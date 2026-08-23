@@ -1,0 +1,35 @@
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+Warning: Option --xmlout requires --html
+/pfs/data6/home/fr/fr_fr/fr_ba122/miniforge3/envs/sam3d-objects/lib/python3.11/site-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+Traceback (most recent call last):
+  File "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/sam3d/sam-3d-objects/demo.py", line 4, in <module>
+    from inference import Inference, load_image, load_single_mask
+  File "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/sam3d/sam-3d-objects/notebook/inference.py", line 19, in <module>
+    import seaborn as sns
+ModuleNotFoundError: No module named 'seaborn'
+Done with Sam3d demo processing, output saved in splat.ply
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n001
+Job ID: 3454200
+Cluster: uc3
+User/Group: fr_ba122/fr_fr
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:04
+CPU Efficiency: 6.67% of 00:01:00 core-walltime
+Job Wall-clock time: 00:00:30
+Memory Utilized: 287.84 MB
+Memory Efficiency: 7.20% of 3.91 GB (1.95 GB/core)

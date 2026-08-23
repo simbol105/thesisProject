@@ -1,0 +1,50 @@
+# Note: Keep C:\Program Files (x86)\Microsoft Visual Studio\Installer directory.
+#       disutils/setuptools calls vswhere.exe from that location unconditionally.
+
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ARG PYTHON_VERSION=3.7
+ARG PYTORCH_VERSION=1.8
+ARG FORCE_CUDA=1
+ARG IGNORE_TORCH_VER=0
+
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+ENV PYTORCH_VERSION=${PYTORCH_VERSION}
+ENV FORCE_CUDA=${FORCE_CUDA}
+ENV IGNORE_TORCH_VER=${IGNORE_TORCH_VER}
+
+RUN Write-Host $Env:PYTHON_VERSION
+
+RUN conda install -y python=$Env:PYTHON_VERSION
+
+RUN $cudaDir = Get-ChildItem -Path 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\' -Directory | Select-Object -First 1 -ExpandProperty Name; \
+    $cudaVer = $cudaDir.TrimStart('v'); \
+    Write-Host ('Detected CUDA: ' + $cudaVer); \
+    [Environment]::SetEnvironmentVariable('CUDA_VERSION', $cudaVer, 'Machine')
+
+RUN $Env:TORCH_STR = ${Env:PYTORCH_VERSION} + '+cu' + ${Env:CUDA_VERSION}.Replace('.',''); \
+    $Env:TORCH_URL='https://download.pytorch.org/whl/cu' + ${Env:CUDA_VERSION}.Replace('.',''); \
+    pip install --no-cache-dir torch==${Env:TORCH_STR} torchvision --index-url ${Env:TORCH_URL};
+
+RUN pip install brotli
+
+RUN conda list > conda_build.txt
+
+WORKDIR /kaolin
+
+COPY . .
+
+# NOTE: pin setuptools to avoid directory copy bug
+RUN pip install --upgrade --no-cache-dir certifi ninja
+RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host pypi.python.org \
+    --trusted-host files.pythonhosted.org -r tools/build_requirements.txt
+
+SHELL ["cmd", "/S", "/C"]
+
+RUN "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=%MSVC_VER_PREFIX% && \
+    set DISTUTILS_USE_SDK=1 && \
+    set FORCE_CUDA=1 && \
+    for /d %d in (c:\buildtools\vc\tools\msvc\%MSVC_VER_PREFIX%*) do set CUDAHOSTCXX=%d\bin\hostx64\x64\cl.exe && \
+    python setup.py bdist_wheel --dist-dir . && \
+    for %f in (kaolin-*.whl) do pip install %f

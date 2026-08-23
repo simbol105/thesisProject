@@ -1,0 +1,26 @@
+**/.git
+
+# Ignore all image files
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.bmp
+*.tiff
+
+# Ignore all mesh files
+*.obj
+*.ply
+*.stl
+*.glb
+*.gltf
+
+# Ignore dataset folder (any level)
+dataset/
+*/dataset/
+**/dataset/
+
+# Ignore any images inside dataset folders
+dataset/**/*
+*/dataset/**/*
+**/dataset/**/*

@@ -1,0 +1,15 @@
+Mesh generation time: 55.08 seconds
+SDF calculation time: 13.05 seconds
+Total optimization time for  1000 iterations: 371.79 seconds
+Mesh generation time: 55.20 seconds
+SDF calculation time: 12.42 seconds
+Total optimization time for  1002 iterations: 377.08 seconds
+Mesh generation time: 64.33 seconds
+SDF calculation time: 13.23 seconds
+Total optimization time for  1002 iterations: 378.99 seconds
+Mesh generation time: 55.33 seconds
+SDF calculation time: 12.71 seconds
+Total optimization time for  1002 iterations: 368.76 seconds
+Mesh generation time: 63.85 seconds
+SDF calculation time: 13.44 seconds
+Total optimization time for  1002 iterations: 372.61 seconds

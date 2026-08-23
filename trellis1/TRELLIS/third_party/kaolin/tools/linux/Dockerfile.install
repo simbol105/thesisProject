@@ -1,0 +1,94 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+# used for cross-compilation in docker build
+ARG FORCE_CUDA=1
+ENV FORCE_CUDA=${FORCE_CUDA}
+
+ARG IGNORE_TORCH_VER=0
+ENV IGNORE_TORCH_VER=${IGNORE_TORCH_VER}
+
+RUN if [ -f /etc/apt/sources.list.d/cuda.list ]; then \
+        rm /etc/apt/sources.list.d/cuda.list; \
+    fi \
+    && if [ -f /etc/apt/sources.list.d/nvidia-ml.list ]; then \
+        rm /etc/apt/sources.list.d/nvidia-ml.list; \
+    fi
+
+RUN echo "Acquire { https::Verify-Peer false }" > /etc/apt/apt.conf.d/99verify-peer.conf \
+    && apt-get -y update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated ca-certificates \
+    && rm /etc/apt/apt.conf.d/99verify-peer.conf \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        git \
+        pkg-config \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libgtk2.0-0 \
+        libgtk-3-0 \
+        libnss3 \
+        curl \
+        cmake \
+        xvfb \
+        wget \
+        software-properties-common \
+        && (apt-get install -y --no-install-recommends libasound2 || apt-get install -y --no-install-recommends libasound2t64) \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
+
+# Dev headers required when imgui-bundle (newton dep) builds from source:
+# PyPI ships imgui-bundle>=1.92.0 wheels only for Python >=3.11, so on
+# Python 3.10 pip falls back to the sdist, whose CMake step builds glfw
+# and needs X11/Wayland/GL dev headers.
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        libx11-dev \
+        libxrandr-dev \
+        libxinerama-dev \
+        libxcursor-dev \
+        libxi-dev \
+        libgl1-mesa-dev \
+        libwayland-dev \
+        libxkbcommon-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Remove PEP 668 restriction (safe in containers)
+RUN rm -f /usr/lib/python*/EXTERNALLY-MANAGED
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# fix for a weird pytorch bug (see: https://discuss.pytorch.org/t/not-able-to-include-cusolverdn-h/169122/5)
+ENV PATH /usr/local/cuda/bin:$PATH
+
+WORKDIR /kaolin
+
+COPY . .
+
+# Install Dash3D Requirements ###
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x --insecure | bash - \
+    && apt-get install -y nodejs
+
+RUN npm install -g npm@8.5.4
+RUN npm install 
+
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir \
+       	ninja \
+        imageio \
+	imageio-ffmpeg
+RUN pip install --ignore-installed --no-cache-dir \
+        -r tools/viz_requirements.txt \
+        -r tools/requirements.txt \
+        -r tools/build_requirements.txt
+
+RUN if [ "$FORCE_CUDA" -eq "1" ]; then \
+    export TORCH_CUDA_ARCH_LIST=`python tools/get_nvdiffrast_compatible_arch.py` && \
+    cd /tmp && \
+    git clone https://github.com/NVlabs/nvdiffrast && \
+    cd nvdiffrast && \
+    export MAX_JOBS=1 && \
+    pip install --no-build-isolation --break-system-packages .; fi
+
+RUN export MAX_JOBS=1 && python setup.py develop

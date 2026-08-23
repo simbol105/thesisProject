@@ -1,0 +1,9 @@
+ipython ; python_version >= "3.9"
+ipython < 8.13 ; python_version < "3.9"
+ipycanvas
+ipyevents
+jupyter_client
+flask
+tornado
+comm>=0.1.3
+matplotlib

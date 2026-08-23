@@ -1,0 +1,153 @@
+ARG BASE_IMAGE="mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2022"
+FROM ${BASE_IMAGE}
+
+# set up conda and python environment
+ARG CUDA_VERSION=11.1
+ENV CUDA_VERSION=${CUDA_VERSION}
+ARG CUDA_URL="http://developer.download.nvidia.com/compute/cuda/11.1.1/local_installers/cuda_11.1.1_456.81_win10.exe"
+ENV CUDA_URL=${CUDA_URL}
+ARG CUDA_FILENAME=cuda_${CUDA_VERSION}_win10.exe
+ENV CUDA_FILENAME=${CUDA_FILENAME}
+
+# MSVC version selection is derived from CUDA_VERSION at build time (see the
+# vs_buildtools install step below). CUDA 13.x CCCL hits MSVC 14.34's C++17
+# nested-namespace lookup bug (C2872 cuda/c10::cuda ambiguity), so CUDA >=13
+# images need 14.42, while older CUDA configs need 14.34 for compatibility with
+# their PyTorch/CCCL ABIs. The chosen prefix is exported as a machine env var
+# (MSVC_VER_PREFIX) and inherited by Dockerfile.install / Dockerfile.install_wheel.
+
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+#### BUILD TOOLS ####
+
+# pulling downloads to top to not repeat
+# download & install VS build tools 17.x (Visual Studio 2022)
+RUN Invoke-WebRequest 'https://aka.ms/vs/17/release/vs_buildtools.exe' -OutFile vs_buildtools.exe -UseBasicParsing; \
+    $cudaMajor = [int]($Env:CUDA_VERSION.Split('.')[0]); \
+    if ($cudaMajor -lt 13) { \
+        $msvcComponent = 'Microsoft.VisualStudio.Component.VC.14.34.17.4.x86.x64'; \
+        $msvcVerPrefix = '14.34'; \
+    } else { \
+        $msvcComponent = 'Microsoft.VisualStudio.Component.VC.14.42.17.12.x86.x64'; \
+        $msvcVerPrefix = '14.42'; \
+    }; \
+    Write-Host ('Selected MSVC component for CUDA ' + $Env:CUDA_VERSION + ': ' + $msvcComponent); \
+    [Environment]::SetEnvironmentVariable('MSVC_VER_PREFIX', $msvcVerPrefix, 'Machine'); \
+    $components = @( \
+        'Microsoft.VisualStudio.Workload.VCTools', \
+        'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', \
+        $msvcComponent, \
+        'Microsoft.VisualStudio.Workload.MSBuildTools', \
+        'Microsoft.Component.VC.Runtime.UCRTSDK', \
+        'Microsoft.VisualStudio.Component.Windows10SDK.17763' \
+    ); \
+    $args = @('--quiet', '--norestart', '--downloadThenInstall', '--nocache', '--wait', '--installPath', 'C:\BuildTools'); \
+    foreach ($c in $components) { $args += '--add'; $args += $c }; \
+    $p = Start-Process -FilePath 'vs_buildtools.exe' -Wait -PassThru -ArgumentList $args; \
+    if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) { throw ('Install failed: ' + $p.ExitCode) }; \
+    Remove-Item .\vs_buildtools.exe; \
+    Get-ChildItem -Path 'C:\Program Files (x86)\Windows Kits\10' -Recurse -Filter 'basetsd.h' | Select-Object -ExpandProperty FullName
+
+RUN New-Item -ItemType Directory -Path 'C:\TEMP' -Force; \
+    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2120843' -OutFile 'C:\TEMP\winsdksetup.exe' -UseBasicParsing; \
+    $p = Start-Process -FilePath 'C:\TEMP\winsdksetup.exe' -ArgumentList '/features', '+', '/quiet', '/norestart' -Wait -PassThru; \
+    Write-Host ('SDK installer exit code: ' + $p.ExitCode); \
+    if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) { throw ('SDK install failed: ' + $p.ExitCode) }; \
+    Remove-Item 'C:\TEMP\winsdksetup.exe' -Force; \
+    Get-ChildItem -Path 'C:\Program Files (x86)\Windows Kits\10' -Recurse -Filter 'basetsd.h' | Select-Object -ExpandProperty FullName
+
+# The msvc version (subdir) has been shown to change over time.
+# The winsdk version (subdir) may change over time either through changes by MS or our own arguments to vs_buildtools.exe above.
+# Keeping that in mind, let's dynamically pick up the paths which get created.
+RUN setx /M PATH $('c:\buildtools\vc\tools\msvc\' + $(Get-ChildItem -Path 'c:\buildtools\vc\tools\msvc' -Force -Directory | Select-Object -First 1).Name + '\bin\hostx64\x64;' \
+    + 'c:\buildtools\vc\tools\msvc\' + $(Get-ChildItem -Path 'c:\buildtools\vc\tools\msvc' -Force -Directory | Select-Object -First 1).Name + '\lib\x64;' \
+    + 'c:\buildtools\vc\tools\msvc\' + $(Get-ChildItem -Path 'c:\buildtools\vc\tools\msvc' -Force -Directory | Select-Object -First 1).Name + '\include;' \
+    + 'C:\Program Files (x86)\Windows Kits\10\bin\' + $(Get-ChildItem -Path 'C:\Program Files (x86)\Windows Kits\10\bin\' -Force -Directory | Select-Object -First 1).Name + '\x64;' \
+    + 'C:\BuildTools\VC\Auxiliary\Build;' \
+    + $Env:PATH)
+
+RUN Get-ChildItem -Path 'c:\buildtools\vc\tools\msvc\' -Directory | Select-Object -ExpandProperty Name
+
+RUN $msvcDir = $(Get-ChildItem -Path 'c:\buildtools\vc\tools\msvc\' -Force -Directory | Where-Object { $_.Name -like ($Env:MSVC_VER_PREFIX + '*') } | Select-Object -First 1).FullName; \
+    $sdkVersion = $(Get-ChildItem -Path 'C:\Program Files (x86)\Windows Kits\10\Include\' -Force -Directory | Sort-Object -Descending | Select-Object -First 1).Name; \
+    $sdkBinBase = 'C:\Program Files (x86)\Windows Kits\10\bin\' + $sdkVersion; \
+    $sdkIncBase = 'C:\Program Files (x86)\Windows Kits\10\Include\' + $sdkVersion; \
+    $sdkLibBase = 'C:\Program Files (x86)\Windows Kits\10\Lib\' + $sdkVersion; \
+    $pathValue = $msvcDir + '\bin\hostx64\x64;' + $msvcDir + '\lib\x64;' + $msvcDir + '\include;' + $sdkBinBase + '\x64;C:\BuildTools\VC\Auxiliary\Build;' + $Env:PATH; \
+    $incValue = $msvcDir + '\include;' + $sdkIncBase + '\ucrt;' + $sdkIncBase + '\shared;' + $sdkIncBase + '\um;' + $sdkIncBase + '\winrt'; \
+    $libValue = $msvcDir + '\lib\x64;' + $sdkLibBase + '\ucrt\x64;' + $sdkLibBase + '\um\x64'; \
+    Write-Host ('MSVC: ' + $msvcDir); \
+    Write-Host ('SDK: ' + $sdkVersion); \
+    [Environment]::SetEnvironmentVariable('PATH', $pathValue, 'Machine'); \
+    [Environment]::SetEnvironmentVariable('INCLUDE', $incValue, 'Machine'); \
+    [Environment]::SetEnvironmentVariable('LIB', $libValue, 'Machine')
+
+RUN $msvcSubdir = $(Get-ChildItem -Path 'c:\buildtools\vc\tools\msvc\' -Force -Directory | Where-Object { $_.Name -like ($Env:MSVC_VER_PREFIX + '*') } | Select-Object -First 1).Name; \
+    $clPath = 'c:\buildtools\vc\tools\msvc\' + $msvcSubdir + '\bin\hostx64\x64\cl.exe'; \
+    Write-Host ('CUDAHOSTCXX=' + $clPath); \
+    Write-Host ('VCToolsVersion=' + $msvcSubdir); \
+    [Environment]::SetEnvironmentVariable('CUDAHOSTCXX', $clPath, 'Machine'); \
+    [Environment]::SetEnvironmentVariable('VCToolsVersion', $msvcSubdir, 'Machine')
+
+
+#### CUDA ####
+
+# needed:
+# nvcc
+# cusparse
+# cusparse_dev
+# cublas
+# cublas_dev
+# curand
+# curand_dev
+# cudart_11.1  # for vector_types.h
+# cusolver_11.1
+# cusolver_dev_11.1
+# cuda_thrust_11.3 # if CUDA >= 11.3, needed to build
+
+# install CUDA toolkit
+# TODO: may need to add more packages or alter names for later CUDA versions...
+# CUDA 11.3+ adds 'thrust' to the set of requirements we need to install
+RUN Invoke-WebRequest $Env:CUDA_URL -OutFile $Env:CUDA_FILENAME -UseBasicParsing; \
+    Write-Host '=== Try 1: no version suffix ==='; \
+    $components1 = @( \
+        'cuda_nvcc', 'cuda_cudart', 'cuda_crt', 'cuda_cccl', \
+        'cuda_nvtx', 'cuda_nvrtc', 'cuda_profiler_api', \
+        'libcublas', 'libcusparse', 'libcurand', 'libcusolver', \
+        'visual_studio_integration' \
+    ); \
+    $p1 = Start-Process -FilePath $Env:CUDA_FILENAME -Wait -PassThru -ArgumentList (@('-s') + $components1); \
+    Write-Host ('Exit code (no suffix): ' + $p1.ExitCode); \
+    if ($p1.ExitCode -ne 0) { \
+        Write-Host '=== Try 2: _13.0.2 suffix ==='; \
+        $components2 = $components1 | ForEach-Object { $_ + '_13.0.2' }; \
+        Write-Host ($components2 -join ', '); \
+        $p2 = Start-Process -FilePath $Env:CUDA_FILENAME -Wait -PassThru -ArgumentList (@('-s') + $components2); \
+        Write-Host ('Exit code (13.0.2): ' + $p2.ExitCode); \
+        if ($p2.ExitCode -ne 0) { \
+            Write-Host '=== Try 3: just install everything ==='; \
+            $p3 = Start-Process -FilePath $Env:CUDA_FILENAME -Wait -PassThru -ArgumentList '-s'; \
+            Write-Host ('Exit code (full install): ' + $p3.ExitCode); \
+            if ($p3.ExitCode -ne 0) { throw ('All CUDA install attempts failed. Last: ' + $p3.ExitCode) }; \
+        }; \
+    }; \
+    Remove-Item $Env:CUDA_FILENAME; \
+    Write-Host '=== Verify crt/host_config.h ==='; \
+    Get-ChildItem -Path 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA' -Recurse -Filter 'host_config.h' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+
+# TODO: can we use conda cuda install instead? only once we need cuda 11.3.0+
+# RUN conda install -y cuda cuda-nvcc -c nvidia/label/cuda-11.3.1
+# RUN setx /M PATH $('C:\Users\Administrator\miniconda3\bin;C:\Users\Administrator\miniconda3\include;' + $Env:Path)
+
+
+#### ANACONDA ####
+RUN Invoke-WebRequest "https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe" -OutFile miniconda3.exe -UseBasicParsing;
+
+# install conda & python packages
+# PATH must be updated before attempting to run "conda" or it will error out strangely on web requests
+RUN setx /M PATH $('C:\Users\Administrator\miniconda3\Library\bin;C:\Users\Administrator\miniconda3\Scripts;C:\Users\Administrator\miniconda3;' + $Env:PATH)
+RUN Start-Process -FilePath 'miniconda3.exe' -Wait -ArgumentList '/S', '/D=C:\Users\Administrator\miniconda3'; \
+    Remove-Item .\miniconda3.exe; \
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main; \
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r; \
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/msys2; \

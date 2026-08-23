@@ -1,0 +1,4 @@
+Runtime for sam3d on DTC image: 37.40 seconds
+Runtime for sam3d on DTC image: 35.46 seconds
+Runtime for sam3d on DTC image: 53.65 seconds
+Runtime for sam3d on DTC image: 40.75 seconds

@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Optimize Voxel",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/trellis2/TRELLIS.2/voxel_opt.py",
+            "console": "integratedTerminal",
+            "args": "['--yaml-config', '/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/yaml_config/config.yaml']"
+        }
+    ]
+}

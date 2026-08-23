@@ -1,0 +1,2 @@
+Trellis mesh generation runtime: 56.96 seconds
+Trellis mesh generation runtime: 35.38 seconds

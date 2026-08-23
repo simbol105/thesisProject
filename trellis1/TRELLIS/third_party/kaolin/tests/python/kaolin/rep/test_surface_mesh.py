@@ -1,0 +1,2077 @@
+# Copyright (c) 2019-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import copy
+import logging
+import math
+import os
+import glob
+import pytest
+import random
+
+import torch
+
+import kaolin.render.materials
+from kaolin.io import obj, usd
+from kaolin.ops.mesh import index_vertices_by_faces
+from kaolin.rep import SurfaceMesh
+from kaolin.utils.testing import check_tensor_attribute_shapes, contained_torch_equal
+
+
+__test_dir = os.path.dirname(os.path.realpath(__file__))
+__samples_path = os.path.join(__test_dir, os.pardir, os.pardir, os.pardir, 'samples')
+
+
+def data_path(fname):
+    """ Return path relative to tests/samples/io"""
+    return os.path.join(__samples_path, 'io', fname)
+
+
+def rand_float_vec(shp, device):
+    return torch.rand(shp, dtype=torch.float32, device=device)
+
+
+_core_attr = ["vertices", "normals", "uvs", "faces", "face_uvs_idx",
+              "face_normals_idx", "material_assignments", "vertex_normals",
+              "face_normals", "face_uvs", "face_vertices"]
+
+
+class DummyCustomMaterial:
+    def __init__(self):
+        self.shininess = random.random()
+
+
+def random_mesh_attr(num_vertices=None,
+                     num_normals=None,
+                     num_uvs=None,
+                     num_faces=None,
+                     num_materials=None,
+                     add_face_uvs_idx=False,
+                     add_face_normals_idx=False,
+                     add_material_assignments=False,
+                     add_materials=False,
+                     add_vertex_normals=False,
+                     add_face_normals=False,
+                     add_face_uvs=False,
+                     add_face_vertices=False,
+                     add_vertex_tangents=False,
+                     add_vertex_colors=False,
+                     add_vertex_features=False,
+                     add_face_tangents=False,
+                     add_face_colors=False,
+                     add_face_features=False,
+                     add_transform=False,
+                     face_size=3,
+                     num_features=5,
+                     float_dtype=torch.float32,
+                     device="cpu",
+                     use_unsupported_material=False):
+    """Generate random mesh attributes for testing."""
+    def _val_or_rand(val):
+        return val if val is not None else random.randint(30, 200)
+
+    attr = {}
+    _num_vertices = None
+    if num_vertices is not None:
+        attr["vertices"] = torch.rand((num_vertices, 3), dtype=float_dtype)
+    if num_normals is not None:
+        attr["normals"] = torch.rand((num_normals, 3), dtype=float_dtype)
+    if num_uvs is not None:
+        attr["uvs"] = torch.rand((num_uvs, 2), dtype=float_dtype)
+    if num_faces is not None:
+        _num_vertices = _val_or_rand(num_vertices)
+        # Sample face_size distinct vertex indices per face (no duplicates → no degenerate triangles).
+        attr["faces"] = torch.argsort(torch.rand(num_faces, _num_vertices), dim=-1)[:, :face_size]
+    if num_materials is not None:
+        attr["materials"] = [{"material_name": f"material_{i}"} for i in range(num_faces)]
+
+    _num_faces = _val_or_rand(num_faces)
+    if add_face_uvs_idx:
+        attr["face_uvs_idx"] = torch.randint(0, _val_or_rand(num_uvs), (_num_faces, face_size)).long()
+    if add_face_normals_idx:
+        attr["face_normals_idx"] = torch.randint(0, _val_or_rand(num_normals), (_num_faces, face_size)).long()
+    if add_material_assignments:
+        attr["material_assignments"] = torch.randint(0, _val_or_rand(num_materials), (_num_faces,)).short()
+    if add_vertex_normals:
+        _num_vertices = _val_or_rand(_num_vertices)
+        attr["vertex_normals"] = torch.rand((_num_vertices, 3), dtype=float_dtype)
+    if add_vertex_tangents:
+        attr["vertex_tangents"] = torch.rand((_num_vertices, 3), dtype=float_dtype)
+    if add_vertex_colors:
+        attr["vertex_colors"] = torch.rand((_num_vertices, 3), dtype=float_dtype)
+    if add_vertex_features:
+        attr["vertex_features"] = torch.rand((_num_vertices, num_features), dtype=float_dtype)
+    if add_face_normals:
+        attr["face_normals"] = torch.rand((_num_faces, face_size, 3), dtype=float_dtype)
+    if add_face_uvs:
+        attr["face_uvs"] = torch.rand((_num_faces, face_size, 2), dtype=float_dtype)
+    if add_face_vertices:
+        attr["face_vertices"] = torch.rand((_num_faces, face_size, 3), dtype=float_dtype)
+    if add_face_tangents:
+        attr["face_tangents"] = torch.rand((_num_faces, face_size, 3), dtype=float_dtype)
+    if add_face_colors:
+        attr["face_colors"] = torch.rand((_num_faces, face_size, 3), dtype=float_dtype)
+    if add_face_features:
+        attr["face_features"] = torch.rand((_num_faces, face_size, num_features), dtype=float_dtype)
+    if add_transform:
+        attr["transform"] = torch.rand((4, 4), dtype=float_dtype)
+
+    if add_materials:
+        if use_unsupported_material:
+            attr["materials"] = [DummyCustomMaterial()]
+        else:
+            attr["materials"] = [
+                kaolin.render.materials.PBRMaterial(
+                    diffuse_color=(random.random(), random.random(), random.random()),
+                    specular_color=(0.7, 0.5, 0.7), is_specular_workflow=True,
+                    material_name='DefaultMaterial').to(device)]
+
+    for k, v in attr.items():
+        if torch.is_tensor(v):
+            attr[k] = v.to(device)
+
+    return attr
+
+
+def two_squares_mesh_attr(device='cpu', float_dtype=torch.float32, quad=False):
+    attr = {}
+    attr['vertices'] = torch.FloatTensor([
+        [-1., -1., -1.],
+        [1., -1., -1.],
+        [1., 1., -1.],
+        [-1., 1., -1.],
+        [1., 1., 1.],
+        [1, -1., 1.]]).to(float_dtype)
+    if quad:
+        # one square at z=-1, spanning [-1,1] for x and y
+        # one square at x=1, spanning [-1, 1] for z and y
+        attr['faces'] = torch.LongTensor([[0, 1, 2, 3], [1, 5, 4, 2]])
+        attr['normals'] = torch.FloatTensor([[0, 0, -1], [1, 0, 0]]).to(float_dtype)
+        attr['face_normals_idx'] = torch.LongTensor([[0, 0, 0, 0], [1, 1, 1, 1]])
+        attr['face_normals'] = torch.FloatTensor([[[0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1]],
+                                                 [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]]).to(float_dtype)
+    else:
+        # same, but squares are split into triangles
+        attr['faces'] = torch.LongTensor([[0, 1, 2], [0, 2, 3], [1, 5, 4], [1, 4, 2]])
+        # Note: custom normals use right-hand rule, unlike default Kaolin face normal computation
+        # (to allow testing both indexed and computed face normals)
+        attr['normals'] = torch.FloatTensor([[0, 0, -1], [1, 0, 0]]).to(float_dtype)
+        attr['face_normals_idx'] = torch.LongTensor([[0, 0, 0], [0, 0, 0], [1, 1, 1],  [1, 1, 1]])
+        attr['face_normals'] = torch.FloatTensor([[[0, 0, -1], [0, 0, -1], [0, 0, -1]],
+                                                  [[0, 0, -1], [0, 0, -1], [0, 0, -1]],
+                                                  [[1, 0, 0], [1, 0, 0], [1, 0, 0]],
+                                                  [[1, 0, 0], [1, 0, 0], [1, 0, 0]]]).to(float_dtype)
+
+    # Compute vertex normals for vertices that share faces with different normals (by averaging)
+    n0 = attr['normals'][0, ...]
+    n1 = attr['normals'][1, ...]
+    if quad:
+        n_ave = (n0 + n1) / 2.0
+        attr['vertex_normals'] = torch.stack([n0, n_ave, n_ave, n0, n1, n1])
+    else:
+        n_v2 = (n0 + n0 + n1) / 3.0
+        n_v1 = (n0 + n1 + n1) / 3.0
+        attr['vertex_normals'] = torch.stack([n0, n_v1, n_v2, n0, n1, n1])
+
+    # Face normals obtained from vertex_normals, if directly passed into mesh (e.g. gltf format does that)
+    nfaces = attr['faces'].shape[0]
+    fsize = attr['faces'].shape[1]
+    fn = torch.zeros((nfaces, fsize, 3)).to(float_dtype)
+    for f in range(nfaces):
+        for v in range(fsize):
+            fn[f, v, :] = attr['vertex_normals'][attr['faces'][f, v], :]
+    attr['face_normals_from_vertex_normals'] = fn
+
+    for k, v in attr.items():
+        if torch.is_tensor(v):
+            attr[k] = v.to(device)
+
+    return attr
+
+
+def make_default_unbatched_input(device, nfaces=4, use_unsupported_material=False):
+    V, N, U, M = 9, 12, 6, 3
+    return random_mesh_attr(num_vertices=V,
+                            num_normals=N,
+                            num_uvs=U,
+                            num_faces=nfaces,
+                            num_materials=M,
+                            add_face_uvs_idx=True,
+                            add_face_normals_idx=True,
+                            add_material_assignments=True,
+                            add_materials=True,
+                            add_vertex_normals=True,
+                            add_face_normals=True,
+                            add_face_uvs=True,
+                            add_face_vertices=True,
+                            add_vertex_tangents=True,
+                            add_vertex_colors=True,
+                            add_vertex_features=True,
+                            add_face_tangents=True,
+                            add_face_colors=True,
+                            add_face_features=True,
+                            add_transform=True,
+                            face_size=3,
+                            device=device,
+                            use_unsupported_material=use_unsupported_material)
+
+
+def make_default_fixed_input(device, batchsize=3, use_unsupported_material=False):
+    attr_dicts = [make_default_unbatched_input(
+        device, use_unsupported_material=use_unsupported_material) for i in range(batchsize)]
+    res = {}
+    for attr in attr_dicts[0].keys():
+        if attr == 'faces':
+            val = attr_dicts[0]['faces']  # just use first item's faces
+        elif attr == 'materials':
+            val = [attr_dicts[i][attr] for i in range(batchsize)]
+        else:
+            val = torch.stack([attr_dicts[i][attr] for i in range(batchsize)])
+        res[attr] = val
+    return res
+
+
+def make_default_list_input(device, batchsize=3, fixed_topology=False, use_unsupported_material=False):
+    nfaces = [4 if fixed_topology else random.randint(3, 7) for i in range(batchsize)]
+
+    attr_dicts = [make_default_unbatched_input(
+        device, nfaces=nfaces[i], use_unsupported_material=use_unsupported_material) for i in range(batchsize)]
+    res = {}
+    for attr in attr_dicts[0].keys():
+        if attr == 'faces' and fixed_topology:
+            val = [attr_dicts[0]['faces'] for i in range(batchsize)]
+        elif attr == 'transform':
+            # transform is always a tensor: (B, 4, 4) for LIST batching.
+            val = torch.stack([attr_dicts[i][attr] for i in range(batchsize)])
+        else:
+            val = [attr_dicts[i][attr] for i in range(batchsize)]
+        res[attr] = val
+    return res
+
+
+def make_default_input(device, batching, fixed_topology_if_list=False, use_unsupported_material=False):
+    if batching == SurfaceMesh.Batching.NONE:
+        return make_default_unbatched_input(
+            device, use_unsupported_material=use_unsupported_material)
+    elif batching == SurfaceMesh.Batching.FIXED:
+        return make_default_fixed_input(
+            device, use_unsupported_material=use_unsupported_material)
+    elif batching == SurfaceMesh.Batching.LIST:
+        return make_default_list_input(
+            device, fixed_topology=fixed_topology_if_list, use_unsupported_material=use_unsupported_material)
+    else:
+        raise RuntimeError(f'Bug; implement for batching {batching}')
+
+
+def make_batched_attribute(attr, val, batching):
+    if batching == SurfaceMesh.Batching.NONE:
+        return val
+
+    if attr == 'faces':
+        return [val] if batching == SurfaceMesh.Batching.LIST else val
+    elif attr == 'materials':
+        return [val]
+    else:
+        return [val] if batching == SurfaceMesh.Batching.LIST else val.unsqueeze(0)
+
+
+def make_batched_attributes(attr_dict, batching):
+    if batching == SurfaceMesh.Batching.NONE:
+        return attr_dict
+
+    res = {}
+    for k, v in attr_dict.items():
+        res[k] = make_batched_attribute(k, v, batching)
+    return res
+
+
+# Construct with a realistic set of attributes
+def construct_mesh_default(in_attr, with_transform=False):
+    kwargs = dict(
+        vertices=in_attr['vertices'],
+        faces=in_attr['faces'],
+        normals=in_attr['normals'],
+        uvs=in_attr['uvs'],
+        face_uvs_idx=in_attr['face_uvs_idx'],
+        face_normals_idx=in_attr['face_normals_idx'],
+        material_assignments=in_attr['material_assignments'],
+        materials=in_attr['materials'],
+    )
+    if with_transform:
+        kwargs['transform'] = in_attr['transform']
+    return SurfaceMesh(**kwargs)
+
+
+class TestClassMethods:
+    def test_computable_attribute_requirements(self):
+        """Verify that computable_attribute_requirements() lists all expected auto-computable attributes.
+        Failures here mean new computable attributes were added without updating exhaustive attribute tests."""
+        expected = {'vertex_normals',
+                    'face_normals',
+                    'vertex_tangents',
+                    'face_tangents',
+                    'face_features',
+                    'vertex_features',
+                    'face_colors',
+                    'vertex_colors',
+                    'face_uvs',
+                    'face_vertices'}
+        missing = expected.difference(SurfaceMesh.computable_attribute_requirements().keys())
+        assert len(missing) == 0, f'Computable attribute requirements are missing expected values. ' \
+            'If this list is incorrect, this will affect exhaustive attribute tests.'
+
+    def test_supported_tensor_attributes(self):
+        """Verify that supported_tensor_attributes() includes all expected core attributes."""
+        missing = set(_core_attr).difference(SurfaceMesh.supported_tensor_attributes())
+        assert len(missing) == 0, f'Missing core attributes {missing}'
+
+@pytest.mark.parametrize("batching", [x for x in SurfaceMesh.Batching])
+class TestBasics:
+    def assert_string_includes_attributes(self, in_str, required_attributes=None):
+        if required_attributes is None:
+            required_attributes = _core_attr
+
+        incl_attr_superset = [rec.split(':')[0].strip() for rec in in_str.split('\n')]
+        for attr in required_attributes:
+            assert attr in incl_attr_superset
+
+    def test_attribute_info_string(self, batching):
+        """Verify that attribute_info_string() produces a string that mentions every supported tensor attribute."""
+        res = SurfaceMesh.attribute_info_string(batching)
+        self.assert_string_includes_attributes(res, required_attributes=SurfaceMesh.supported_tensor_attributes())
+
+    def test_to_string(self, batching):
+        """Verify to_string() / str() output includes all core attribute names, and that
+        detailed mode produces a longer (more informative) string."""
+        input_attr = make_default_input("cpu", batching)
+        mesh = construct_mesh_default(input_attr)
+        str_default = mesh.to_string()
+        self.assert_string_includes_attributes(str_default)
+        str_default2 = str(mesh)
+        assert str_default == str_default2
+
+        str_detailed = mesh.to_string(detailed=True, print_stats=True)
+        self.assert_string_includes_attributes(str_detailed)
+        assert len(str_detailed) > len(str_default)
+        assert len('\n'.split(str_detailed)) == len('\n'.split(str_default))
+
+    def test_describe_attribute(self, batching):
+        """Verify that describe_attribute() returns a non-empty description for every set attribute."""
+        input_attr = make_default_input("cpu", batching)
+        mesh = construct_mesh_default(input_attr)
+
+        for attr in _core_attr:
+            res = mesh.describe_attribute(attr)
+            if mesh.has_attribute(attr):
+                assert len(res) > 5
+
+    def test_check_sanity(self, batching):
+        """ Check that unexpected tensor sizes are detected (valid arguments already tested in the construction test).
+        """
+        input_attr = make_default_input("cpu", batching)
+        missing_test_attributes = set(SurfaceMesh.supported_tensor_attributes()).difference(set(input_attr.keys()))
+        assert len(missing_test_attributes) == 0, \
+            f'Test is missing for the following mesh attributes: {missing_test_attributes}'
+
+        for attr in set(input_attr.keys()).difference({'faces', 'vertices', 'materials'}):
+            args = {attr: input_attr[attr]}
+            mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'], **args)
+            assert mesh.check_sanity()
+
+            if batching == SurfaceMesh.Batching.LIST:
+                wrong_input = [x.unsqueeze(0) for x in input_attr[attr]]
+            else:
+                wrong_input = input_attr[attr].unsqueeze(0)
+            args = {attr: wrong_input}
+            with pytest.raises(ValueError):
+                mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'], **args)
+            args['strict_checks'] = False
+            mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'], **args)
+            assert not mesh.check_sanity()
+
+
+@pytest.mark.parametrize("device", ["cuda", "cpu"])
+@pytest.mark.parametrize("batching", [x for x in SurfaceMesh.Batching])
+class TestCoreParameterized:
+
+    @pytest.mark.parametrize('unset_attributes_return_none', [False, True])
+    @pytest.mark.parametrize('strict_checks', [False, True])
+    @pytest.mark.parametrize('allow_auto_compute', [False, True])
+    def test_construct_access_attributes(self, device, batching,
+                                         strict_checks, unset_attributes_return_none, allow_auto_compute):
+        """Verify that SurfaceMesh can be constructed with all supported attributes and that attribute
+        access (direct, auto-computed, and None-returning) behaves correctly under all combinations of
+        strict_checks, unset_attributes_return_none, and allow_auto_compute."""
+        common_args = {'strict_checks': strict_checks,
+                       'unset_attributes_return_none': unset_attributes_return_none,
+                       'allow_auto_compute': allow_auto_compute}
+        input_attr = make_default_input(device, batching)
+        missing_test_attributes = set(SurfaceMesh.supported_tensor_attributes()).difference(set(input_attr.keys()))
+        assert len(missing_test_attributes) == 0, f'Test is missing for the following mesh attributes: {missing_test_attributes}'
+        expected_batch_size = 1 if batching == SurfaceMesh.Batching.NONE else 3
+
+        input_vertices = input_attr['vertices']
+        input_faces = input_attr['faces']
+        if batching == SurfaceMesh.Batching.NONE:
+            expected_face_vertices = index_vertices_by_faces(input_vertices.unsqueeze(0), input_faces).squeeze(0)
+
+        # Construct with just faces and vertices
+        mesh = SurfaceMesh(vertices=input_vertices, faces=input_faces, **common_args)
+        mesh0_str = str(mesh)
+        assert len(mesh) == expected_batch_size
+        assert mesh.batching == batching   # Batching auto-detect succeeded
+        assert contained_torch_equal(mesh.vertices, input_vertices, approximate=True)
+        assert contained_torch_equal(mesh.faces, input_faces)
+        assert contained_torch_equal(mesh.get_attribute('vertices'), input_vertices, approximate=True)
+        assert contained_torch_equal(mesh.get_attribute('faces'), input_faces)
+        assert set(mesh.get_attributes(only_tensors=True)) == {'vertices', 'faces'}
+        with pytest.raises(AttributeError):
+            tmp = mesh.abracadabra
+        with pytest.raises(AttributeError):
+            tmp = mesh.get_attribute('abracadabra')
+        with pytest.raises(AttributeError):
+            tmp = mesh.get_or_compute_attribute('abracadabra')
+
+        if unset_attributes_return_none:
+            # Convenience API
+            assert mesh.uvs is None
+            assert mesh.face_uvs_idx is None
+            assert mesh.face_normals_idx is None
+            assert mesh.material_assignments is None
+            assert mesh.face_uvs is None
+
+            # Explicit API
+            for attr in ['uvs', 'face_uvs_idx', 'face_normals_idx', 'material_assignments', 'face_uvs']:
+                assert mesh.get_attribute(attr) is None
+                assert mesh.get_or_compute_attribute(attr) is None
+        else:
+            # Convenience API
+            with pytest.raises(AttributeError):
+                tmp = mesh.uvs
+            with pytest.raises(AttributeError):
+                tmp = mesh.face_uvs_idx
+            with pytest.raises(AttributeError):
+                tmp = mesh.face_normals_idx
+            with pytest.raises(AttributeError):
+                tmp = mesh.material_assignments
+            with pytest.raises(AttributeError):
+                tmp = mesh.face_uvs
+
+            # Explicit API
+            for attr in ['uvs', 'face_uvs_idx', 'face_normals_idx', 'material_assignments', 'face_uvs']:
+                with pytest.raises(AttributeError):
+                    tmp = mesh.get_attribute(attr)
+                with pytest.raises(AttributeError):
+                    tmp = mesh.get_or_compute_attribute(attr)
+        if allow_auto_compute:
+            assert mesh.vertex_normals is not None  # Can compute
+            assert mesh.face_normals is not None  # Can compute
+            if batching == SurfaceMesh.Batching.NONE:
+                assert torch.allclose(mesh.face_vertices, expected_face_vertices)
+            else:
+                assert mesh.face_vertices is not None
+            assert set(mesh.get_attributes(only_tensors=True)) == \
+                   {'vertices', 'faces', 'face_normals', 'vertex_normals', 'face_vertices'}
+
+            # Test that we can delete these attributes
+            mesh.vertex_normals = None
+            mesh.face_normals = None
+            mesh.face_vertices = None
+            assert set(mesh.get_attributes(only_tensors=True)) == {'vertices', 'faces'}
+            for attr in ['vertex_normals', 'face_normals', 'face_vertices']:
+                assert not mesh.has_attribute(attr)
+                assert mesh.probably_can_compute_attribute(attr)
+                assert mesh.has_or_can_compute_attribute(attr)
+
+                # Can compute
+                assert mesh.get_or_compute_attribute(attr, should_cache=False) is not None
+
+                # But is not cached
+                assert not mesh.has_attribute(attr)
+
+                if unset_attributes_return_none:
+                    assert mesh.get_attribute(attr) is None
+                else:
+                    with pytest.raises(AttributeError):
+                        tmp = mesh.get_attribute(attr)
+
+            for attr in ['vertex_normals', 'face_normals', 'face_vertices']:
+                # Can compute and cache
+                assert mesh.get_or_compute_attribute(attr, should_cache=True) is not None
+                assert mesh.get_attribute(attr) is not None
+                assert mesh.has_attribute(attr)
+        elif unset_attributes_return_none:
+            assert mesh.vertex_normals is None
+            assert mesh.face_normals is None
+            assert mesh.face_vertices is None
+
+            # But we can compute these with explicit API
+            for attr in ['vertex_normals', 'face_vertices', 'face_normals']:
+                assert not mesh.has_attribute(attr), attr
+                assert mesh.probably_can_compute_attribute(attr)
+                assert mesh.has_or_can_compute_attribute(attr)
+                assert mesh.get_attribute(attr) is None
+                assert mesh.get_or_compute_attribute(attr, should_cache=False) is not None
+
+            # Not set b/c caching was false
+            assert mesh.vertex_normals is None
+            assert mesh.face_normals is None
+            assert mesh.face_vertices is None
+
+            # Now we cache
+            assert mesh.get_or_compute_attribute('vertex_normals', should_cache=True) is not None
+
+            # Now these are set, b/c we force computed them
+            assert mesh.vertex_normals is not None
+            assert mesh.face_normals is not None
+            assert mesh.face_vertices is not None
+        else:
+            with pytest.raises(AttributeError):
+                tmp = mesh.vertex_normals
+            with pytest.raises(AttributeError):
+                tmp = mesh.face_normals
+            with pytest.raises(AttributeError):
+                tmp = mesh.face_vertices
+
+        # Construct with all the attributes (note: we allow conflicts between indexed and explicit normals)
+        mesh = SurfaceMesh(**input_attr, **common_args)
+        assert len(mesh) == expected_batch_size
+        assert set(mesh.get_attributes(only_tensors=True)) == set([k for k in input_attr.keys() if k != 'materials'])
+        assert contained_torch_equal(mesh.vertices, input_vertices, approximate=True)
+        assert contained_torch_equal(mesh.faces, input_faces)
+        assert contained_torch_equal(mesh.normals, input_attr['normals'], approximate=True)
+        assert contained_torch_equal(mesh.uvs, input_attr['uvs'], approximate=True)
+        assert contained_torch_equal(mesh.face_uvs_idx, input_attr['face_uvs_idx'])
+        assert contained_torch_equal(mesh.face_normals_idx, input_attr['face_normals_idx'])
+        assert contained_torch_equal(mesh.material_assignments, input_attr['material_assignments'])
+        assert contained_torch_equal(mesh.vertex_normals, input_attr['vertex_normals'], approximate=True)
+        assert contained_torch_equal(mesh.face_normals, input_attr['face_normals'], approximate=True)
+        assert contained_torch_equal(mesh.face_uvs, input_attr['face_uvs'], approximate=True)
+        assert contained_torch_equal(mesh.face_vertices, input_attr['face_vertices'], approximate=True)
+        # Exhaustively check all attributes are set
+        for att in SurfaceMesh.supported_tensor_attributes() + ['materials']:
+            assert contained_torch_equal(mesh.get_attribute(att), input_attr[att], approximate=True)
+
+        # Construct with more realistic set of attributes
+        mesh = SurfaceMesh(vertices=input_vertices,
+                           faces=input_faces,
+                           normals=input_attr['normals'],
+                           uvs=input_attr['uvs'],
+                           face_uvs_idx=input_attr['face_uvs_idx'],
+                           face_normals_idx=input_attr['face_normals_idx'],
+                           material_assignments=input_attr['material_assignments'],
+                           face_colors=input_attr['face_colors'],
+                           vertex_features=input_attr['vertex_features'],
+                           materials=input_attr['materials'],
+                           **common_args)
+        mesh2_str = str(mesh)
+        assert len(mesh0_str) < len(mesh2_str)
+        assert len(mesh) == expected_batch_size
+        assert set(mesh.get_attributes(only_tensors=True)) == \
+               {'vertices', 'faces', 'normals', 'uvs', 'face_uvs_idx', 'face_normals_idx', 'material_assignments',
+                'face_colors', 'vertex_features'}
+        assert contained_torch_equal(mesh.vertices, input_vertices, approximate=True)
+        assert contained_torch_equal(mesh.faces, input_faces)
+        assert contained_torch_equal(mesh.normals, input_attr['normals'], approximate=True)
+        assert contained_torch_equal(mesh.uvs, input_attr['uvs'], approximate=True)
+        assert contained_torch_equal(mesh.face_uvs_idx, input_attr['face_uvs_idx'])
+        assert contained_torch_equal(mesh.face_normals_idx, input_attr['face_normals_idx'])
+        assert contained_torch_equal(mesh.material_assignments, input_attr['material_assignments'])
+        assert contained_torch_equal(mesh.face_colors, input_attr['face_colors'])
+        assert contained_torch_equal(mesh.vertex_features, input_attr['vertex_features'])
+        if allow_auto_compute:
+            assert mesh.vertex_normals is not None  # can compute
+            assert mesh.face_normals is not None  # can compute
+            assert mesh.face_uvs is not None  # can compute
+            assert mesh.vertex_tangents is not None  # can compute
+            assert mesh.face_tangents is not None  # can compute
+            assert mesh.vertex_colors is not None  # can compute
+            assert mesh.face_features is not None  # can compute
+            if batching == SurfaceMesh.Batching.NONE:
+                assert torch.allclose(mesh.face_vertices, expected_face_vertices)
+            else:
+                assert mesh.face_vertices is not None
+            assert set(mesh.get_attributes(only_tensors=True)) == \
+                   {'vertices', 'faces', 'normals', 'uvs', 'face_uvs_idx', 'face_normals_idx', 'material_assignments',
+                    'face_colors', 'vertex_features',
+                    'vertex_normals', 'face_normals', 'face_uvs', 'face_vertices', 'vertex_tangents', 'face_tangents',
+                    'vertex_colors', 'face_features'}
+        elif unset_attributes_return_none:
+            assert mesh.vertex_normals is None
+            assert mesh.face_normals is None
+            assert mesh.face_uvs is None
+            assert mesh.face_vertices is None
+        else:
+            with pytest.raises(AttributeError):
+                tmp = mesh.vertex_normals
+            with pytest.raises(AttributeError):
+                tmp = mesh.face_normals
+            with pytest.raises(AttributeError):
+                tmp = mesh.face_uvs
+            with pytest.raises(AttributeError):
+                tmp = mesh.face_vertices
+
+        # Let's try to construct with an unexpected type of input
+        if batching == SurfaceMesh.Batching.LIST:
+            input_faces = [torch.randint(0, 15, (1, 15, 3)).long() for i in range(len(input_faces))]
+        else:
+            input_attr['face_normals_idx'] = input_attr['face_normals_idx'][..., :-1, :]  # face number does not match
+        if not strict_checks:
+            # should succeed
+            mesh = SurfaceMesh(vertices=input_vertices,
+                               faces=input_faces,
+                               normals=input_attr['normals'],
+                               face_normals_idx=input_attr['face_normals_idx'],
+                               **common_args)
+            assert len(mesh) == expected_batch_size
+        else:
+            with pytest.raises(ValueError):
+                mesh = SurfaceMesh(vertices=input_vertices,
+                                   faces=input_faces,
+                                   normals=input_attr['normals'],
+                                   face_normals_idx=input_attr['face_normals_idx'],
+                                   **common_args)
+
+    @pytest.mark.parametrize('allow_auto_compute', [False, True])
+    @pytest.mark.parametrize('use_secondary_requirements', [False, True])
+    @pytest.mark.parametrize('attr', sorted(SurfaceMesh.computable_attribute_requirements().keys()))
+    def test_exhaustive_auto_compute(self, attr, device, batching, allow_auto_compute, use_secondary_requirements):
+        """Given all supported auto-computable attributes, check basics of auto-computatin and caching.
+        Note that each attribute should still be separately unit-tested."""
+        input_attr = make_default_input(device, batching)
+        attr_reqs = SurfaceMesh.computable_attribute_requirements()
+        missing_test_attributes = set(attr_reqs).difference(set(input_attr.keys()))
+        assert len(missing_test_attributes) == 0, \
+            f'Auto-computation test is missing for the following mesh attributes: {missing_test_attributes}'
+
+        def _swap_for_secondary_requirements(reqs):
+            res = []
+            for r in reqs:
+                if r not in attr_reqs:
+                    res.append(r)
+                else:
+                    res.extend(attr_reqs[r][0])  # swap direct requirement with its requirements
+            return res
+
+        reqs_lists = attr_reqs[attr]
+        for raw_reqs in reqs_lists:
+            if use_secondary_requirements:
+                reqs = _swap_for_secondary_requirements(raw_reqs)
+                if attr in reqs:
+                    continue  # skip circular dependencies
+            else:
+                reqs = raw_reqs
+
+            # Check can constuct mesh and properly compute attribute
+            assert attr not in reqs  # basic sanity
+            args = {x: input_attr[x] for x in reqs if x not in ['vertices', 'faces']}
+            args['allow_auto_compute'] = allow_auto_compute
+            mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'], **args)
+            orig_attributes = mesh.get_attributes()
+            assert not mesh.has_attribute(attr)
+
+            # Note: auto-compute input argument should not affect explicit API
+            assert mesh.has_or_can_compute_attribute(attr)
+            for should_cache in [False, True]:
+                res = mesh.get_or_compute_attribute(attr, should_cache=should_cache)
+                assert res is not None
+                if batching != SurfaceMesh.Batching.LIST:
+                    assert res.shape == input_attr[attr].shape, attr
+                else:
+                    assert len(res) == len(input_attr[attr]), attr
+                assert should_cache == mesh.has_attribute(attr), \
+                    f'Attr {attr} caching incorrect for should_cache={should_cache}'
+
+                if not should_cache:
+                    assert set(orig_attributes) == set(mesh.get_attributes()), \
+                        f'After auto-computing {attr} with should_cache=False, mesh has extra ' \
+                        f'attributes {set(mesh.get_attributes()).difference(orig_attributes)}'
+
+            # Check for caching properties when one of the requirements has a gradient requirement
+            for required_attr in reqs:
+                if required_attr in ['faces', 'materials'] or '_idx' in required_attr:
+                    continue  # cannot set grad
+
+                input_attr = make_default_input(device, batching)
+                args = {x: input_attr[x] for x in reqs if x not in ['vertices', 'faces']}
+                args['allow_auto_compute'] = allow_auto_compute
+                mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'], **args)
+
+                if batching is SurfaceMesh.Batching.LIST:
+                    for fn in mesh.get_attribute(required_attr):
+                        fn.requires_grad = True
+                else:
+                    mesh.get_attribute(required_attr).requires_grad = True
+
+                assert not mesh.has_attribute(attr)
+                assert mesh.get_or_compute_attribute(attr) is not None
+                assert not mesh.has_attribute(attr), \
+                    f'Attr {attr} is cached when auto-computed with requirement {required_attr} that needs grad'
+                assert mesh.get_or_compute_attribute(attr, should_cache=True) is not None
+                assert mesh.has_attribute(attr), \
+                    f'Attr {attr} could not be force-cached when auto-computing and {required_attr} needs grad'
+
+    @pytest.mark.parametrize('with_transform', [True, False])
+    @pytest.mark.parametrize('deep', [False, True])
+    def test_copy(self, device, batching, deep, with_transform):
+        """Verify shallow and deep copy preserve all attributes with correct value and reference semantics.
+        With deep=True the copied tensors are independent objects; with deep=False they share storage.
+        Parametrized with with_transform to also exercise copying of the optional transform attribute."""
+        input_attr = make_default_input(device, batching)
+        mesh = construct_mesh_default(input_attr, with_transform=with_transform)
+        mesh_str = str(mesh)
+        orig_attr = sorted(mesh.get_attributes())
+
+        print(f'Copied mesh')
+        if deep:
+            mesh1 = copy.deepcopy(mesh)
+        else:
+            mesh1 = copy.copy(mesh)
+        mesh1_str = str(mesh1)
+        copied_attr = sorted(mesh1.get_attributes())
+
+        assert contained_torch_equal(orig_attr, copied_attr)
+        for attr in orig_attr:
+            orig_val = getattr(mesh, attr)
+            new_val = getattr(mesh1, attr)
+            assert contained_torch_equal(orig_val, new_val)
+            if torch.is_tensor(orig_val):
+                if deep:
+                    assert orig_val is not new_val  # different references
+                else:
+                    assert orig_val is new_val  # same reference
+
+        # Also check printed summaries
+        assert mesh_str == mesh1_str
+
+    @pytest.mark.parametrize('with_transform', [True, False])
+    @pytest.mark.parametrize('method', ['set', 'function'])  # How to set batching
+    @pytest.mark.parametrize('convert_to_batching', [x for x in SurfaceMesh.Batching])
+    def test_set_batching(self, device, batching, convert_to_batching, method, with_transform):
+        """Verify that set_batching() correctly reshapes all tensor attributes when converting between
+        NONE, FIXED, and LIST strategies. Checks that unsupported conversions raise ValueError, and
+        that transform is correctly unsqueezed / stacked / split to match the target batching."""
+        input_attr = make_default_input(device, batching)
+        mesh = construct_mesh_default(input_attr, with_transform=with_transform)
+        assert mesh.batching == batching
+
+        def _apply_batching(in_mesh, in_batching):
+            if method == 'set':
+                in_mesh.batching = in_batching
+            else:
+                in_mesh.set_batching(in_batching)
+
+        with pytest.raises(ValueError):
+            mesh_tmp = copy.copy(mesh)
+            _apply_batching(mesh_tmp, 1022)  # bogus value
+
+        if batching == convert_to_batching:
+            mesh_orig = copy.copy(mesh)
+            _apply_batching(mesh, convert_to_batching)
+            assert contained_torch_equal(mesh, mesh_orig, approximate=True)
+        elif batching == SurfaceMesh.Batching.NONE:  # can convert to any batching
+            mesh_copy = copy.copy(mesh)
+            batched_attr = make_batched_attributes(input_attr, convert_to_batching)  # TODO: add expected_face_vertices
+            _apply_batching(mesh, convert_to_batching)
+            assert contained_torch_equal(mesh.faces, batched_attr['faces'])
+            assert contained_torch_equal(mesh.face_uvs_idx, batched_attr['face_uvs_idx'])
+            assert contained_torch_equal(mesh.face_normals_idx, batched_attr['face_normals_idx'])
+            assert contained_torch_equal(mesh.material_assignments, batched_attr['material_assignments'])
+            assert contained_torch_equal(mesh.vertices, batched_attr['vertices'], approximate=True)
+            assert contained_torch_equal(mesh.normals, batched_attr['normals'], approximate=True)
+            assert contained_torch_equal(mesh.uvs, batched_attr['uvs'], approximate=True)
+            assert contained_torch_equal(mesh.materials, batched_attr['materials'], approximate=True)
+
+            assert contained_torch_equal(mesh.faces, mesh_copy.getattr_batched('faces', convert_to_batching))
+            assert contained_torch_equal(mesh.face_uvs_idx, mesh_copy.getattr_batched('face_uvs_idx', convert_to_batching))
+            assert contained_torch_equal(mesh.face_normals_idx, mesh_copy.getattr_batched('face_normals_idx', convert_to_batching))
+            assert contained_torch_equal(mesh.material_assignments, mesh_copy.getattr_batched('material_assignments', convert_to_batching))
+            assert contained_torch_equal(mesh.vertices, mesh_copy.getattr_batched('vertices', convert_to_batching), approximate=True)
+            assert contained_torch_equal(mesh.normals, mesh_copy.getattr_batched('normals', convert_to_batching), approximate=True)
+            assert contained_torch_equal(mesh.uvs, mesh_copy.getattr_batched('uvs', convert_to_batching), approximate=True)
+            assert contained_torch_equal(mesh.materials, mesh_copy.getattr_batched('materials', convert_to_batching), approximate=True)
+
+            if with_transform:
+                orig_wtl = input_attr['transform']  # [4, 4]
+                # transform is a tensor for every batching; (4, 4) is preserved as-is.
+                assert torch.is_tensor(mesh.transform) and mesh.transform.shape == (4, 4)
+                assert torch.allclose(mesh.transform, orig_wtl)
+            else:
+                assert not mesh.has_attribute('transform')
+
+            # Check that for unbatched meshes result equivalent for to_batched and set_batching(FIXED)
+            if convert_to_batching == SurfaceMesh.Batching.FIXED:
+                mesh_copy.to_batched()
+                assert contained_torch_equal(mesh, mesh_copy)
+        elif batching == SurfaceMesh.Batching.FIXED:
+            if convert_to_batching == SurfaceMesh.Batching.NONE:
+                with pytest.raises(ValueError):
+                    _apply_batching(mesh, convert_to_batching)
+
+                # Let's try making fixed size mesh with size 1 -- that one is convertible
+            elif convert_to_batching == SurfaceMesh.Batching.LIST:
+                batch_size = input_attr['vertices'].shape[0]
+                _apply_batching(mesh, convert_to_batching)
+                assert contained_torch_equal(
+                    mesh.faces, [input_attr['faces'] for i in range(batch_size)])
+                assert contained_torch_equal(
+                    mesh.face_uvs_idx, [input_attr['face_uvs_idx'][i, ...] for i in range(batch_size)])
+                assert contained_torch_equal(
+                    mesh.face_normals_idx, [input_attr['face_normals_idx'][i, ...] for i in range(batch_size)])
+                assert contained_torch_equal(
+                    mesh.material_assignments, [input_attr['material_assignments'][i, ...] for i in range(batch_size)])
+                assert contained_torch_equal(
+                    mesh.vertices, [input_attr['vertices'][i, ...] for i in range(batch_size)], approximate=True)
+                assert contained_torch_equal(
+                    mesh.normals, [input_attr['normals'][i, ...] for i in range(batch_size)], approximate=True)
+                assert contained_torch_equal(
+                    mesh.uvs, [input_attr['uvs'][i, ...] for i in range(batch_size)], approximate=True)
+                if with_transform:
+                    # transform is a (B, 4, 4) tensor for LIST batching now, not a list.
+                    assert torch.is_tensor(mesh.transform)
+                    assert mesh.transform.shape == (batch_size, 4, 4)
+                    assert torch.allclose(mesh.transform, input_attr['transform'])
+            else:
+                raise RuntimeError(f'Bug conversion {batching} --> {convert_to_batching} not tested')
+        elif batching == SurfaceMesh.Batching.LIST:
+            # Default list mesh is not convertible to other batchings
+            with pytest.raises(ValueError):
+                _apply_batching(mesh, convert_to_batching)
+
+            # Try to make a list batch that's fixed topology -- convertible to FIXED
+            input_attr = make_default_list_input(device, batchsize=3, fixed_topology=True)
+            mesh = construct_mesh_default(input_attr, with_transform=with_transform)
+            assert mesh.batching == batching
+            if convert_to_batching == SurfaceMesh.Batching.FIXED:
+                _apply_batching(mesh, convert_to_batching)
+                assert torch.equal(input_attr['faces'][0], mesh.faces)
+                assert contained_torch_equal(input_attr['vertices'], [mesh.vertices[i, ...] for i in range(len(mesh))])
+            else:
+                with pytest.raises(ValueError):
+                    _apply_batching(mesh, convert_to_batching)
+
+            # Try to make a list batch of size 1 -- that's convertible to either
+            input_attr = make_default_list_input(device, batchsize=1, fixed_topology=True)
+            mesh = construct_mesh_default(input_attr, with_transform=with_transform)
+            _apply_batching(mesh, convert_to_batching)
+        else:
+            raise RuntimeError(f'Bug conversion from batching {batching} not tested')
+
+    @pytest.mark.parametrize('with_transform', [True, False])
+    def test_set_attributes(self, device, batching, with_transform):
+        """Verify that all attributes can be freely reassigned after construction without raising errors."""
+        input_attr = make_default_input(device, batching)
+        mesh = construct_mesh_default(input_attr, with_transform=with_transform)
+        assert mesh.batching == batching
+
+        # Make new default input
+        input_attr2 = make_default_input(device, batching)
+
+        # User is allowed to set any value; we do not disallow checks
+        mesh.vertices = input_attr2['vertices']
+        mesh.faces = input_attr2['faces']
+        mesh.uvs = input_attr2['uvs']
+        mesh.face_uvs_idx = input_attr2['face_uvs_idx']
+        mesh. face_normals_idx = input_attr2['face_normals_idx']
+        mesh.material_assignments = input_attr2['material_assignments']
+        mesh.vertex_normals = input_attr2['vertex_normals']
+        mesh.face_normals = input_attr2['face_normals']
+        mesh.face_uvs = input_attr2['face_uvs']
+        mesh.face_vertices = input_attr2['face_vertices']
+        mesh.materials = input_attr2['materials']
+        if with_transform:
+            mesh.transform = input_attr2['transform']
+            assert mesh.has_attribute('transform')
+
+    def test_as_dict(self, device, batching):
+        """Verify as_dict() round-trips all set and auto-computed attributes back to their original values."""
+        input_attr = make_default_input(device, batching)
+        input_attr = {k: v for k, v in input_attr.items()
+                      if k in ['vertices', 'faces', 'normals', 'uvs', 'face_uvs_idx', 'face_normals_idx',
+                               'material_assignments', 'materials']}
+        input_attr['allow_auto_compute'] = True
+        mesh = SurfaceMesh(**input_attr)
+        input_attr['batching'] = mesh.batching
+        input_attr['unset_attributes_return_none'] = mesh.unset_attributes_return_none
+        assert contained_torch_equal(input_attr, mesh.as_dict(), print_error_context='')
+
+        assert mesh.face_vertices is not None  # auto compute
+        assert mesh.face_normals is not None  # auto compute
+        input_attr['face_vertices'] = mesh.face_vertices
+        input_attr['face_normals'] = mesh.face_normals
+        assert contained_torch_equal(input_attr, mesh.as_dict(), print_error_context='')
+
+        # Also test exhaustive
+        input_attr = make_default_input(device, batching)
+        input_attr['allow_auto_compute'] = True
+        mesh = SurfaceMesh(**input_attr)
+        input_attr['batching'] = mesh.batching
+        input_attr['unset_attributes_return_none'] = mesh.unset_attributes_return_none
+        assert set(input_attr.keys()) == set(mesh.as_dict().keys())
+        assert contained_torch_equal(input_attr, mesh.as_dict(), print_error_context='')
+
+    def test_empty_faces(self, device, batching):
+        """Verify that a mesh with zero faces passes sanity check and returns an empty face_vertices tensor."""
+        input_attr = make_default_input(device, batching)
+        if batching == SurfaceMesh.Batching.LIST:
+            empty_faces = [torch.zeros((0, 3)).long().to(device) for i in range(len(input_attr['faces']))]
+        else:
+            empty_faces = torch.zeros((0, 3)).long().to(device)
+        input_attr['faces'] = empty_faces
+
+        mesh = construct_mesh_default(input_attr)
+        assert mesh.check_sanity()
+        assert mesh.face_vertices is not None
+        if batching == SurfaceMesh.Batching.NONE:
+            assert mesh.face_vertices.shape[0] == 0
+        elif batching == SurfaceMesh.Batching.FIXED:
+            assert list(mesh.face_vertices.shape) == [len(mesh), 0, 3, 3]
+        elif batching == SurfaceMesh.Batching.LIST:
+            for i in range(len(mesh)):
+                assert mesh.face_vertices[i].shape[0] == 0
+        else:
+            raise RuntimeError(f'Error not tested for batching {batching}')
+
+    def test_empty_vertices(self, device, batching):
+        """Verify that a mesh with zero vertices passes sanity check and silently fails to auto-compute face_vertices."""
+        input_attr = make_default_input(device, batching)
+        if batching == SurfaceMesh.Batching.LIST:
+            empty_vertices = [torch.zeros((0, 3)).float().to(device) for i in range(len(input_attr['vertices']))]
+        elif batching == SurfaceMesh.Batching.NONE:
+            empty_vertices = torch.zeros((0, 3)).float().to(device)
+        elif batching == SurfaceMesh.Batching.FIXED:
+            empty_vertices = torch.zeros((input_attr['vertices'].shape[0], 0, 3)).float().to(device)
+        else:
+            raise RuntimeError(f'Error not tested for batching {batching}')
+        input_attr['vertices'] = empty_vertices
+
+        mesh = construct_mesh_default(input_attr)
+        assert mesh.check_sanity()
+        assert mesh.face_vertices is None  # Fails to compute
+
+    @pytest.mark.parametrize('to_attr', ['vertices', 'normals'])
+    @pytest.mark.parametrize('through_attr', ['face_vertices', 'face_normals', 'vertex_normals'])
+    def test_backprop_to_vertices(self, device, batching, to_attr, through_attr):
+        """
+        Test that we can backprop to optimize to_attr (e.g. mesh.vertices) when the loss is
+        computed using auto-computed through_attr (e.g. mesh.face_vertices).
+        This is testing that the mesh's internal caching is off when a gradient is required.
+        """
+        if to_attr == 'normals' and through_attr == 'face_vertices':
+            # The only combination that is not related
+            return
+
+        input_attr = make_default_input(device, batching, fixed_topology_if_list=True)
+        extra_args = {}
+        if to_attr == 'normals':
+            extra_args['normals'] = input_attr['normals']
+            extra_args['face_normals_idx'] = input_attr['face_normals_idx']
+        mesh = SurfaceMesh(faces=input_attr['faces'], vertices=input_attr['vertices'], **extra_args)
+        mesh.to_batched()
+        if to_attr == 'vertices':
+            mesh.vertices.requires_grad = True
+            params = [mesh.vertices]
+        elif to_attr == 'normals':
+            mesh.normals.requires_grad = True
+            params = [mesh.normals]
+        else:
+            raise RuntimeError(f'Not tested backpropagation to attr {to_attr}')
+
+        crit = torch.nn.MSELoss()
+        def compute_loss():
+            if through_attr == 'vertex_normals':
+                vn = mesh.vertex_normals
+                # Let's say want all normals equal to 0, 1, 0
+                return crit(mesh.vertex_normals,
+                            torch.tensor([0, 1, 0]).float().to(device).reshape((1, 1, 3)).expand(vn.shape))
+            else:
+                if through_attr == 'face_vertices':
+                    face_attr = mesh.face_vertices
+                elif through_attr == 'face_normals':
+                    face_attr = mesh.face_normals
+                else:
+                    raise RuntimeError(f'Bug, not tested for {through_attr}')
+            # Let's say we want first and second vertex to be exactly 1 unit apart
+            distances = torch.sqrt(torch.pow(face_attr[..., 0, :] - face_attr[..., 1, :], 2).sum(dim=-1))
+            return crit(distances, torch.ones_like(distances))
+        optim = torch.optim.Adam(params=params, lr=5e-4)
+
+        loss = None
+        for i in range(3):
+            optim.zero_grad()
+            prior_loss = loss
+
+            loss = compute_loss()
+            if prior_loss is not None:
+                assert not torch.allclose(loss, prior_loss)
+
+            loss.backward()
+            if to_attr == 'vertices':
+                prior_value = torch.clone(mesh. vertices)
+                assert not torch.allclose(mesh.vertices.grad, torch.zeros_like(mesh.vertices.grad))
+            elif to_attr == 'normals':
+                prior_value = torch.clone(mesh.normals)
+                assert not torch.allclose(mesh.normals.grad, torch.zeros_like(mesh.normals.grad))
+            else:
+                raise RuntimeError(f'Bug, not tested for {to_attr}')
+
+            optim.step()
+            if to_attr == 'vertices':
+                assert not torch.allclose(mesh.vertices, prior_value)
+            elif to_attr == 'normals':
+                assert not torch.allclose(mesh.normals, prior_value)
+            else:
+                raise RuntimeError(f'Bug, not tested for {to_attr}')
+
+    def test_backprop_face_uvs(self, device, batching):
+        """
+        Test that we can backprop to optimize mesh.uvs when the loss is
+        computed using auto-computed mesh.face_uvs.
+        This is testing that the mesh's internal caching is off when a gradient is required.
+        """
+        input_attr = make_default_input(device, batching, fixed_topology_if_list=True)
+        mesh = construct_mesh_default(input_attr)
+        mesh.to_batched()
+        mesh.uvs.requires_grad = True
+
+        # Let's say we want first and second uvs to be exactly 1 unit apart
+        crit = torch.nn.MSELoss()
+
+        def compute_loss():
+            face_uvs = mesh.face_uvs
+            distances = torch.sqrt(torch.pow(face_uvs[:, 0, :] - face_uvs[:, 1, :], 2).sum(dim=-1))
+            return crit(distances, torch.ones_like(distances))
+
+        optim = torch.optim.Adam(params=[mesh.uvs], lr=5e-4)
+
+        loss = None
+        for i in range(3):
+            optim.zero_grad()
+            prior_loss = loss
+            prior_uvs = torch.clone(mesh.uvs)
+            loss = compute_loss()
+            if prior_loss is not None:
+                assert not torch.allclose(loss, prior_loss)
+
+            loss.backward()
+            assert not torch.allclose(mesh.uvs.grad, torch.zeros_like(mesh.uvs.grad))
+            optim.step()
+            assert not torch.allclose(mesh.uvs, prior_uvs)
+
+    def test_vertex_normals(self, device, batching):
+        """Verify vertex_normals can be auto-computed from geometry, from indexed face normals,
+        or taken directly when explicitly provided."""
+        attr = two_squares_mesh_attr(device=device, quad=False)
+        # Indexed normals use right-hand rule, but auto-computed normals use left-hand rule
+        flipped_vertex_normals = make_batched_attribute('vertex_normals', attr['vertex_normals'] * -1, batching)
+
+        # Test can conpute vertex normal by computing face normals and then vertex normals
+        mesh = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces'])
+        mesh.set_batching(batching)
+        attr = make_batched_attributes(attr, batching)
+        assert contained_torch_equal(mesh.vertex_normals, flipped_vertex_normals, approximate=True, atol=1e-4)
+
+        # Test can compute vertex normals from indexed face normals
+        mesh = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces'],
+                           normals=attr['normals'], face_normals_idx=attr['face_normals_idx'])
+        mesh.set_batching(batching)
+        assert contained_torch_equal(mesh.vertex_normals, attr['vertex_normals'], approximate=True)
+
+        # Test when vertex_normals are provided as input
+        mesh = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces'],
+                           vertex_normals=attr['vertex_normals'])
+        mesh.set_batching(batching)
+        assert mesh.normals is None
+        assert mesh.face_normals_idx is None
+        assert contained_torch_equal(mesh.vertex_normals, attr['vertex_normals'], approximate=True)  # provided
+
+    def test_vertex_face_colors(self, device, batching):
+        """Verify face_colors and vertex_colors can each be auto-computed from the other."""
+        input_attr = make_default_input(device, batching)
+        mesh = SurfaceMesh(
+            faces=input_attr['faces'], vertices=input_attr['vertices'])
+        assert mesh.face_colors is None
+        assert mesh.vertex_colors is None
+        assert not mesh.has_or_can_compute_attribute('face_colors')
+        assert not mesh.has_or_can_compute_attribute('vertex_colors')
+
+        mesh = SurfaceMesh(
+            faces=input_attr['faces'], vertices=input_attr['vertices'], face_colors=input_attr['face_colors'])
+        assert not mesh.has_attribute('vertex_colors')
+        assert mesh.vertex_colors is not None  # auto-compute
+
+        mesh = SurfaceMesh(
+            faces=input_attr['faces'], vertices=input_attr['vertices'], vertex_colors=input_attr['vertex_colors'])
+        assert not mesh.has_attribute('face_colors')
+        assert mesh.face_colors is not None  # auto-compute
+
+    def test_vertex_face_features(self, device, batching):
+        """Verify face_features and vertex_features can each be auto-computed from the other."""
+        input_attr = make_default_input(device, batching)
+        mesh = SurfaceMesh(
+            faces=input_attr['faces'], vertices=input_attr['vertices'])
+        assert mesh.face_features is None
+        assert mesh.vertex_features is None
+        assert not mesh.has_or_can_compute_attribute('face_features')
+        assert not mesh.has_or_can_compute_attribute('vertex_features')
+
+        mesh = SurfaceMesh(
+            faces=input_attr['faces'], vertices=input_attr['vertices'], face_features=input_attr['face_features'])
+        assert not mesh.has_attribute('vertex_features')
+        assert mesh.vertex_features is not None  # auto-compute
+
+        mesh = SurfaceMesh(
+            faces=input_attr['faces'], vertices=input_attr['vertices'], vertex_features=input_attr['vertex_features'])
+        assert not mesh.has_attribute('face_features')
+        assert mesh.face_features is not None  # auto-compute
+
+    def test_vertex_face_tangents(self, device, batching):
+        """Verify vertex_tangents and face_tangents auto-computation, caching, and gradient-flow suppression of caching.
+        Tangents require UVs to be present; tests both orderings of computing vertex vs. face tangents first."""
+        input_attr = make_default_input(device, batching)
+
+        # Mesh with no UVS (need faces, vertices, face_uvs, vertex_normals to compute)
+        mesh = SurfaceMesh(
+            faces=input_attr['faces'], vertices=input_attr['vertices'],
+            face_uvs_idx=input_attr['face_uvs_idx'])
+        assert not mesh.has_attribute('vertex_tangents')
+        assert not mesh.has_attribute('face_tangents')
+        assert not mesh.has_or_can_compute_attribute('vertex_tangents')
+        assert not mesh.has_or_can_compute_attribute('face_tangents')
+        assert mesh.vertex_tangents is None
+        assert mesh.face_tangents is None
+
+        # Test auto-compute with caching
+        for compute_vertex_tangents_first in [True, False]:
+            mesh = SurfaceMesh(
+                faces=input_attr['faces'], vertices=input_attr['vertices'],
+                face_uvs_idx=input_attr['face_uvs_idx'], uvs=input_attr['uvs'])
+            assert not mesh.has_attribute('vertex_tangents')
+            assert not mesh.has_attribute('face_tangents')
+            assert mesh.has_or_can_compute_attribute('vertex_tangents')
+            assert mesh.has_or_can_compute_attribute('face_tangents')
+
+            if compute_vertex_tangents_first:
+                assert mesh.vertex_tangents is not None  # auto-compute on access
+                assert mesh.has_attribute('vertex_tangents')
+                assert not mesh.has_attribute('face_tangents')
+                assert mesh.has_or_can_compute_attribute('face_tangents')
+                assert mesh.face_tangents is not None  # auto-compute on access
+                assert mesh.has_attribute('face_tangents')
+                if batching != SurfaceMesh.Batching.LIST:
+                    assert mesh.vertex_tangents.shape == input_attr['vertex_tangents'].shape
+                    assert mesh.face_tangents.shape == input_attr['face_tangents'].shape
+            else:
+                assert mesh.face_tangents is not None  # auto-compute on access; also computes vertex_tangents
+                assert mesh.has_attribute('face_tangents')
+                assert mesh.has_attribute('vertex_tangents')   # face_tangents require also computing this
+
+            # Test no auto-cache
+            mesh = SurfaceMesh(
+                faces=input_attr['faces'], vertices=input_attr['vertices'],
+                face_uvs_idx=input_attr['face_uvs_idx'], uvs=input_attr['uvs'])
+            assert not mesh.has_attribute('vertex_tangents')
+            assert not mesh.has_attribute('face_tangents')
+            if compute_vertex_tangents_first:
+                assert mesh.get_or_compute_attribute('vertex_tangents', should_cache=False) is not None
+                assert mesh.get_or_compute_attribute('face_tangents', should_cache=False) is not None
+            else:
+                assert mesh.get_or_compute_attribute('face_tangents', should_cache=False) is not None
+                assert mesh.get_or_compute_attribute('vertex_tangents', should_cache=False) is not None
+            # Caching was disabled
+            assert not mesh.has_attribute('vertex_tangents')
+            assert not mesh.has_attribute('face_tangents')
+            assert not mesh.has_attribute('face_normals')
+            assert not mesh.has_attribute('vertex_normals')
+            assert not mesh.has_attribute('vertex_normals')
+
+        # Test auto-cache with gradient flow
+        for required_attr in {'vertices', 'uvs'}:
+            mesh = SurfaceMesh(
+                faces=input_attr['faces'], vertices=input_attr['vertices'],
+                face_uvs_idx=input_attr['face_uvs_idx'], uvs=input_attr['uvs'])
+
+            if batching is SurfaceMesh.Batching.LIST:
+                for fn in mesh.get_attribute(required_attr):
+                    fn.requires_grad = True
+            else:
+                mesh.get_attribute(required_attr).requires_grad = True
+
+            assert mesh.vertex_tangents is not None
+            assert mesh.face_tangents is not None
+            assert not mesh.has_attribute('vertex_tangents')
+            assert not mesh.has_attribute('face_tangents')
+
+            if required_attr == 'uvs':
+                assert not mesh.has_attribute('face_uvs')
+            elif required_attr == 'vertices':
+                assert not mesh.has_attribute('vertex_normals')
+
+    @pytest.mark.parametrize('quad', [True, False])
+    def test_face_normals(self, device, batching, quad):
+        # Test that can compute face normals, given just vertices, for tri meshes
+        attr = two_squares_mesh_attr(device=device, quad=quad)
+
+        # Indexed normals use right-hand rule, but auto-computed normals use left-hand rule
+        flipped_face_normals = make_batched_attribute('face_normals', attr['face_normals'] * -1, batching)
+
+        mesh = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces'])
+        mesh.set_batching(batching)
+        attr = make_batched_attributes(attr, batching)
+        assert mesh.normals is None
+        assert mesh.face_normals_idx is None
+        if not quad:
+            assert contained_torch_equal(mesh.face_normals, flipped_face_normals, approximate=True)
+        else:
+            assert mesh.face_normals is None  # cannot compute for quad faces
+
+        # Test that nothing bad happens if only normals or face_normals_idx are set
+        mesh = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces'],
+                           normals=attr['normals'])
+        mesh.set_batching(batching)
+        assert contained_torch_equal(mesh.normals, attr['normals'], approximate=True)
+        assert mesh.face_normals_idx is None
+        if not quad:  # still compute, b/c not enough attributes to index
+            assert contained_torch_equal(mesh.face_normals, flipped_face_normals, approximate=True)
+        else:
+            assert mesh.face_normals is None
+
+        mesh = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces'],
+                           face_normals_idx=attr['face_normals_idx'])
+        mesh.set_batching(batching)
+        assert contained_torch_equal(mesh.face_normals_idx, attr['face_normals_idx'])
+        assert mesh.normals is None
+        if not quad:  # still compute, b/c not enough attributes to index
+            assert contained_torch_equal(mesh.face_normals, flipped_face_normals, approximate=True)
+        else:
+            assert mesh.face_normals is None
+
+        # Test that can index normals correctly
+        mesh = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces'],
+                           normals=attr['normals'], face_normals_idx=attr['face_normals_idx'])
+        mesh.set_batching(batching)
+        assert contained_torch_equal(mesh.normals, attr['normals'], approximate=True)
+        assert contained_torch_equal(mesh.face_normals_idx, attr['face_normals_idx'])
+        assert contained_torch_equal(mesh.face_normals, attr['face_normals'], approximate=True)
+        assert contained_torch_equal(mesh.vertex_normals, attr['vertex_normals'], approximate=True)
+
+        # Test that can compute face_normals from vertex_normals, if provided
+        # Note: in this case the face_normals value is different, so we check against face_normals_from_vertex_normals
+        mesh = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces'],
+                           vertex_normals=attr['vertex_normals'])
+        mesh.set_batching(batching)
+        assert mesh.has_or_can_compute_attribute('face_normals')
+        assert contained_torch_equal(mesh.face_normals, attr['face_normals_from_vertex_normals'], approximate=True)
+
+    def test_face_uvs(self, device, batching):
+        """Verify face_uvs is auto-computed and correctly cached from indexed uvs, and that per-face
+        uv values match the indexed lookup uvs[face_uvs_idx[f, v]]."""
+        input_attr = make_default_input(device, batching)
+        expected_batch_size = 1 if batching == SurfaceMesh.Batching.NONE else 3
+        mesh = SurfaceMesh(faces=input_attr['faces'],
+                           vertices=input_attr['vertices'],
+                           uvs=input_attr['uvs'],
+                           face_uvs_idx=input_attr['face_uvs_idx'])
+        assert not mesh.has_attribute('face_uvs')  # Does not have it to start
+        assert mesh.face_uvs is not None           # Is auto-computed
+        assert mesh.has_attribute('face_uvs')      # It's cached
+
+        mesh.set_batching(SurfaceMesh.Batching.LIST)
+        assert len(mesh) == expected_batch_size
+        for b in range(len(mesh)):
+            if batching == SurfaceMesh.Batching.NONE:
+                uvs = input_attr['uvs']
+                face_uvs_idx = input_attr['face_uvs_idx']
+            elif batching == SurfaceMesh.Batching.LIST:
+                uvs = input_attr['uvs'][b]
+                face_uvs_idx = input_attr['face_uvs_idx'][b]
+            elif batching == SurfaceMesh.Batching.FIXED:
+                uvs = input_attr['uvs'][b, ...]
+                face_uvs_idx = input_attr['face_uvs_idx'][b, ...]
+            else:
+                raise RuntimeError(f'Not tested for batching {batching}')
+            actual_face_uvs = mesh.face_uvs[b]
+            for f in range(face_uvs_idx.shape[0]):
+                for v in range(face_uvs_idx.shape[1]):
+                    assert torch.allclose(uvs[face_uvs_idx[f, v], :], actual_face_uvs[f, v, :]), f'Failed for f {f}, v {v}'
+
+    def test_face_vertices(self, device, batching):
+        """Verify face_vertices is auto-computed and correctly cached from vertices and faces, and that
+        per-face vertex values match the indexed lookup vertices[faces[f, v]]."""
+        input_attr = make_default_input(device, batching)
+        expected_batch_size = 1 if batching == SurfaceMesh.Batching.NONE else 3
+        mesh = SurfaceMesh(faces=input_attr['faces'],
+                           vertices=input_attr['vertices'])
+        assert not mesh.has_attribute('face_vertices')  # Does not have it to start
+        assert mesh.face_vertices is not None  # Is auto-computed
+        assert mesh.has_attribute('face_vertices')  # It's cached
+
+        mesh.set_batching(SurfaceMesh.Batching.LIST)
+        assert len(mesh) == expected_batch_size
+        for b in range(len(mesh)):
+            if batching == SurfaceMesh.Batching.NONE:
+                vertices = input_attr['vertices']
+                faces = input_attr['faces']
+            elif batching == SurfaceMesh.Batching.LIST:
+                vertices = input_attr['vertices'][b]
+                faces = input_attr['faces'][b]
+            elif batching == SurfaceMesh.Batching.FIXED:
+                vertices = input_attr['vertices'][b, ...]
+                faces = input_attr['faces']
+            else:
+                raise RuntimeError(f'Not tested for batching {batching}')
+            actual_face_vertices = mesh.face_vertices[b]
+            for f in range(faces.shape[0]):
+                for v in range(faces.shape[1]):
+                    assert torch.allclose(vertices[faces[f, v], :],
+                                          actual_face_vertices[f, v, :]), f'Failed for f {f}, v {v}'
+
+    @pytest.mark.parametrize('with_transform', [True, False])
+    @pytest.mark.parametrize("method_to_test", ["to", "named"])  # if to test mesh.to or mesh.cpu/mesh.cuda
+    @pytest.mark.parametrize("to_device", ["cuda", "cpu"])
+    @pytest.mark.parametrize("unsupported_materials", [False, True])
+    def test_device_convert(self, device, batching, to_device, method_to_test, unsupported_materials, with_transform):
+        """Verify mesh.to(), mesh.cuda(), and mesh.cpu() correctly move a subset or all tensors to the
+        target device, leaving unspecified tensors on the original device."""
+        input_attr = make_default_input(device, batching, fixed_topology_if_list=True,
+                                        use_unsupported_material=unsupported_materials)
+        mesh = construct_mesh_default(input_attr, with_transform=with_transform)
+        if method_to_test == "to":
+            mesh_converted = mesh.to(to_device, attributes=["vertices", "faces"])
+        elif to_device == "cuda":
+            mesh_converted = mesh.cuda(attributes=["vertices", "faces"])
+        elif to_device == "cpu":
+            mesh_converted = mesh.cpu(["vertices", "faces"])
+        else:
+            raise RuntimeError(f'Bug; unknown test condition.')
+
+        # Convert to fixed batching for easier tests
+        mesh.set_batching(SurfaceMesh.Batching.FIXED)
+        mesh_converted.set_batching(SurfaceMesh.Batching.FIXED)
+
+        # orig mesh, orig device
+        assert mesh.vertices.device.type == device
+        assert mesh.faces.device.type == device
+        assert mesh.normals.device.type == device
+
+        # converted mesh, converted device
+        assert mesh_converted.vertices.device.type == to_device     # converted
+        assert mesh_converted.faces.device.type == to_device        # converted
+        assert mesh_converted.normals.device.type == device      # not converted
+        assert mesh_converted.uvs.device.type == device  # not converted
+        assert mesh_converted.face_uvs_idx.device.type == device  # not converted
+        assert mesh_converted.face_normals_idx.device.type == device  # not converted
+        assert mesh_converted.material_assignments.device.type == device  # not converted
+        assert contained_torch_equal(mesh.materials, mesh_converted.materials, approximate=True)
+
+        # Now we convert all tensors
+        if method_to_test == "to":
+            mesh_converted = mesh.to(to_device)
+        elif to_device == "cuda":
+            mesh_converted = mesh.cuda()
+        elif to_device == "cpu":
+            mesh_converted = mesh.cpu()
+        else:
+            raise RuntimeError(f'Bug; unknown test condition.')
+        assert mesh_converted.vertices.device.type == to_device
+        assert mesh_converted.faces.device.type == to_device
+        assert mesh_converted.normals.device.type == to_device
+        assert mesh_converted.uvs.device.type == to_device
+        assert mesh_converted.face_uvs_idx.device.type == to_device
+        assert mesh_converted.face_normals_idx.device.type == to_device
+        assert mesh_converted.material_assignments.device.type == to_device
+        if with_transform:
+            assert mesh_converted.transform.device.type == to_device
+
+        def _check_pbr_material(m_orig, m_converted):
+            for att in m_orig.get_attributes(only_tensors=True):
+                orig_mat_attr = getattr(m_orig, att)
+                new_mat_attr = getattr(m_converted, att)
+                assert new_mat_attr.device.type == to_device
+                assert contained_torch_equal(orig_mat_attr, new_mat_attr.to(device),
+                                             approximate=True, print_error_context=att)
+            assert contained_torch_equal(m_orig, m_converted.to(device), approximate=True)
+
+        if unsupported_materials:
+            contained_torch_equal(mesh.materials, mesh_converted.materials, approximate=True)
+        else:
+            # Always FIXED batching (we convert before comparing
+            for mesh_idx, mats in enumerate(mesh.materials):
+                for idx, m in enumerate(mats):
+                    _check_pbr_material(m, mesh_converted.materials[mesh_idx][idx])
+
+    @pytest.mark.parametrize('with_transform', [True, False])
+    def test_type_convert(self, device, batching, with_transform):
+        """Verify float_tensors_to() correctly casts all floating-point attributes to the target dtype."""
+        input_attr = make_default_input(device, batching, fixed_topology_if_list=True)
+        mesh = construct_mesh_default(input_attr, with_transform=with_transform)
+        to_dtype = torch.float64
+        mesh_converted = mesh.float_tensors_to(to_dtype)
+
+        # Convert to fixed batching for easier tests
+        mesh.set_batching(SurfaceMesh.Batching.FIXED)
+        mesh_converted.set_batching(SurfaceMesh.Batching.FIXED)
+
+        orig_dtype = torch.float32
+        assert mesh.vertices.dtype == orig_dtype
+        assert mesh.normals.dtype == orig_dtype
+        assert mesh.uvs.dtype == orig_dtype
+        assert mesh.vertex_normals.dtype == orig_dtype
+        assert mesh.face_normals.dtype == orig_dtype
+        assert mesh.face_uvs.dtype == orig_dtype
+        assert mesh.face_vertices.dtype == orig_dtype
+
+        assert mesh_converted.vertices.dtype == to_dtype
+        assert mesh_converted.normals.dtype == to_dtype
+        assert mesh_converted.uvs.dtype == to_dtype
+        assert mesh_converted.vertex_normals.dtype == to_dtype
+        assert mesh_converted.face_normals.dtype == to_dtype
+        assert mesh_converted.face_uvs.dtype == to_dtype
+        assert mesh_converted.face_vertices.dtype == to_dtype
+        if with_transform:
+            assert mesh.transform.dtype == orig_dtype
+            assert mesh_converted.transform.dtype == to_dtype
+
+    def test_cat_fixed_topology(self, device, batching):
+        """Verify cat() with fixed_topology=True stacks same-topology meshes into a FIXED batch,
+        and falls back gracefully to face attributes when indexed normals cannot be stacked.
+        Also verifies the same data is accessible via fixed_topology=False (LIST result)."""
+        debug_print = False
+        import_args = {'with_materials': True, 'with_normals': True}
+        log_args = {'detailed': True, 'print_stats': True}
+
+        # 1. Load two fixed topology meshes
+        flat_mesh = obj.import_mesh(data_path('ico_flat.obj'), **import_args)
+        if debug_print:
+            print('FLAT mesh')
+            print(flat_mesh.to_string(**log_args))
+        flat_mesh = flat_mesh.set_batching(batching).to(device)
+
+        smooth_mesh = obj.import_mesh(data_path('ico_smooth.obj'), **import_args)
+        # print('SMOOTH mesh')
+        # print(smooth_mesh.to_string(**log_args))
+        smooth_mesh = smooth_mesh.set_batching(batching).to(device)
+
+        source_meshes = [flat_mesh, smooth_mesh]
+
+        # 2. Concatenate meshes, asking for FIXED batching
+        expected_shapes = {'vertices': [2, 42, 3], 'faces': [80,  3], 'material_assignments': [2, 80],
+                           'face_normals': [2, 80, 3, 3], 'uvs': [2, 63, 2], 'face_uvs_idx': [2, 80, 3]}
+        result = SurfaceMesh.cat(source_meshes, fixed_topology=True)
+        if debug_print:
+            print('Result')
+            print(result.to_string(**log_args))
+        assert result.batching == SurfaceMesh.Batching.FIXED
+        assert result.check_sanity()
+        assert len(result) == 2
+        assert check_tensor_attribute_shapes(result, **expected_shapes)
+
+        # Because normals have different shapes across two meshes, we expect indexed normals to be removed
+        # (Note that face_normals are batched instead)
+        assert result.normals is None
+        assert result.face_normals_idx is None
+        assert type(result.materials) == list
+        assert len(result.materials) == 2
+
+        # Check value of all the items
+        for idx in range(len(source_meshes)):
+            source_meshes[idx].set_batching(SurfaceMesh.Batching.NONE)
+
+            assert torch.allclose(result.vertices[idx, ...], source_meshes[idx].vertices)
+            assert torch.equal(result.faces, source_meshes[idx].faces)
+            assert torch.equal(result.face_uvs_idx[idx, ...], source_meshes[idx].face_uvs_idx)
+            assert torch.allclose(result.uvs[idx, ...], source_meshes[idx].uvs)
+            assert torch.allclose(result.face_normals[idx, ...], source_meshes[idx].face_normals, atol=1e-4)
+            assert torch.allclose(result.vertex_normals[idx, ...], source_meshes[idx].vertex_normals, atol=1e-4)
+
+        # 3. Concatenate meshes, asking for LIST batching (should still work)
+        result_list = SurfaceMesh.cat(source_meshes, fixed_topology=False)
+        if debug_print:
+            print('Result')
+            print(result_list.to_string(**log_args))
+        assert result_list.batching == SurfaceMesh.Batching.LIST
+        assert result_list.check_sanity()
+        assert len(result_list) == 2
+        # set_batching is less smart than cat; it will simply ignore un-stackable items
+        assert result_list.vertex_normals is not None
+        assert result_list.face_normals is not None
+        assert result_list.face_uvs is not None
+        result_list.set_batching(SurfaceMesh.Batching.FIXED, skip_errors=True)
+        assert contained_torch_equal(result.vertices, result_list.vertices, approximate=True)
+        assert contained_torch_equal(result.faces, result_list.faces, approximate=True)
+        assert contained_torch_equal(result.face_normals, result_list.face_normals, approximate=True)
+        assert contained_torch_equal(result.face_uvs, result_list.face_uvs, approximate=True)
+        assert contained_torch_equal(result.vertex_normals, result_list.vertex_normals, approximate=True)
+
+    def test_cat_variable_topology(self, device, batching):
+        """Verify cat() handles a heterogeneous mix of NONE/FIXED/LIST meshes with different topologies,
+        producing a LIST batch, and that fixed_topology=True correctly raises ValueError for non-uniform topologies."""
+        debug_print = False
+        import_args = {'with_materials': True, 'with_normals': True}
+
+        # Load multiple meshes from USD and concatenate them
+        fname = glob.glob(data_path('amsterdam.usd') + '*')[0]
+        amsterdam_meshes = usd.import_meshes(fname, **import_args)
+        input_meshes = list(amsterdam_meshes)
+        num_amsterdam = 18
+        assert len(amsterdam_meshes) == num_amsterdam
+        amsterdam = SurfaceMesh.cat(amsterdam_meshes, fixed_topology=False)
+        assert len(amsterdam) == num_amsterdam   # SurfaceMesh
+        assert amsterdam.batching == SurfaceMesh.Batching.LIST
+
+        # Load and cat two fixed topology meshes
+        flat_mesh = obj.import_mesh(data_path('ico_flat.obj'), **import_args)
+        smooth_mesh = obj.import_mesh(data_path('ico_smooth.obj'), **import_args)
+        input_meshes.extend([flat_mesh, smooth_mesh])
+        fixed_meshes = SurfaceMesh.cat([flat_mesh, smooth_mesh], fixed_topology=True)
+        if debug_print:
+            print(f'\nFixed meshes {fixed_meshes}')
+
+        # Load another mesh and convert it to any batching strategy
+        fname = glob.glob(data_path('pizza.usd') + '*')[0]
+        pizza_mesh = usd.import_mesh(fname, **import_args)
+        input_meshes.append(copy.deepcopy(pizza_mesh))
+        pizza_mesh.set_batching(batching)
+
+        # Now, let's concatenate all of these together
+        mesh = SurfaceMesh.cat([amsterdam, fixed_meshes, pizza_mesh], fixed_topology=False)
+        if debug_print:
+            print(f'\nTotal mesh {mesh}')
+        expected_len = num_amsterdam + 3
+        assert len(mesh) == expected_len
+        expected_attrs = {'vertices', 'faces', 'uvs', 'face_normals', 'face_uvs_idx', 'material_assignments'}
+        assert set(mesh.get_attributes(only_tensors=True)) == expected_attrs
+        assert mesh.has_attribute('materials')
+        assert len(mesh.materials) == expected_len
+        for attr in expected_attrs:
+            assert len(getattr(mesh, attr)) == expected_len
+        for i in range(len(mesh)):
+            for attr in expected_attrs:
+                assert torch.allclose(getattr(mesh, attr)[i], getattr(input_meshes[i], attr))
+
+        # Now try concatenating with fixed topology
+        with pytest.raises(ValueError):
+            mesh = SurfaceMesh.cat([amsterdam, fixed_meshes, pizza_mesh], fixed_topology=True)
+
+        # Will fail even with skip_errors, as faces and vertices must be concatenatable
+        with pytest.raises(ValueError):
+            mesh = SurfaceMesh.cat([amsterdam, fixed_meshes, pizza_mesh], fixed_topology=True, skip_errors=True)
+
+    @pytest.mark.parametrize('fixed_topology', [True, False])
+    def test_cat_autocompute(self, device, batching, fixed_topology):
+        """Test concatenation of fixed topology meshes, with auto-computation of missing attributes."""
+        import_args = {'with_materials': True, 'with_normals': True}
+
+        # 1. Load obj mesh, which has normals and face_normals_idx
+        flat_mesh = obj.import_mesh(data_path('ico_flat.obj'), **import_args).set_batching(batching).to(device)
+
+        # 2. Load usd mesh, which has face_normals (due to the way normals are stored), but not indexed normals
+        smooth_mesh = usd.import_mesh(data_path('ico_smooth.usda'), **import_args).set_batching(batching).to(device)
+        assert smooth_mesh.face_uvs is not None  # autocompute
+        smooth_mesh.uvs = None  # unset indexed uvs
+        smooth_mesh.face_uvs_idx = None
+
+        # TODO: also add a gltf mesh with vertex_normals
+
+        # concatenating the meshes should auto-compute face_normals for smooth_mesh and face_uvs for smooth mesh
+        source_meshes = [flat_mesh, smooth_mesh]
+        mesh = SurfaceMesh.cat(source_meshes, fixed_topology=fixed_topology)
+        expected_attributes = {'faces', 'vertices', 'face_uvs', 'face_normals', 'material_assignments'}
+        assert set(mesh.get_attributes(only_tensors=True)) == expected_attributes
+        assert mesh.materials is not None
+
+    def test_cat_transform(self, device, batching):
+        """Verify cat() batches transform without applying it."""
+        import_args = {'with_materials': False, 'with_normals': False}
+        flat_mesh = obj.import_mesh(data_path('ico_flat.obj'), **import_args).set_batching(batching).to(device)
+        smooth_mesh = obj.import_mesh(data_path('ico_smooth.obj'), **import_args).set_batching(batching).to(device)
+
+        wtl_a = torch.eye(4, dtype=torch.float32, device=device)
+        wtl_a[:3, 3] = torch.tensor([1.0, 2.0, 3.0], device=device)
+        wtl_b = torch.eye(4, dtype=torch.float32, device=device)
+        wtl_b[:3, 3] = torch.tensor([4.0, 5.0, 6.0], device=device)
+
+        m1 = copy.deepcopy(flat_mesh)
+        m2 = copy.deepcopy(smooth_mesh)
+        if batching in (SurfaceMesh.Batching.FIXED, SurfaceMesh.Batching.LIST):
+            B1, B2 = len(m1), len(m2)
+            m1.transform = wtl_a.unsqueeze(0).expand(B1, 4, 4).clone()
+            m2.transform = wtl_b.unsqueeze(0).expand(B2, 4, 4).clone()
+        else:
+            m1.transform = wtl_a.clone()
+            m2.transform = wtl_b.clone()
+
+        orig_verts = flat_mesh.vertices if batching == SurfaceMesh.Batching.NONE else flat_mesh.vertices[0]
+        result = SurfaceMesh.cat([m1, m2])
+
+        # Transforms must be batched in input order, never applied. cat concatenates each input's
+        # transform (broadcasting a single (4, 4) to that input's batch size) along the batch dim.
+        if batching in (SurfaceMesh.Batching.FIXED, SurfaceMesh.Batching.LIST):
+            expected_t1 = wtl_a.unsqueeze(0).expand(B1, 4, 4)
+            expected_t2 = wtl_b.unsqueeze(0).expand(B2, 4, 4)
+        else:
+            expected_t1 = wtl_a.unsqueeze(0)
+            expected_t2 = wtl_b.unsqueeze(0)
+        assert torch.allclose(m1.transform, expected_t1.reshape(m1.transform.shape))
+        assert torch.allclose(m2.transform, expected_t2.reshape(m2.transform.shape))
+        expected_transform = torch.cat([expected_t1, expected_t2], dim=0)
+        assert torch.allclose(result.transform, expected_transform), \
+            'cat must batch transforms in [m1, m2] order without applying them'
+        assert torch.allclose(result.vertices[0], orig_verts), 'cat must not transform vertices'
+
+    def test_ensure_indexed_attribute(self, device, batching):
+        """Verify ensure_indexed_attribute() converts face attributes (face_normals, face_uvs) into
+        indexed form (normals + face_normals_idx, uvs + face_uvs_idx), with correct caching behavior
+        based on gradient flow and the should_cache flag."""
+        # Test when not possible to unindex
+        import_args = {'with_materials': False, 'with_normals': False}
+        mesh = obj.import_mesh(data_path('ico_flat.obj'), **import_args).set_batching(batching).to(device)
+        assert not mesh.has_attribute('uvs')
+        assert not mesh.has_attribute('normals')
+        val, idx = mesh.ensure_indexed_attribute('uvs')
+        assert val is None and idx is None  # no face_uvs present
+        val, idx = mesh.ensure_indexed_attribute('normals')
+        assert val is None and idx is None  # no face_normals present
+        with pytest.raises(AttributeError):
+            val, idx = mesh.ensure_indexed_attribute('abracadabra')
+
+        # Test when is possible to unindex
+        import_args = {'with_materials': True, 'with_normals': True}
+        for requires_grad in [False, True]:
+            mesh = usd.import_mesh(data_path('ico_flat.usda'), **import_args).set_batching(batching).to(device)
+            assert mesh.has_attribute('face_normals')
+            assert not mesh.has_attribute('normals')
+            assert not mesh.has_attribute('face_normals_idx')
+            if batching is SurfaceMesh.Batching.LIST:
+                for fn in mesh.face_normals:
+                    fn.requires_grad = requires_grad
+            else:
+                mesh.face_normals.requires_grad = requires_grad
+            val, idx = mesh.ensure_indexed_attribute('normals')
+            assert val is not None
+            assert idx is not None
+            # Auto-caching only happens if no gradient flow
+            assert requires_grad == (not mesh.has_attribute('normals'))
+            assert requires_grad == (not mesh.has_attribute('face_normals_idx'))
+            # Let's force it to cache
+            val, idx = mesh.ensure_indexed_attribute('normals', should_cache=True)
+            assert mesh.has_attribute('normals')
+            assert mesh.has_attribute('face_normals_idx')
+
+            # Make sure original face_normals can be reconstructed from cached index
+            orig_face_normals = mesh.face_normals              # Save orig
+            mesh.face_normals = None                           # Unset orig
+            assert not mesh.has_attribute('face_normals')      # Make sure it got unset
+            recomputed_face_normals = mesh.face_normals        # Auto-compute face_normals
+            assert contained_torch_equal(orig_face_normals, recomputed_face_normals, approximate=True)
+
+        # Test a batch of two meshes and unindex their UVs
+        flat_mesh = obj.import_mesh(data_path('ico_flat.obj'), **import_args).to(device)
+        smooth_mesh = usd.import_mesh(data_path('ico_smooth.usda'), **import_args).to(device)
+        source_meshes = [flat_mesh, smooth_mesh]
+        mesh = SurfaceMesh.cat(source_meshes, fixed_topology=True)
+        if batching == SurfaceMesh.Batching.LIST:
+            mesh.set_batching(batching)
+        assert mesh.has_attribute('face_uvs')
+        assert not mesh.has_attribute('uvs')
+        assert not mesh.has_attribute('face_uvs_idx')
+        val, idx = mesh.ensure_indexed_attribute('uvs')  # compute and cache
+        assert mesh.has_attribute('uvs')
+        assert mesh.has_attribute('face_uvs_idx')
+        assert contained_torch_equal(val, mesh.uvs)
+        assert contained_torch_equal(idx, mesh.face_uvs_idx)
+        # Unset and check can reconstruct original face_uvs with the new indices
+        orig_face_uvs = mesh.face_uvs
+        mesh.face_uvs = None
+        assert not mesh.has_attribute('face_uvs')
+        assert mesh.face_uvs is not None  # recomputed
+        assert contained_torch_equal(orig_face_uvs, mesh.face_uvs, approximate=True)
+
+    @pytest.mark.parametrize('quad', [True, False])
+    def test_can_compute_attribute(self, device, batching, quad):
+        """Verify has_attribute(), probably_can_compute_attribute(), and has_or_can_compute_attribute()
+        return correct results depending on which attributes are set and whether the mesh is triangular."""
+        if quad:
+            input_attr = two_squares_mesh_attr(device=device, quad=True)
+            mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces']).set_batching(batching)
+            mesh_full = None
+        else:
+            input_attr = make_default_input(device, batching)
+            mesh = SurfaceMesh(vertices=input_attr['vertices'],
+                               faces=input_attr['faces'])
+            mesh_full = SurfaceMesh(vertices=input_attr['vertices'],
+                                    faces=input_attr['faces'],
+                                    uvs=input_attr['uvs'],
+                                    face_uvs_idx=input_attr['face_uvs_idx'],
+                                    normals=input_attr['normals'],
+                                    face_normals_idx=input_attr['face_normals_idx'])
+        for existing in ['vertices', 'faces']:
+            assert mesh.has_attribute(existing)
+            assert mesh.has_or_can_compute_attribute(existing)
+            assert existing in mesh.get_attributes()
+        for computable in ['face_vertices'] + (['face_normals', 'vertex_normals'] if not quad else []):
+            assert not mesh.has_attribute(computable), computable
+            assert mesh.probably_can_compute_attribute(computable), computable
+            assert mesh.has_or_can_compute_attribute(computable), computable
+        for missing in ['uvs', 'normals', 'face_uvs', 'face_uvs_idx', 'face_normals_idx', 'vertex_tangents', 'face_tangents']:
+            assert not mesh.has_attribute(missing), missing
+            assert not mesh.probably_can_compute_attribute(missing), missing
+            assert not mesh.has_or_can_compute_attribute(missing), missing
+
+        if mesh_full is not None:
+            for existing in ['vertices', 'faces', 'uvs', 'face_uvs_idx', 'normals', 'face_normals_idx']:
+                assert mesh_full.has_attribute(existing), existing
+                assert mesh_full.has_or_can_compute_attribute(existing), existing
+                assert existing in mesh_full.get_attributes()
+            for computable in ['face_vertices', 'face_normals', 'vertex_normals', 'vertex_tangents', 'face_tangents']:
+                assert not mesh_full.has_attribute(computable), computable
+                assert mesh_full.probably_can_compute_attribute(computable), computable
+                assert mesh_full.has_or_can_compute_attribute(computable), computable
+
+    def test_is_triangular(self, device, batching):
+        """Verify is_triangular() returns True for triangle-only meshes and False for quad or mixed meshes."""
+        attr = two_squares_mesh_attr(device=device, quad=False)
+        mesh_tri = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces']).set_batching(batching)
+        assert mesh_tri.is_triangular()
+
+        attr = two_squares_mesh_attr(device=device, quad=True)
+        mesh_quad = SurfaceMesh(vertices=attr['vertices'], faces=attr['faces']).set_batching(batching)
+        assert not mesh_quad.is_triangular()
+
+        mesh_mixed = SurfaceMesh.cat([mesh_tri, mesh_quad], fixed_topology=False)
+        assert not mesh_mixed.is_triangular()
+
+    @staticmethod
+    def _random_affine(device):
+        """Random affine: rotation * non-uniform scale + translation. Tangent and normal paths differ here."""
+        angles = [random.uniform(0, 2 * math.pi) for _ in range(3)]
+        cx, sx = math.cos(angles[0]), math.sin(angles[0])
+        cy, sy = math.cos(angles[1]), math.sin(angles[1])
+        cz, sz = math.cos(angles[2]), math.sin(angles[2])
+        Rx = torch.tensor([[1, 0, 0], [0, cx, -sx], [0, sx, cx]], dtype=torch.float32, device=device)
+        Ry = torch.tensor([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]], dtype=torch.float32, device=device)
+        Rz = torch.tensor([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]], dtype=torch.float32, device=device)
+        scale = torch.tensor([random.uniform(0.5, 1.5) for _ in range(3)],
+                             dtype=torch.float32, device=device)
+        linear = Rz @ Ry @ Rx @ torch.diag(scale)
+        t = torch.tensor([random.uniform(-1, 1) for _ in range(3)],
+                         dtype=torch.float32, device=device)
+        mat = torch.eye(4, dtype=torch.float32, device=device)
+        mat[:3, :3] = linear
+        mat[:3, 3] = t
+        return mat
+
+    @staticmethod
+    def _ref_apply_pos(pos, mat4):
+        homog = torch.cat([pos, torch.ones_like(pos[..., :1])], dim=-1)
+        out = homog @ mat4.T
+        return out[..., :3] / out[..., 3:4]
+
+    @staticmethod
+    def _ref_apply_normal(vec, mat4):
+        inv_lin = torch.linalg.inv(mat4[:3, :3])
+        return torch.nn.functional.normalize(vec @ inv_lin, dim=-1)
+
+    @staticmethod
+    def _ref_apply_tangent(vec, mat4):
+        return torch.nn.functional.normalize(vec @ mat4[:3, :3].T, dim=-1)
+
+    @pytest.mark.parametrize('with_tangents', [True, False])
+    @pytest.mark.parametrize('with_normals', [True, False])
+    @pytest.mark.parametrize('transform_kind', ['single', 'per_batch_tensor'])
+    def test_as_transformed(self, device, batching, transform_kind, with_normals, with_tangents):
+        """Test as_transformed applies transform to vertices, normals, and tangents under
+        every valid (batching, transform_kind) combination."""
+        # NONE batching only supports the unbatched (4, 4) transform.
+        if batching == SurfaceMesh.Batching.NONE and transform_kind != 'single':
+            pytest.skip(f'transform_kind={transform_kind} only applies to batched meshes')
+
+        input_attr = make_default_input(device, batching)
+
+        # Returns self when transform is not set
+        mesh_no_wtl = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'])
+        assert mesh_no_wtl.as_transformed() is mesh_no_wtl
+
+        # Determine batch length and build reference matrices (always a list of (4,4)).
+        if batching == SurfaceMesh.Batching.NONE:
+            B = 1
+        elif batching == SurfaceMesh.Batching.FIXED:
+            B = input_attr['vertices'].shape[0]
+        else:
+            B = len(input_attr['vertices'])
+
+        if transform_kind == 'single':
+            single_mat = self._random_affine(device)
+            ref_mats = [single_mat] * B
+            stored = single_mat
+        else:  # 'per_batch_tensor'
+            ref_mats = [self._random_affine(device) for _ in range(B)]
+            stored = torch.stack(ref_mats, dim=0)
+
+        mesh_kwargs = dict(
+            vertices=input_attr['vertices'],
+            faces=input_attr['faces'],
+            face_vertices=input_attr['face_vertices'],
+            face_normals=input_attr['face_normals'],
+            transform=stored,
+        )
+        if with_normals:
+            mesh_kwargs['normals'] = input_attr['normals']
+            mesh_kwargs['vertex_normals'] = input_attr['vertex_normals']
+        if with_tangents:
+            mesh_kwargs['vertex_tangents'] = input_attr['vertex_tangents']
+            mesh_kwargs['face_tangents'] = input_attr['face_tangents']
+
+        mesh = SurfaceMesh(**mesh_kwargs)
+        local_mesh = mesh.as_transformed()
+
+        # transform and face_vertices cleared; face_normals present (was set and transformed).
+        assert not local_mesh.has_attribute('transform')
+        assert not local_mesh.has_attribute('face_vertices')
+        assert local_mesh.has_attribute('face_normals')
+        if not with_normals:
+            assert not local_mesh.has_attribute('normals')
+            assert not local_mesh.has_attribute('vertex_normals')
+        if not with_tangents:
+            assert not local_mesh.has_attribute('vertex_tangents')
+            assert not local_mesh.has_attribute('face_tangents')
+
+        def _elem(value, i):
+            if batching == SurfaceMesh.Batching.NONE:
+                return value
+            return value[i]
+
+        # as_transformed must return a transformed copy without mutating the source mesh.
+        assert local_mesh is not mesh
+        assert mesh.has_attribute('transform')
+        assert mesh.has_attribute('face_vertices')
+        src_attrs = ['vertices', 'face_normals']
+        if with_normals:
+            src_attrs += ['normals', 'vertex_normals']
+        if with_tangents:
+            src_attrs += ['vertex_tangents', 'face_tangents']
+        for i in range(B):
+            for attr in src_attrs:
+                assert torch.allclose(_elem(getattr(mesh, attr), i), _elem(input_attr[attr], i)), \
+                    f'source {attr} was mutated at i={i}'
+
+        for i in range(B):
+            ref_mat = ref_mats[i]
+
+            out_verts = _elem(local_mesh.vertices, i)
+            exp_verts = self._ref_apply_pos(_elem(input_attr['vertices'], i), ref_mat)
+            assert torch.allclose(out_verts, exp_verts, atol=1e-5), f'vertices mismatch at i={i}'
+
+            out_fn = _elem(local_mesh.face_normals, i)
+            exp_fn = self._ref_apply_normal(_elem(input_attr['face_normals'], i), ref_mat)
+            assert torch.allclose(out_fn, exp_fn, atol=1e-5), f'face_normals mismatch at i={i}'
+
+            if with_normals:
+                out_n = _elem(local_mesh.normals, i)
+                exp_n = self._ref_apply_normal(_elem(input_attr['normals'], i), ref_mat)
+                assert torch.allclose(out_n, exp_n, atol=1e-5), f'normals mismatch at i={i}'
+
+                out_vn = _elem(local_mesh.vertex_normals, i)
+                exp_vn = self._ref_apply_normal(_elem(input_attr['vertex_normals'], i), ref_mat)
+                assert torch.allclose(out_vn, exp_vn, atol=1e-5), f'vertex_normals mismatch at i={i}'
+
+            if with_tangents:
+                out_vt = _elem(local_mesh.vertex_tangents, i)
+                exp_vt = self._ref_apply_tangent(_elem(input_attr['vertex_tangents'], i), ref_mat)
+                assert torch.allclose(out_vt, exp_vt, atol=1e-5), f'vertex_tangents mismatch at i={i}'
+
+                out_ft = _elem(local_mesh.face_tangents, i)
+                exp_ft = self._ref_apply_tangent(_elem(input_attr['face_tangents'], i), ref_mat)
+                assert torch.allclose(out_ft, exp_ft, atol=1e-5), f'face_tangents mismatch at i={i}'
+
+        # face_vertices was cleared and is still auto-recomputable
+        assert local_mesh.face_vertices is not None
+        # face_normals are stored (transformed), also accessible
+        assert local_mesh.face_normals is not None
+
+    def test_transform_getitem(self, device, batching):
+        """Verify mesh[i] correctly extracts the per-element [4,4] transform matrix for FIXED
+        and LIST batched meshes, and returns self unchanged for NONE batching."""
+        input_attr = make_default_input(device, batching)
+
+        if batching == SurfaceMesh.Batching.NONE:
+            # NONE batching: mesh[0] returns self, transform is unchanged
+            wtl = torch.rand(4, 4, device=device)
+            mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'],
+                               transform=wtl)
+            assert mesh[0] is mesh
+            assert torch.allclose(mesh[0].transform, wtl)
+        elif batching == SurfaceMesh.Batching.FIXED:
+            B = input_attr['vertices'].shape[0]
+            wtl = torch.rand(B, 4, 4, device=device)
+            mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'],
+                               transform=wtl)
+            for i in range(B):
+                elem = mesh[i]
+                assert elem.batching == SurfaceMesh.Batching.NONE
+                assert elem.transform.shape == (4, 4)
+                assert torch.allclose(elem.transform, wtl[i])
+        elif batching == SurfaceMesh.Batching.LIST:
+            B = len(input_attr['vertices'])
+            wtl = torch.rand(B, 4, 4, device=device)
+            mesh = SurfaceMesh(vertices=input_attr['vertices'], faces=input_attr['faces'],
+                               transform=wtl)
+            for i in range(B):
+                elem = mesh[i]
+                assert elem.batching == SurfaceMesh.Batching.NONE
+                assert elem.transform.shape == (4, 4)
+                assert torch.allclose(elem.transform, wtl[i])
+
+class TestCoreUnparameterized:
+    @pytest.mark.parametrize('with_materials', [True, False])
+    @pytest.mark.parametrize('with_normals', [True, False])
+    @pytest.mark.parametrize('group_materials_by_name', [True, False])
+    def test_flatten(self, with_materials, with_normals, group_materials_by_name):
+        """Verify flatten() produces a correct NONE-batched mesh from meshes with mixed batching modes
+        (NONE/FIXED/LIST) imported from USD, correctly handling normals and materials (including
+        group_materials_by_name merging)."""
+        input_path = data_path('armchair.usdc')
+        meshes = usd.import_meshes(input_path, with_materials=with_materials, with_normals=with_normals)
+        meshes[0].set_batching(SurfaceMesh.Batching.NONE)
+        meshes[1].set_batching(SurfaceMesh.Batching.FIXED)
+        meshes[2].set_batching(SurfaceMesh.Batching.LIST)
+
+        flattened = SurfaceMesh.flatten(meshes, group_materials_by_name=group_materials_by_name)
+        assert flattened.batching == SurfaceMesh.Batching.NONE
+        check_tensor_attribute_shapes(flattened, faces=[9200, 4], vertices=[9204, 3])
+
+        # import_mesh returns LIST-batched for multiple meshes, apply flatten to compare
+        mesh = SurfaceMesh.flatten(
+            usd.import_meshes(input_path, with_materials=with_materials, with_normals=with_normals),
+            group_materials_by_name=group_materials_by_name)
+        assert torch.equal(mesh.faces, flattened.faces)
+        assert torch.allclose(mesh.vertices, flattened.vertices)
+        assert set(flattened.get_attributes()) == set(mesh.get_attributes())
+        if with_normals:
+            assert torch.allclose(mesh.face_normals, flattened.face_normals)
+        else:
+            assert flattened.face_normals is None
+
+        if with_materials:
+            assert torch.allclose(mesh.face_uvs, flattened.face_uvs)  # Note: this one is slow, b/c we compute face_uvs
+            if not group_materials_by_name:
+                assert len(flattened.materials) == 3
+                expected_assignments = []
+                expected_materials = []
+                for i, m in enumerate(meshes):
+                    expected_assignments.append(
+                        m.getattr_batched('material_assignments', SurfaceMesh.Batching.NONE) + len(expected_materials))
+                    expected_materials.extend(m.getattr_batched('materials', SurfaceMesh.Batching.NONE))
+                expected_assignments = torch.cat(expected_assignments, dim=0)
+                assert contained_torch_equal(expected_assignments, flattened.material_assignments)
+                assert contained_torch_equal(expected_materials, flattened.materials, approximate=True)
+            else:
+                assert torch.equal(mesh.material_assignments, flattened.material_assignments)
+                assert contained_torch_equal(mesh.materials, flattened.materials, approximate=True)
+        else:
+            assert flattened.material_assignments is None
+            assert flattened.materials is None
+
+    @pytest.mark.parametrize('triangulate', [True, False])
+    @pytest.mark.parametrize('ensure_materials', [True, False])
+    def test_flatten_partial_meshes(self, triangulate, ensure_materials):
+        """ Tests flattening when some meshes are missing certain attributes.
+        """
+        meshes = []
+        # armchair + amsterdam + ico_smooth + ico_flat
+        num_vertices = 9204 + 1974 + 42 + 42
+        num_faces = 9200 * 2 + 1932 * 2 + 80 + 80
+
+        # Meshes with materials and normals, concatenated into a LIST mesh
+        imported = usd.import_meshes(data_path('armchair.usdc'),
+                                     with_materials=True, with_normals=True, triangulate=triangulate, return_list=False)
+        meshes.append(SurfaceMesh.cat(list(imported.values()), fixed_topology=False))
+
+        # Mesh with no normals, unbatched, and imported from obj
+        imported = obj.import_mesh(data_path('amsterdam.obj'),
+                                   with_materials=True, with_normals=False, triangulate=triangulate)
+        meshes.append(imported)
+
+        # Meshes with no materials but normals, using fixed topology
+        imported = [obj.import_mesh(data_path(p), with_materials=False, with_normals=True, triangulate=triangulate)
+                    for p in ['ico_flat.obj', 'ico_smooth.obj']]
+        meshes.append(SurfaceMesh.cat(imported, fixed_topology=True))
+        if ensure_materials:
+            # Let's add a dummy material to the only mesh missing materials
+            meshes[-1].materials = [
+                [kaolin.render.materials.PBRMaterial(diffuse_color=(1., 0., 0.), material_name='dummy')] for i in range(2)]
+            meshes[-1].material_assignments = torch.zeros((2, meshes[-1].faces.shape[0])).short()
+            meshes[-1].face_uvs = torch.rand((2, meshes[-1].faces.shape[0], meshes[-1].faces.shape[1], 2)).float()
+
+        if triangulate:
+            # All other attributes are only present in *some* of the meshes, and so are not flattened
+            # Note that face_normals are present in first mesh and can be auto-computed
+            expected_attrs = {'vertices', 'faces', 'face_normals'}
+            if ensure_materials:
+                # if all meshes have these, then these attributes should also exist
+                expected_attrs.add('material_assignments')
+                expected_attrs.add('face_uvs')
+
+            # Make two versions, with and without grouped materials
+            mesh_regular = SurfaceMesh.flatten(meshes)
+            mesh_grouped = SurfaceMesh.flatten(meshes, group_materials_by_name=True)
+            for i, mesh in enumerate([mesh_regular, mesh_grouped]):
+                attrs = mesh.get_attributes(only_tensors=True)
+
+                assert set(attrs) == expected_attrs
+                assert check_tensor_attribute_shapes(mesh, vertices=[num_vertices, 3], faces=[num_faces, 3])
+                if not ensure_materials:
+                    assert mesh.materials is None
+                    assert mesh.material_assignments is None
+                else:
+                    expected_materials = (3 + 14 + 2) if i == 0 else (2 + 14 + 1)  # fewer grouped materials
+                    assert len(mesh.materials) == expected_materials
+        else:
+            with pytest.raises(ValueError) as error:
+                # Cannot flatten triangles and quads
+                mesh = SurfaceMesh.flatten(meshes)
+                print(error)
+
+            # TODO: also try skipping the error when None faces are supported
+
+    def test_flatten_transform(self):
+        """Test that flatten always applies transform, producing world-space vertices."""
+        import_args = {'with_materials': False, 'with_normals': False}
+        m1 = obj.import_mesh(data_path('ico_flat.obj'), **import_args)
+        m2 = obj.import_mesh(data_path('ico_smooth.obj'), **import_args)
+
+        wtl_a = torch.eye(4, dtype=torch.float32)
+        wtl_a[:3, 3] = torch.tensor([1.0, 2.0, 3.0])
+        wtl_b = torch.eye(4, dtype=torch.float32)
+        wtl_b[:3, 3] = torch.tensor([4.0, 5.0, 6.0])
+        orig_verts = m1.vertices.clone()
+
+        # Case A: meshes with transforms → transforms always applied, no transform on result
+        m1c, m2c = copy.deepcopy(m1), copy.deepcopy(m2)
+        m1c.transform = wtl_a.clone()
+        m2c.transform = wtl_b.clone()
+        result = SurfaceMesh.flatten([m1c, m2c])
+        assert not result.has_attribute('transform'), \
+            'flatten must always apply transforms and clear transform'
+        assert not torch.allclose(result.vertices[:len(orig_verts)], orig_verts), \
+            'flatten must transform vertices to world space'
+        assert torch.allclose(result.vertices[:len(orig_verts)], orig_verts + torch.tensor([1., 2., 3.])), \
+            'flatten must apply the correct translation'
+
+        # Case B: meshes without transforms → flatten works normally, no transform
+        m1c, m2c = copy.deepcopy(m1), copy.deepcopy(m2)
+        result = SurfaceMesh.flatten([m1c, m2c])
+        assert not result.has_attribute('transform')
+        assert torch.allclose(result.vertices[:len(orig_verts)], orig_verts)
+
