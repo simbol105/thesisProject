@@ -1,0 +1,290 @@
+{
+ "slat|recgen|Birdhouse_Lighting001": {
+  "init": 14,
+  "final": 97,
+  "faces_init": 1695728,
+  "faces_final": 1697976
+ },
+ "slat|recgen|Cup_B08TWHJ33Q_Tan_Lighting001": {
+  "init": 207,
+  "final": 264,
+  "faces_init": 1951704,
+  "faces_final": 1901960
+ },
+ "slat|recgen|Figurine_B08FYFNYP4_LionKing_Lighting001": {
+  "init": 3,
+  "final": 151,
+  "faces_init": 1332016,
+  "faces_final": 1303680
+ },
+ "slat|recgen|Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+  "init": 89,
+  "final": 373,
+  "faces_init": 1823568,
+  "faces_final": 1763568
+ },
+ "slat|recgen|Mallard_B082D168CK_MintGreen_Lighting001": {
+  "init": 13,
+  "final": 56,
+  "faces_init": 566936,
+  "faces_final": 537232
+ },
+ "slat|recgen|Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+  "init": 13,
+  "final": 171,
+  "faces_init": 831968,
+  "faces_final": 1099384
+ },
+ "slat|sam3d|Birdhouse_Lighting001": {
+  "init": 5,
+  "final": 100,
+  "faces_init": 1852896,
+  "faces_final": 1859328
+ },
+ "slat|sam3d|Cup_B08TWHJ33Q_Tan_Lighting001": {
+  "init": 196,
+  "final": 244,
+  "faces_init": 1582520,
+  "faces_final": 1509456
+ },
+ "slat|sam3d|Figurine_B08FYFNYP4_LionKing_Lighting001": {
+  "init": 3,
+  "final": 104,
+  "faces_init": 1551208,
+  "faces_final": 1519992
+ },
+ "slat|sam3d|Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+  "init": 35,
+  "final": 215,
+  "faces_init": 1345616,
+  "faces_final": 1287904
+ },
+ "slat|sam3d|Mallard_B082D168CK_MintGreen_Lighting001": {
+  "init": 1,
+  "final": 111,
+  "faces_init": 737544,
+  "faces_final": 650408
+ },
+ "slat|sam3d|Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+  "init": 32,
+  "final": 81,
+  "faces_init": 966112,
+  "faces_final": 1028576
+ },
+ "slat|trellis|Birdhouse_Lighting001": {
+  "init": 16,
+  "final": 72,
+  "faces_init": 1765520,
+  "faces_final": 1803496
+ },
+ "slat|trellis|Cup_B08TWHJ33Q_Tan_Lighting001": {
+  "init": 340,
+  "final": 359,
+  "faces_init": 2417248,
+  "faces_final": 2440032
+ },
+ "slat|trellis|Figurine_B08FYFNYP4_LionKing_Lighting001": {
+  "init": 2,
+  "final": 124,
+  "faces_init": 1478760,
+  "faces_final": 1429712
+ },
+ "slat|trellis|Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+  "init": 12,
+  "final": 242,
+  "faces_init": 1623768,
+  "faces_final": 1557832
+ },
+ "slat|trellis|Mallard_B082D168CK_MintGreen_Lighting001": {
+  "init": 1,
+  "final": 43,
+  "faces_init": 725176,
+  "faces_final": 689200
+ },
+ "slat|trellis|Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+  "init": 1,
+  "final": 39,
+  "faces_init": 816992,
+  "faces_final": 866728
+ },
+ "slat|trellis2|Birdhouse_Lighting001": {
+  "init": 43,
+  "final": 144,
+  "faces_init": 1869320,
+  "faces_final": 1901896
+ },
+ "slat|trellis2|Cup_B08TWHJ33Q_Tan_Lighting001": {
+  "init": 45,
+  "final": 108,
+  "faces_init": 2523984,
+  "faces_final": 2570592
+ },
+ "slat|trellis2|Figurine_B08FYFNYP4_LionKing_Lighting001": {
+  "init": 9,
+  "final": 197,
+  "faces_init": 1472560,
+  "faces_final": 1511192
+ },
+ "slat|trellis2|Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+  "init": 30,
+  "final": 197,
+  "faces_init": 1811048,
+  "faces_final": 1673848
+ },
+ "slat|trellis2|Mallard_B082D168CK_MintGreen_Lighting001": {
+  "init": 2,
+  "final": 88,
+  "faces_init": 678936,
+  "faces_final": 620336
+ },
+ "slat|trellis2|Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+  "init": 9,
+  "final": 60,
+  "faces_init": 769832,
+  "faces_final": 843624
+ },
+ "cubefeats|recgen|Birdhouse_Lighting001": {
+  "init": 13,
+  "final": 16,
+  "faces_init": 1695344,
+  "faces_final": 1726992
+ },
+ "cubefeats|recgen|Cup_B08TWHJ33Q_Tan_Lighting001": {
+  "init": 208,
+  "final": 209,
+  "faces_init": 1951464,
+  "faces_final": 1947040
+ },
+ "cubefeats|recgen|Figurine_B08FYFNYP4_LionKing_Lighting001": {
+  "init": 3,
+  "final": 4,
+  "faces_init": 1331968,
+  "faces_final": 1328528
+ },
+ "cubefeats|recgen|Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+  "init": 89,
+  "final": 90,
+  "faces_init": 1823504,
+  "faces_final": 1820144
+ },
+ "cubefeats|recgen|Mallard_B082D168CK_MintGreen_Lighting001": {
+  "init": 13,
+  "final": 13,
+  "faces_init": 566992,
+  "faces_final": 566472
+ },
+ "cubefeats|recgen|Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+  "init": 13,
+  "final": 14,
+  "faces_init": 831784,
+  "faces_final": 831056
+ },
+ "cubefeats|sam3d|Birdhouse_Lighting001": {
+  "init": 5,
+  "final": 6,
+  "faces_init": 1852872,
+  "faces_final": 1872720
+ },
+ "cubefeats|sam3d|Cup_B08TWHJ33Q_Tan_Lighting001": {
+  "init": 196,
+  "final": 196,
+  "faces_init": 1582536,
+  "faces_final": 1581904
+ },
+ "cubefeats|sam3d|Figurine_B08FYFNYP4_LionKing_Lighting001": {
+  "init": 3,
+  "final": 3,
+  "faces_init": 1551160,
+  "faces_final": 1552720
+ },
+ "cubefeats|sam3d|Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+  "init": 35,
+  "final": 35,
+  "faces_init": 1346096,
+  "faces_final": 1347256
+ },
+ "cubefeats|sam3d|Mallard_B082D168CK_MintGreen_Lighting001": {
+  "init": 1,
+  "final": 1,
+  "faces_init": 737496,
+  "faces_final": 736832
+ },
+ "cubefeats|sam3d|Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+  "init": 32,
+  "final": 31,
+  "faces_init": 966072,
+  "faces_final": 970256
+ },
+ "cubefeats|trellis|Birdhouse_Lighting001": {
+  "init": 16,
+  "final": 16,
+  "faces_init": 1765488,
+  "faces_final": 1785944
+ },
+ "cubefeats|trellis|Cup_B08TWHJ33Q_Tan_Lighting001": {
+  "init": 340,
+  "final": 344,
+  "faces_init": 2417272,
+  "faces_final": 2413896
+ },
+ "cubefeats|trellis|Figurine_B08FYFNYP4_LionKing_Lighting001": {
+  "init": 2,
+  "final": 2,
+  "faces_init": 1478712,
+  "faces_final": 1479736
+ },
+ "cubefeats|trellis|Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+  "init": 12,
+  "final": 12,
+  "faces_init": 1623824,
+  "faces_final": 1623256
+ },
+ "cubefeats|trellis|Mallard_B082D168CK_MintGreen_Lighting001": {
+  "init": 1,
+  "final": 1,
+  "faces_init": 725096,
+  "faces_final": 724816
+ },
+ "cubefeats|trellis|Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+  "init": 1,
+  "final": 1,
+  "faces_init": 816968,
+  "faces_final": 817512
+ },
+ "cubefeats|trellis2|Birdhouse_Lighting001": {
+  "init": 42,
+  "final": 39,
+  "faces_init": 1869776,
+  "faces_final": 1891712
+ },
+ "cubefeats|trellis2|Cup_B08TWHJ33Q_Tan_Lighting001": {
+  "init": 47,
+  "final": 47,
+  "faces_init": 2523920,
+  "faces_final": 2510496
+ },
+ "cubefeats|trellis2|Figurine_B08FYFNYP4_LionKing_Lighting001": {
+  "init": 9,
+  "final": 5,
+  "faces_init": 1473248,
+  "faces_final": 1467912
+ },
+ "cubefeats|trellis2|Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+  "init": 30,
+  "final": 17,
+  "faces_init": 1811536,
+  "faces_final": 1794944
+ },
+ "cubefeats|trellis2|Mallard_B082D168CK_MintGreen_Lighting001": {
+  "init": 2,
+  "final": 1,
+  "faces_init": 678904,
+  "faces_final": 677904
+ },
+ "cubefeats|trellis2|Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+  "init": 9,
+  "final": 7,
+  "faces_init": 769936,
+  "faces_final": 766544
+ }
+}

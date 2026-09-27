@@ -1,0 +1,14 @@
+# Prompt image per object, used by `thesis3d generate` for every method.
+# Managed by the app (`thesis3d prompts ...`); the project's own benchmark/prompts.yaml is untouched.
+# tag names the run: outputs go to generative_runs/<tag>/ and benchmark_output/<method>_<tag>/.
+
+tag: v2
+
+prompts:
+  Birdhouse_Lighting001: im_0077
+  Bowl_B0BQR77WRW_LightGrey_1_TU_Lighting001: im_0065
+  Cup_B08TWHJ33Q_Tan_Lighting001: im_0059
+  Figurine_B08FYFNYP4_LionKing_Lighting001: im_0044
+  Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001: im_0045
+  Mallard_B082D168CK_MintGreen_Lighting001: im_0043
+  Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001: im_0067

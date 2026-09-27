@@ -1,0 +1,7 @@
+# Stanford-ORB metric code, imported unchanged by benchmark/dtc_orb_benchmark.py.
+# Runs inside the trellis2 environment; the only extra pieces are:
+#   third_party/stanford_orb           the ORB repository (metrics)
+#   benchmark/shim/pyexr.py            OpenCV-backed stand-in for the unavailable pyexr
+lpips==0.1.4
+scikit-image
+opencv-python

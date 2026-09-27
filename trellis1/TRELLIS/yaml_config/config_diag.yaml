@@ -1,0 +1,36 @@
+
+latent_l2_weight: 0.0  
+lr: 6e-2
+# optimizer_type: sgd  # Use SGD instead of Adam to avoid momentum issues
+num_iters: 150
+envmap_path: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/env.exr"
+
+# 47
+prompt_idx: 4
+frames_per_iter: 10
+display_interval: 25
+near: 0.01
+far: 1000
+dmtet_res: 64
+lambda_geo: 1.0
+seed: 1
+weight: 1.5
+sdf_weight: 5e-1
+tsdf_weight: 5e-1
+
+# out_dir: "/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/hypothesis/latent_opt"
+# out_dir: "/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/hypothesis/gaussian_optimization"
+out_dir: "/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/hypothesis/claude_fix"
+# out_dir: "/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/hypothesis/mesh_cup"
+
+# out_dir: "/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/optimization_output/hypothesis/voxel_house"
+gt_mesh: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/model.glb"
+# gt_mesh: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Cup_B08TWHJ33Q_Tan_Lighting001/model.glb"
+transforms_json: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/transforms_train.json" 
+# transforms_json: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Cup_B08TWHJ33Q_Tan_Lighting001/transforms_train.json"
+# test_transforms_json: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Cup_B08TWHJ33Q_Tan_Lighting001/transforms_test.json"
+test_transforms_json: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/transforms_test.json"
+data_dir: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/" 
+# output_path: "/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/optimization_output/voxel_house_cup"
+
+recgen_mesh_path: ""

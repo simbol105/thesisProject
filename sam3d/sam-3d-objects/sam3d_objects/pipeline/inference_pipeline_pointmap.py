@@ -399,6 +399,7 @@ class InferencePipelinePointMap(InferencePipeline):
         pointmap=None,
         decode_formats=None,
         estimate_plane=False,
+        return_slat=False,
     ) -> dict:
         image = self.merge_image_and_mask(image, mask)
         with self.device: 
@@ -504,6 +505,7 @@ class InferencePipelinePointMap(InferencePipeline):
             return {
                 **ss_return_dict,
                 **outputs,
+                **({"slat": slat} if return_slat else {}),
                 "pointmap": pts.cpu().permute((1, 2, 0)),  # HxWx3
                 "pointmap_colors": pts_colors.cpu().permute((1, 2, 0)),  # HxWx3
             }

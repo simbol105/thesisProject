@@ -1,23 +1,16 @@
 #!/bin/bash
 # Install CUDA-dependent packages for RecGen inference.
-#
-# Usage:
-#   bash setup_cuda.sh              # install spconv + flash-attn
-#   bash setup_cuda.sh --nvdiffrast # build nvdiffrast from source
-#   bash setup_cuda.sh --all        # everything
 
 set -e
 
 EXTDIR="${RECGEN_EXT_DIR:-/tmp/recgen_extensions}"
 mkdir -p "$EXTDIR"
 
-# ── Parse arguments ──────────────────────────────────────────────────────
 BUILD_NVDIFFRAST=false
 BUILD_DIFF_GAUSSIAN=false
 ALL=false
 
 if [ "$#" -eq 0 ]; then
-    # Default: just spconv + flash-attn
     true
 fi
 
@@ -32,7 +25,6 @@ for arg in "$@"; do
     esac
 done
 
-# ── Build diff_gaussian_rasterization from source ───────────────────────
 _build_diff_gaussian() {
     echo ""
     echo "Building diff_gaussian_rasterization from source (mip-splatting fork)..."
@@ -50,7 +42,6 @@ if [ "$BUILD_DIFF_GAUSSIAN" = true ] && [ "$ALL" = false ]; then
     exit 0
 fi
 
-# ── nvdiffrast ───────────────────────────────────────────────────────────
 if [ "$ALL" = true ] || [ "$BUILD_NVDIFFRAST" = true ]; then
     echo "── Building nvdiffrast ──"
     if [ ! -d "$EXTDIR/nvdiffrast" ]; then
@@ -58,13 +49,11 @@ if [ "$ALL" = true ] || [ "$BUILD_NVDIFFRAST" = true ]; then
     fi
     pip install --no-build-isolation "$EXTDIR/nvdiffrast"
     echo "nvdiffrast installed successfully."
-    # If only --nvdiffrast was requested, exit
     if [ "$ALL" = false ]; then
         exit 0
     fi
 fi
 
-# ── Detect CUDA version ─────────────────────────────────────────────────
 if command -v nvcc &> /dev/null; then
     CUDA_VERSION=$(nvcc --version | grep "release" | sed 's/.*release //' | sed 's/,.*//')
     echo "Detected CUDA version: $CUDA_VERSION"
@@ -74,7 +63,6 @@ else
     echo "PyTorch CUDA: $CUDA_VERSION"
 fi
 
-# ── Install spconv ───────────────────────────────────────────────────────
 CUDA_MAJOR=$(echo $CUDA_VERSION | cut -d. -f1)
 
 if [ "$CUDA_MAJOR" = "11" ]; then
@@ -88,7 +76,6 @@ else
     pip install spconv-cu120
 fi
 
-# ── Install flash-attn (optional) ───────────────────────────────────────
 echo ""
 echo "Installing flash-attn (optional, for faster inference)..."
 pip install flash-attn --no-build-isolation 2>/dev/null || {

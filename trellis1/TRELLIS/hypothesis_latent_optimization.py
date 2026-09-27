@@ -25,8 +25,7 @@ import json
 from typing import List, Dict, Tuple
 import trimesh
 
-# Global settings 
-RES = 512 # The render/grid resolution
+RES = 512
 TEST_INDEX = 4
 TEST_INTERVALS = [0, 1, 50, 100, 200,  500, 799, 999]
 
@@ -58,7 +57,6 @@ def load_image(path):
     return image
 
 AXIS_SWAP = rot_z(-np.pi/2)
-# AXIS_SWAP = np.eye(4, dtype=np.float32)
 
 def _scale_opencv_intrinsics(intr: Dict, orig_wh: Tuple[int, int], render_resolution: int) -> torch.Tensor:
     fx, fy, cx, cy = float(intr["fx"]), float(intr["fy"]), float(intr["cx"]), float(intr["cy"])
@@ -96,49 +94,29 @@ def _resize_rgb_to_tensor(img_path: Path, render_resolution: int, device: torch.
     return t   
 
 def ensure_nchw(x):
-    """Normalize tensor to NCHW format.
-
-    Accepts tensors in shapes:
-    - (C, H, W)
-    - (H, W, C)
-    - (B, C, H, W)
-    - (B, H, W, C)
-    - (H, W)
-    - (C, H, W) with no batch dim
-    Returns tensor with shape (B, C, H, W).
-    """
+    """Normalize tensor to NCHW format."""
     if x is None:
         return None
-    # ensure tensor
     if not isinstance(x, torch.Tensor):
         x = torch.as_tensor(x)
 
     if x.dim() == 4:
-        # could be (B, C, H, W) or (B, H, W, C)
         B, a, b, c = x.shape
-        # If last dim is small (<=4) and second dim is large, assume NHWC
         if c <= 4 and a > c:
             return x.permute(0, 3, 1, 2)
-        # If second dim is small (<=4) and looks like channels, assume NCHW
         if a <= 4 and a <= 16:
             return x
-        # Fallback: if last dim is small, permute
         if c <= 16:
             return x.permute(0, 3, 1, 2)
         return x
     elif x.dim() == 3:
-        # could be (C, H, W), (H, W, C), or (B, H, W)
         a, b, c = x.shape
-        # HWC: last dim small
         if c <= 4 and a > c:
             return x.permute(2, 0, 1).unsqueeze(0)
-        # CHW: first dim small
         if a <= 4 and b > 16 and c > 16:
             return x.unsqueeze(0)
-        # B,H,W -> add channel
         return x.unsqueeze(1)
     elif x.dim() == 2:
-        # single-channel image (H, W)
         return x.unsqueeze(0).unsqueeze(0)
 
     return x
@@ -183,27 +161,15 @@ def refine_latent(config_path: Path):
     outputs = pipeline.run(
         prompt_img,
         seed=seed,
-        # Optional parameters
-        # sparse_structure_sampler_params={
-        #     "steps": 12,
-        #     "cfg_strength": 7.5,
-        # },
-        # slat_sampler_params={
-        #     "steps": 12,
-        #     "cfg_strength": 3,
-        # },
         return_latent=True,
-        # num_samples=1,
     )
     orig_w, orig_h = prompt_img.size
     intr_scaled = _scale_opencv_intrinsics(intr, (orig_w, orig_h), RES).to(device=device)
 
-    # camera extrinsics
     extrinsics = []
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
     
-    # setup renderer
     renderer = MeshRenderer(
         rendering_options={
                     "resolution": RES,
@@ -217,11 +183,9 @@ def refine_latent(config_path: Path):
 
     slat = outputs['latent']
     mesh = outputs['mesh'][0]
-    # print(f"Lantent SLAT shape: {slat.shape}")
     slat_opt = nn.Parameter(slat.feats.clone())
     slat_opt.requires_grad_(True)
 
-    # setup optimizer 
     if config_yaml.get("optimizer", "") == "sgd":
         optimizer = torch.optim.SGD([slat_opt], lr=lr)
     else: 
@@ -237,7 +201,7 @@ def refine_latent(config_path: Path):
         dtc_mesh = trimesh.load_mesh(gt_mesh)
         with torch.no_grad():
             alignment, _ = align_meshes_similarity(mesh, dtc_mesh) 
-            alignment = torch.from_numpy(alignment @ AXIS_SWAP  ).to(device=device, dtype=torch.float32) # @ AXIS_SWAP
+            alignment = torch.from_numpy(alignment @ AXIS_SWAP  ).to(device=device, dtype=torch.float32)
     else:
         print("No ground truth mesh provided, skipping alignment step.")
         alignment = torch.eye(4, device=device) 
@@ -249,7 +213,6 @@ def refine_latent(config_path: Path):
     gt_mask = None
     
     decoder = pipeline.models['slat_decoder_mesh']
-    # decoder.train()
     print(pipeline.models.keys())
 
     for i in range(num_iters + 1):
@@ -260,23 +223,18 @@ def refine_latent(config_path: Path):
         )
         optimizer.zero_grad()
         slat_ = slat.replace(feats=slat_opt)
-        # mesh = pipeline.models['slat_decoder_mesh'](slat_)[0]
         mesh = decoder(slat_)[0]
-        # mesh.vertices = mesh.vertices + 0.0 * slat_opt.sum()
         print(f"[Iter {i:03d}] after decode: slat_opt.requires_grad={slat_opt.requires_grad}, "\
       f"mesh.vertices.requires_grad={getattr(mesh.vertices, 'requires_grad', None)}")
-        # mesh = pipeline.decode_slat(slat_, formats=["mesh"])["mesh"][0]
-        # print("Mesh vertices: ", mesh.vertices.shape, "Mesh faces: ", mesh.faces.shape)
         total_loss = torch.zeros((), device=device)
 
         for idx in indices: 
-            ref_rgb = ref_images[idx][:3]#.unsqueeze(0)
+            ref_rgb = ref_images[idx][:3]
             extr = extrinsics_t[idx ] @ object_pose
             buffers = renderer.render(
                 mesh=mesh, 
                 extrinsics=extr,
                 intrinsics=intr_scaled,
-                # return_types=["color", "mask", "normal"]
                 return_types=["color"]
             )
 
@@ -285,54 +243,27 @@ def refine_latent(config_path: Path):
             
             if pred_rgb.ndim == 4:
                 pred_rgb = pred_rgb.squeeze(0)
-                pred_rgb = pred_rgb.permute(2, 0, 1) #.contiguous()
+                pred_rgb = pred_rgb.permute(2, 0, 1)
                 
             rgb_loss = l2_criterion(pred_rgb, ref_rgb)
 
-            loss = rgb_loss # other losses will be added here in the future 
+            loss = rgb_loss
 
-            # Prepare the other outputs for visualization. 
-            # if pred_mask.ndim == 2:
-            #     pred_mask = pred_mask[None, ...]  
-            #     # gt_mask = gt_mask[None, ...]      
-            # elif pred_mask.shape[0] != 1:
-            #     pred_mask = pred_mask.permute(2, 0, 1)
-                # gt_mask = gt_mask.permute(2, 0, 1)
                 
-            # if pred_depth.ndim == 2:
-            #     pred_depth = pred_depth[None, ...]  
-            #     # gt_depth = gt_depth[None, ...]      
-            # elif pred_depth.shape[0] != 1:
-            #     pred_depth = pred_depth.permute(2, 0, 1)
-                # gt_depth = gt_depth.permute(2, 0, 1)
 
             if display_interval and (idx % display_interval == 0 or idx == frames_per_iter - 1):
     
                 pred_rgb    = ensure_nchw(pred_rgb)
-                # pred_normal = ensure_nchw(pred_normal)
-                # pred_mask   = ensure_nchw(pred_mask) if pred_mask is not None else None
                 ref_rgb     = ensure_nchw(ref_rgb)
                 gt_mask     = ensure_nchw(gt_mask) if gt_mask is not None else None
 
-                # Normalize normals
-                # normal_vis = (pred_normal - pred_normal.min()) / (pred_normal.max() - pred_normal.min() + 1e-6)
 
-                # _, _, H, W = normal_vis.shape
 
-                # alpha = torch.ones(1, 1, H, W, device=normal_vis.device)
-                # mask_vis = pred_mask if pred_mask is not None else alpha
 
-                # RGBA blocks
-                # normal_rgba    = torch.cat([normal_vis, mask_vis], dim=1)
-                # pred_rgba_vis  = torch.cat([pred_rgb, mask_vis], dim=1)
 
-                # gt_mask_vis = gt_mask if gt_mask is not None else alpha
-                # gt_img_vis  = torch.cat([ref_rgb[:, :3], gt_mask_vis], dim=1)
 
-                # Horizontal concat: [1, 4, H, 3W]
                 img = torch.cat([pred_rgb, ref_rgb], dim=3)
 
-                # NCHW → HWC
                 img = img[0].permute(1, 2, 0).clamp(0.0, 1.0)
 
                 img_np = img.detach().cpu().numpy()

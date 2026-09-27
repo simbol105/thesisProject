@@ -1,0 +1,28 @@
+# TRELLIS.2 environment (conda env "trellis2", CUDA 12.8)
+# also runs the Stanford-ORB benchmark, the figures and the tables
+# create with:  conda create -n trellis2 python=3.10 && pip install -r trellis2.txt
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.8.0
+torchvision==0.23.0
+numpy==2.2.6
+scipy==1.15.3
+opencv-python
+trimesh==4.11.3
+open3d==0.19.0
+imageio==2.37.3
+pillow==12.0.0
+einops==0.8.2
+easydict==1.13
+kornia==0.8.2
+tqdm==4.67.3
+pyyaml==6.0.3
+safetensors==0.7.0
+huggingface-hub==0.36.2
+transformers==4.57.6
+lpips==0.1.4
+utils3d==0.0.2
+spconv-cu120==2.3.6
+# built from source against the local CUDA, not from PyPI wheels:
+#   nvdiffrast==0.4.0        https://github.com/NVlabs/nvdiffrast
+#   flash-attn==2.8.3        pip install flash-attn --no-build-isolation
+#   o_voxel, flex_gemm       shipped inside third_party/trellis2

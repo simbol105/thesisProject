@@ -6,14 +6,7 @@ import torch
 import trimesh
 
 def transf3d(pts3d, transf4x4):
-    """
-    Args:
-        pts3d (torch.Tensor): ...x3
-        transf4x4 (torch.Tensor): ...x4x4
-
-    Returns:
-        pts3d_transf (torch.Tensor): ...x3
-    """
+    """Args:"""
     device = pts3d.device
     dtype = pts3d.dtype
     transf4x4 = transf4x4.to(device)
@@ -50,7 +43,7 @@ def init_glfw():
         glfw.ERROR_REPORTING = 'raise'
         glfw.default_window_hints()
         glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
-        test = glfw.create_window(8, 8, "Test", None, None) # Create a window and see if not initialized yet
+        test = glfw.create_window(8, 8, "Test", None, None)
     except glfw.GLFWError as e:
         if e.error_code == glfw.NOT_INITIALIZED:
             glfw.init()
@@ -59,15 +52,12 @@ def init_glfw():
 
 _glfw_window = None
 def display_image(image, title=None):
-    # Import OpenGL
     import OpenGL.GL as gl
     import glfw
 
-    # Zoom image if requested.
     image = np.asarray(image[..., 0:3]) if image.shape[-1] == 4 else np.asarray(image)
     height, width, channels = image.shape
 
-    # Initialize window.
     init_glfw()
     if title is None:
         title = 'Debug window'
@@ -83,7 +73,6 @@ def display_image(image, title=None):
         glfw.set_window_title(_glfw_window, title)
         glfw.set_window_size(_glfw_window, width, height)
 
-    # Update window.
     glfw.poll_events()
     gl.glClearColor(0, 0, 0, 1)
     gl.glClear(gl.GL_COLOR_BUFFER_BIT)
@@ -97,14 +86,11 @@ def display_image(image, title=None):
         return False
     return True
 
-#----------------------------------------------------------------------------
-# Image save/load helper.
-#----------------------------------------------------------------------------
 
 def save_image(fn, x : np.ndarray) -> np.ndarray:
     try:
         if os.path.splitext(fn)[1] == ".png":
-            imageio.imwrite(fn, np.clip(np.rint(x * 255.0), 0, 255).astype(np.uint8), compress_level=3) # Low compression for faster saving
+            imageio.imwrite(fn, np.clip(np.rint(x * 255.0), 0, 255).astype(np.uint8), compress_level=3)
         else:
             imageio.imwrite(fn, np.clip(np.rint(x * 255.0), 0, 255).astype(np.uint8))
     except:
@@ -134,10 +120,8 @@ def _parse_frame(self, cfg, idx):
         fovy   = util.fovx_to_fovy(cfg['camera_angle_x'], self.aspect) 
         proj   = util.perspective(fovy, self.aspect, self.FLAGS.cam_near_far[0], self.FLAGS.cam_near_far[1])
 
-        # Load image data and modelview matrix
         img    = _load_img(os.path.join(self.base_dir, cfg['frames'][idx]['file_path']))
     
-        # mv = torch.linalg.inv(torch.tensor(cfg['frames'][idx]['transform_matrix'], dtype=torch.float32))
         mv = torch.tensor(cfg['frames'][idx]['transform_matrix'], dtype=torch.float32)
         object_matrix = torch.tensor(cfg['object_pose'], dtype=torch.float32)
         
@@ -145,7 +129,6 @@ def _parse_frame(self, cfg, idx):
    
         mv = mv @ object_matrix
 
-   # Convert OpenCV (+Z forward) -> OpenGL (–Z forward) 
         flip_zy = torch.diag(torch.tensor([1.0, -1.0, -1.0, 1.0], dtype=torch.float32))
         mv = flip_zy @ mv
 
@@ -156,7 +139,6 @@ def _parse_frame(self, cfg, idx):
         S = torch.diag(torch.tensor([1/scale, 1/scale, 1/scale, 1.0], dtype=torch.float32))
         mv = mv @ S
 
-        # mv = mv @ util.rotate_y(np.pi/2)
         
 
         campos = torch.linalg.inv(mv)[:3, 3]   
@@ -164,7 +146,7 @@ def _parse_frame(self, cfg, idx):
         
        
 
-        return img[None, ...], mv[None, ...], mvp[None, ...], campos[None, ...] # Add batch dimension   
+        return img[None, ...], mv[None, ...], mvp[None, ...], campos[None, ...]
 
 def normalize_matrix(M):
     R = M[:3, :3]
@@ -175,20 +157,15 @@ def normalize_matrix(M):
     return M
 
 def push_camera_back(E, d):
-    # E is 4x4 world→camera extrinsic
     R = E[:3, :3]
     t = E[:3, 3]
 
-    # camera center in world space
     C = -R.T @ t
 
-    # camera forward direction in world space (OpenCV: +Z)
     fwd = R.T @ torch.tensor([0.0, 0.0, 1.0], device=E.device)
 
-    # move camera backward by distance d
     C_new = C - d * fwd
 
-    # recompute translation
     t_new = -R @ C_new
 
     E_new = E.clone()
@@ -198,15 +175,12 @@ def push_camera_back(E, d):
 
 
 
-# import trimesh
-# import numpy as np
 
 def unwrap_mesh(mesh):
     
     if isinstance(mesh, trimesh.Trimesh):
         return mesh
     
-    # Trellis2 MeshWithVoxel: has vertices + faces
     if hasattr(mesh, "vertices") and hasattr(mesh, "faces"):
         verts = np.asarray(mesh.vertices.detach().cpu().numpy())
         faces = np.asarray(mesh.faces.detach().cpu().numpy())
@@ -220,35 +194,28 @@ def pca_rotation(mesh):
     cov = np.cov(verts.T)
     eigvals, eigvecs = np.linalg.eigh(cov)
     
-    idx = np.argsort(eigvals)[::-1]  # descending
+    idx = np.argsort(eigvals)[::-1]
     eigvecs = eigvecs[:, idx]
     return eigvecs
 
 R_opengl_to_trellis = np.array([
-    [1, 0, 0],   # X stays X
-    [0, 0, 1],   # Y -> Z
-    [0, 1, 0],   # Z -> Y
+    [1, 0, 0],
+    [0, 0, 1],
+    [0, 1, 0],
 ])
 
 import numpy as np
 
 def kabsch_rotation(A, B):
-    """
-    A, B: (N, 3) arrays of corresponding points
-    returns R: (3, 3) optimal rotation aligning A -> B
-    """
-    # Center
+    """A, B: (N, 3) arrays of corresponding points"""
     Ac = A - A.mean(axis=0)
     Bc = B - B.mean(axis=0)
 
-    # Covariance
     H = Ac.T @ Bc
 
-    # SVD
     U, S, Vt = np.linalg.svd(H)
     R = Vt.T @ U.T
 
-    # Fix reflection
     if np.linalg.det(R) < 0:
         Vt[-1, :] *= -1
         R = Vt.T @ U.T
@@ -257,7 +224,6 @@ def kabsch_rotation(A, B):
 
 
 def convert_to_trellis_axes(mesh):
-    # Accept either a Trimesh or raw vertices
     if hasattr(mesh, "vertices"):
         verts = np.asarray(mesh.vertices)
         faces = np.asarray(mesh.faces)
@@ -265,10 +231,8 @@ def convert_to_trellis_axes(mesh):
         verts = np.asarray(mesh)
         faces = None
 
-    # Apply axis conversion
     verts_trellis = verts @ R_opengl_to_trellis.T
 
-    # Return same type as input
     if faces is not None:
         return trimesh.Trimesh(vertices=verts_trellis, faces=faces, process=False)
     else:
@@ -315,63 +279,23 @@ def get_global_rotations():
     }
     
 def normalize_custom(verts):
-    # verts: torch tensor [N, 3]
     vmin = verts.min(dim=0).values
     vmax = verts.max(dim=0).values
     centroid = (vmin + vmax) * 0.5
     extents = vmax - vmin
-    scale = extents.norm()  # diagonal of bounding box
+    scale = extents.norm()
 
     verts_norm = (verts - centroid) / scale
     return verts_norm, centroid, scale
 
-# def get_normalization_matrix(dtc_mesh, pred_mesh):
-#     # unwrap to get verts/faces as torch tensors
-#     pred_mesh.simplify(target=100000)
-#     dtc = unwrap_mesh(dtc_mesh)
-#     pred = unwrap_mesh(pred_mesh)
 
-#     # --- Normalize BEFORE converting to trimesh ---
-#     A_verts, A_centroid, A_scale = normalize_custom(torch.tensor(dtc.vertices))
-#     B_verts, B_centroid, B_scale = normalize_custom(torch.tensor(pred.vertices))
 
-#     # Convert to trimesh
-#     A = trimesh.Trimesh(vertices=A_verts.numpy(), faces=dtc.faces)
-#     B = trimesh.Trimesh(vertices=B_verts.numpy(), faces=pred.faces)
 
-#     # --- ICP on normalized meshes ---
-#     T_init, _ = trimesh.registration.mesh_other(
-#         A, B,
-#         scale=False,
-#         icp_first=10,     # coarse alignment
-#         samples=5000
-#     )
 
-#     # T_norm, _ = trimesh.registration.mesh_other(
-#     #     A, B,
-#     #     scale=False,
-#     #     samples=10000,
-#     #     initial=T_init
-#     # )
-#     T_norm, _, _ = trimesh.registration.icp(
-#         A.vertices,
-#         B.vertices,
-#         initial=T_init,   # now allowed
-#         scale=False,
-#         max_iterations=50
-#     )
 
-#     # --- Build un-normalization transforms ---
-#     S_A = np.eye(4); S_A[:3, :3] *= A_scale.item()
-#     S_B = np.eye(4); S_B[:3, :3] *= B_scale.item()
 
-#     T_A = np.eye(4); T_A[:3, 3] = A_centroid.numpy()
-#     T_B = np.eye(4); T_B[:3, 3] = B_centroid.numpy()
 
-#     # Final transform in original units
-#     T_final = T_A @ S_A @ T_norm @ np.linalg.inv(S_B) @ np.linalg.inv(T_B)
 
-#     return torch.tensor(T_final, dtype=torch.float32, device=pred_mesh.device)
 
 
 def normalize(mesh):
@@ -381,71 +305,25 @@ def normalize(mesh):
     mesh.apply_scale(scale)
     return mesh
 
-# def get_normalization_matrix(dtc_mesh, pred_mesh):
-#     pred_mesh.simplify(50000)
-#     device = pred_mesh.device
-#     dtc = unwrap_mesh(dtc_mesh)
-#     pred = unwrap_mesh(pred_mesh)
-#     A_verts, A_centroid, A_scale = normalize_custom(torch.tensor(dtc.vertices))
-#     B_verts, B_centroid, B_scale = normalize_custom(torch.tensor(pred.vertices))
-#     A = trimesh.Trimesh(vertices=A_verts.numpy(), faces=dtc.faces)
-#     B = trimesh.Trimesh(vertices=B_verts.numpy(), faces=pred.faces)
-#     # Coarse alignment
-#     T_init, _ = trimesh.registration.mesh_other(A, B, scale=True, samples=10000)
-#     T_norm, _, _ = trimesh.registration.icp(
-#         A.vertices, 
-#         B.vertices, 
-#         initial=T_init,
-#         scale=True,
-#         max_iterations=50
-#     )
-#     S_A = np.eye(4); S_A[:3, :3] *= A_scale.item()
-#     S_B = np.eye(4); S_B[:3, :3] *= B_scale.item()
-#     T_A = np.eye(4); T_A[:3, 3] = A_centroid.numpy()
-#     T_B = np.eye(4); T_B[:3, 3] = B_centroid.numpy()
-#     T_final = T_A @ S_A @ T_norm @ np.linalg.inv(S_B) @ np.linalg.inv(T_B)
     
-#     return torch.tensor(T_final, dtype=torch.float32, device=device)
     
 
 def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, icp_iterations=50):
-    """
-    Compute robust ICP-based alignment transformation from predicted mesh to ground truth mesh.
-    
-    This function aligns two meshes by:
-    1. Simplifying the predicted mesh
-    2. Computing centroids and scaling
-    3. Using ICP registration on normalized meshes
-    4. Properly denormalizing the result
-    
-    Args:
-        dtc_mesh: Ground truth mesh (trimesh.Trimesh or MeshWithVoxel)
-        pred_mesh: Predicted mesh to be aligned (trimesh.Trimesh or MeshWithVoxel)
-        simplify_target: Target vertex count for simplification
-        icp_iterations: Number of ICP iterations
-        
-    Returns:
-        T_final: 4x4 transformation matrix that aligns pred_mesh to dtc_mesh space (torch.Tensor)
-    """
+    """Compute robust ICP-based alignment transformation from predicted mesh to ground truth mesh."""
     device = pred_mesh.device if hasattr(pred_mesh, 'device') else torch.device('cpu')
     
-    # Simplify predicted mesh first
     if hasattr(pred_mesh, 'simplify'):
         pred_mesh.simplify(simplify_target)
     
-    # Unwrap mesh objects
     dtc_trimesh = unwrap_mesh(dtc_mesh)
     pred_trimesh = unwrap_mesh(pred_mesh)
     
-    # Work with copies to avoid modifying originals
     dtc_verts = dtc_trimesh.vertices.copy()
     pred_verts = pred_trimesh.vertices.copy()
     
-    # Compute centroids
     dtc_centroid = dtc_verts.mean(axis=0)
     pred_centroid = pred_verts.mean(axis=0)
     
-    # Compute scale from bounding box diagonals
     dtc_bbox_min, dtc_bbox_max = dtc_verts.min(axis=0), dtc_verts.max(axis=0)
     pred_bbox_min, pred_bbox_max = pred_verts.min(axis=0), pred_verts.max(axis=0)
     
@@ -457,11 +335,9 @@ def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, 
     print(f"[Alignment] DTC diag: {dtc_diag:.4f}, Pred diag: {pred_diag:.4f}, Scale: {scale:.4f}")
     print(f"[Alignment] DTC centroid: {dtc_centroid}, Pred centroid: {pred_centroid}")
     
-    # Normalize vertices to unit scale, centered at origin
     dtc_norm_verts = (dtc_verts - dtc_centroid) / (dtc_diag / 2.0)
     pred_norm_verts = (pred_verts - pred_centroid) / (pred_diag / 2.0)
     
-    # Use ICP for alignment in normalized space
     try:
         T_icp, _, _ = trimesh.registration.icp(
             dtc_norm_verts,
@@ -476,29 +352,15 @@ def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, 
         print(f"[Alignment] ICP failed: {e}. Using identity.")
         T_icp = np.eye(4)
     
-    # Construct transformation in original space
-    # T_final transforms points: p_dtc_space = T_final @ p_pred_space
-    # Derivation:
-    #   1. Center pred at origin: p' = p - pred_centroid
-    #   2. Normalize pred scale: p'' = p' / (pred_diag/2)
-    #   3. Apply ICP in normalized space: p''' = T_icp @ p''
-    #   4. Denormalize: p'''' = p''' * (dtc_diag/2)
-    #   5. Re-center at dtc: p_final = p'''' + dtc_centroid
     
-    # Compose transforms as 4x4 matrices:
-    # T_denorm_pred: undo normalization for pred (center and scale)
     T_denorm_pred = np.eye(4)
     T_denorm_pred[:3, :3] = (pred_diag / 2.0) * np.eye(3)
     T_denorm_pred[:3, 3] = pred_centroid
     
-    # T_norm_dtc: normalize dtc mesh (inverse of above)
     T_norm_dtc = np.eye(4)
     T_norm_dtc[:3, :3] = (2.0 / dtc_diag) * np.eye(3)
     T_norm_dtc[:3, 3] = -dtc_centroid * (2.0 / dtc_diag)
     
-    # Compose: denorm_pred -> icp -> norm_dtc -> scale
-    # p_out = inv(T_norm_dtc) @ T_icp @ T_norm_pred @ p_in
-    # which is: p_out = denorm_dtc @ T_icp @ norm_pred @ p_in
     
     T_norm_pred = np.eye(4)
     T_norm_pred[:3, :3] = (2.0 / pred_diag) * np.eye(3)
@@ -508,26 +370,19 @@ def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, 
     T_denorm_dtc[:3, :3] = (dtc_diag / 2.0) * np.eye(3)
     T_denorm_dtc[:3, 3] = dtc_centroid
     
-    # Apply scale to account for different mesh sizes
     T_scale = np.eye(4)
     T_scale[:3, :3] *= scale
     
-    # Compose transformations - IMPORTANT: only scale the translation, not rotation
-    # First apply ICP in normalized space
-    T_icp_result = T_icp @ T_norm_pred  # Normalize and register
+    T_icp_result = T_icp @ T_norm_pred
     
-    # Extract rotation and translation from ICP result
     R_icp = T_icp_result[:3, :3]
     t_icp = T_icp_result[:3, 3]
     
-    # Apply denormalization: scale and translate
-    # p_final = denorm_dtc(scale * denorm_pred_inv(p_icp))
     t_scaled = scale * t_icp + dtc_centroid - scale * pred_centroid
     
-    # Build final matrix with proper rotation
     T_final = np.eye(4)
-    T_final[:3, :3] = R_icp  # Keep rotation from ICP
-    T_final[:3, 3] = t_scaled  # Scale translation only
+    T_final[:3, :3] = R_icp
+    T_final[:3, 3] = t_scaled
     
     print(f"[Alignment] Final transformation matrix:\n{T_final}")
     print(f"[Alignment] Rotation part preserved from ICP, translation scaled")
@@ -535,49 +390,30 @@ def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, 
     return torch.tensor(T_final, dtype=torch.float32, device=device)
 
 
-# Legacy function kept for backward compatibility
 def get_normalization_matrix(dtc_mesh, pred_mesh):
-    """
-    DEPRECATED: Use compute_icp_alignment_transform instead.
-    This function is kept for backward compatibility.
-    """
+    """DEPRECATED: Use compute_icp_alignment_transform instead."""
     return compute_icp_alignment_transform(dtc_mesh, pred_mesh)
 
 
 def compute_simple_alignment_transform(dtc_mesh, pred_mesh):
-    """
-    Compute simple center-and-scale alignment (no ICP).
-    Use this as a fallback if ICP-based alignment produces bad results.
-    
-    Args:
-        dtc_mesh: Ground truth mesh (trimesh.Trimesh or MeshWithVoxel)
-        pred_mesh: Predicted mesh to be aligned (trimesh.Trimesh or MeshWithVoxel)
-        
-    Returns:
-        T_final: 4x4 transformation matrix (torch.Tensor)
-    """
+    """Compute simple center-and-scale alignment (no ICP)."""
     device = pred_mesh.device if hasattr(pred_mesh, 'device') else torch.device('cpu')
     
-    # Simplify predicted mesh if possible
     if hasattr(pred_mesh, 'simplify'):
         try:
             pred_mesh.simplify(10000)
         except:
             pass
     
-    # Unwrap mesh objects
     dtc_trimesh = unwrap_mesh(dtc_mesh)
     pred_trimesh = unwrap_mesh(pred_mesh)
     
-    # Get vertices
     dtc_verts = dtc_trimesh.vertices.copy()
     pred_verts = pred_trimesh.vertices.copy()
     
-    # Compute centroids
     dtc_centroid = dtc_verts.mean(axis=0)
     pred_centroid = pred_verts.mean(axis=0)
     
-    # Compute scales from bounding boxes
     dtc_bbox_diag = np.linalg.norm(dtc_verts.max(axis=0) - dtc_verts.min(axis=0))
     pred_bbox_diag = np.linalg.norm(pred_verts.max(axis=0) - pred_verts.min(axis=0))
     
@@ -587,7 +423,6 @@ def compute_simple_alignment_transform(dtc_mesh, pred_mesh):
     print(f"[Simple Alignment] Pred centroid: {pred_centroid}, scale: {pred_bbox_diag:.4f}")
     print(f"[Simple Alignment] Scale factor: {scale:.4f}")
     
-    # Build transformation: scale then translate
     T = np.eye(4)
     T[:3, :3] *= scale
     T[:3, 3] = dtc_centroid - scale * pred_centroid
@@ -599,7 +434,6 @@ def compute_simple_alignment_transform(dtc_mesh, pred_mesh):
 
 
 
-# Loss Utils 
 
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -659,7 +493,6 @@ def lpips(img1, img2, value_range=(0, 1)):
     global loss_fn_vgg
     if loss_fn_vgg is None:
         loss_fn_vgg = LPIPS(net='vgg').cuda().eval()
-    # normalize to [-1, 1]
     img1 = (img1 - value_range[0]) / (value_range[1] - value_range[0]) * 2 - 1
     img2 = (img2 - value_range[0]) / (value_range[1] - value_range[0]) * 2 - 1
     return loss_fn_vgg(img1, img2).mean()
@@ -677,10 +510,6 @@ def normal_angle(pred, gt):
     return ang
 
 
-# Get initial structure from DmTeT, 
-# Update dmtet directly with the loss  
-# If it works, use the logic to update the trellis latent optimization process. 
-# 
 
 
 
@@ -691,54 +520,39 @@ def normal_angle(pred, gt):
 from scipy.spatial import cKDTree
 
 def align_meshes_pca(dtc_mesh, pred_mesh):
-    """
-    Aligns two identical shapes globally using Principal Component Analysis (PCA).
-    No initial guess is required.
-    """
-    # 1. Get vertex arrays
+    """Aligns two identical shapes globally using Principal Component Analysis (PCA)."""
     source_mesh = unwrap_mesh(dtc_mesh)
     target_mesh = unwrap_mesh(pred_mesh)
     src_pts = source_mesh.vertices
     tgt_pts = target_mesh.vertices
     
-    # 2. Compute centers of mass and center the points
     src_center = np.mean(src_pts, axis=0)
     tgt_center = np.mean(tgt_pts, axis=0)
     
     src_centered = src_pts - src_center
     tgt_centered = tgt_pts - tgt_center
     
-    # 3. Compute Covariance Matrices and Singular Value Decomposition (SVD)
-    # This gives us the principal geometric axes of both shapes
     _, _, Vt_src = np.linalg.svd(src_centered, full_matrices=False)
     _, _, Vt_tgt = np.linalg.svd(tgt_centered, full_matrices=False)
     
     R_src = Vt_src.T
     R_tgt = Vt_tgt.T
     
-    # 4. Handle PCA sign/flip ambiguity
-    # Test all 8 possible sign flips for the axes to find the correct orientation
     best_error = float('inf')
     best_R = np.eye(3)
     
-    # Build a KD-Tree of the target for rapid distance checking
     tgt_tree = cKDTree(tgt_centered)
     
-    # Generate all sign combinations for 3D space: [[1,1,1], [1,1,-1], ...]
     sign_flips = np.array(np.meshgrid([1, -1], [1, -1], [1, -1])).T.reshape(-1, 3)
     
     for flip in sign_flips:
-        # Apply the flip to the source axes
         R_src_flipped = R_src * flip
         
-        # Candidate rotation matrix to map source axes to target axes
         R_cand = R_tgt @ R_src_flipped.T
         
-        # Enforce a valid rotation matrix (determinant must be +1)
         if np.linalg.det(R_cand) < 0:
             continue
             
-        # Test how close the points match under this rotation
         test_pts = src_centered @ R_cand.T
         distances, _ = tgt_tree.query(test_pts, k=1)
         mean_error = np.mean(distances)
@@ -747,8 +561,6 @@ def align_meshes_pca(dtc_mesh, pred_mesh):
             best_error = mean_error
             best_R = R_cand
 
-    # 5. Build final 4x4 Transformation Matrix
-    # T maps: src -> center -> rotate -> translate to target
     T = np.eye(4)
     T[:3, :3] = best_R
     T[:3, 3] = tgt_center - best_R @ src_center
@@ -762,53 +574,44 @@ def align_meshes_ransac_icp(pred_mesh, dtc_mesh, voxel_size=0.05):
    
     source_mesh = unwrap_mesh(pred_mesh)
     target_mesh = unwrap_mesh(dtc_mesh)
-    # 1. Convert Trimesh structures into Open3D Point Clouds
     source = o3d.geometry.PointCloud()
     source.points = o3d.utility.Vector3dVector(source_mesh.vertices)
     
     target = o3d.geometry.PointCloud()
     target.points = o3d.utility.Vector3dVector(target_mesh.vertices)
     
-    # scale both
-    # source_extent = source.get_max_bound() - source.get_min_bound()
-    # scale_factor = max(source_extent) 
-    # target.scale(scale_factor, center=(0, 0, 0))
     
     
-    # 2. Downsample and estimate geometric surface normals
     source_down = source.voxel_down_sample(voxel_size)
     target_down = target.voxel_down_sample(voxel_size)
     
     source_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
     target_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
 
-    # 3. Extract FPFH local shape descriptors
     source_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
         source_down, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 5, max_nn=100))
     target_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
         target_down, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 5, max_nn=100))
 
-    # 4. Run RANSAC Global Registration (The global rough alignment step)
     distance_threshold = voxel_size * 1.5
     result_ransac = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
         source_down, target_down, source_fpfh, target_fpfh, False, distance_threshold,
-        o3d.pipelines.registration.TransformationEstimationPointToPoint(True), 3, # False
-        [o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.3), # 0.9
+        o3d.pipelines.registration.TransformationEstimationPointToPoint(True), 3,
+        [o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.3),
          o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(distance_threshold)],
         o3d.pipelines.registration.RANSACConvergenceCriteria(100000, 0.999))
 
     rough_alignment = result_ransac.transformation
 
-    # 5. Run Point-to-Plane ICP to fine-tune the final position
     source.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
     target.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
     
     result_icp = o3d.pipelines.registration.registration_icp(
         source, target, voxel_size * 0.4, rough_alignment,
-        o3d.pipelines.registration.TransformationEstimationPointToPlane()) # False
+        o3d.pipelines.registration.TransformationEstimationPointToPlane())
 
  
-    return result_icp.transformation # 4 x 4 matrix 
+    return result_icp.transformation
 
 
 
@@ -822,39 +625,19 @@ def align_meshes_similarity(
     dtc_mesh,
     n_samples=10000,
 ):
-    """
-    Align pred_mesh to gt_mesh.
+    """Align pred_mesh to gt_mesh."""
 
-    Returns
-    -------
-    T : (4,4)
-        Similarity transform matrix mapping
-        pred -> gt
-
-    scale : float
-        Uniform scale factor
-    """
-
-    # --------------------------------------------------
-    # Sample surfaces
-    # --------------------------------------------------
     pred_mesh = unwrap_mesh(pred_mesh)
     gt_mesh = unwrap_mesh(dtc_mesh)
     src, _ = trimesh.sample.sample_surface(pred_mesh, n_samples)
     tgt, _ = trimesh.sample.sample_surface(gt_mesh, n_samples)
 
-    # --------------------------------------------------
-    # Initial centering
-    # --------------------------------------------------
     src_center = src.mean(axis=0)
     tgt_center = tgt.mean(axis=0)
 
     src0 = src - src_center
     tgt0 = tgt - tgt_center
 
-    # --------------------------------------------------
-    # Initial scale estimate
-    # --------------------------------------------------
     src_radius = np.sqrt(np.mean(np.sum(src0**2, axis=1)))
     tgt_radius = np.sqrt(np.mean(np.sum(tgt0**2, axis=1)))
 
@@ -862,11 +645,6 @@ def align_meshes_similarity(
 
     tgt_tree = cKDTree(tgt)
 
-    # --------------------------------------------------
-    # Chamfer objective
-    # params:
-    # [rx ry rz tx ty tz log_scale]
-    # --------------------------------------------------
     def objective(params):
         rx, ry, rz, tx, ty, tz, log_s = params
 
@@ -888,9 +666,6 @@ def align_meshes_similarity(
 
         return chamfer
 
-    # --------------------------------------------------
-    # Initialization
-    # --------------------------------------------------
     x0 = np.array([
         0.0,
         0.0,
@@ -918,10 +693,6 @@ def align_meshes_similarity(
         [rx, ry, rz]
     ).as_matrix()
 
-    # --------------------------------------------------
-    # Build homogeneous transform
-    # x_gt = scale * R @ x_pred + t
-    # --------------------------------------------------
     T = np.eye(4)
     T[:3, :3] = scale * R
     T[:3, 3] = [tx, ty, tz]
@@ -934,112 +705,40 @@ def bake_extrinsic_intrinsic(
     object_pose: torch.Tensor = None,
     scale: float = 1.0,
 ):
-    """
-    Bake OpenCV->OpenGL flips, object pose, and world scale directly into
-    extrinsic and intrinsic matrices so the renderer can use its own projection.
-
-    Args:
-        M_cv: [4,4] OpenCV world->camera matrix
-        intr_norm: [3,3] normalized intrinsics (fx/w, fy/h, cx/w, cy/h)
-        object_pose: [4,4] object->world matrix or None
-        scale: world scale factor (same as nvdiffrecmc)
-
-    Returns:
-        baked_extr: [4,4] world->camera matrix (OpenGL-ready)
-        baked_intr: [3,3] baked intrinsics matching renderer's projection
-    """
+    """Bake OpenCV->OpenGL flips, object pose, and world scale directly into"""
 
     device = M_cv.device
     dtype = M_cv.dtype
 
-    # -------------------------------
-    # 1. Start with world->camera (OpenCV)
-    # -------------------------------
     extr = M_cv.clone()
 
-    # -------------------------------
-    # 2. Apply object pose (object->world)
-    # -------------------------------
     if object_pose is not None:
         extr = extr @ object_pose.to(device=device, dtype=dtype)
 
-    # -------------------------------
-    # 3. Apply OpenCV -> OpenGL axis flip
-    # -------------------------------
     flip_zy = torch.diag(torch.tensor([1.0, -1.0, -1.0, 1.0], dtype=dtype, device=device))
     extr = flip_zy @ extr
 
-    # -------------------------------
-    # 4. Apply object coordinate flip (same as nvdiffrecmc)
-    # -------------------------------
     flip_obj = torch.diag(torch.tensor([1.0, -1.0, 1.0, 1.0], dtype=dtype, device=device))
     extr = extr @ flip_obj
 
-    # -------------------------------
-    # 5. Apply world scale
-    # -------------------------------
     S = torch.diag(torch.tensor([1.0/scale, 1.0/scale, 1.0/scale, 1.0], dtype=dtype, device=device))
     extr = extr @ S
 
-    # -------------------------------
-    # 6. Bake projection sign conventions into intrinsics
-    #    (so renderer's projection matches nvdiffrecmc)
-    # -------------------------------
     baked_intr = intr_norm.clone()
 
-    # Y axis must be flipped (nvdiffrecmc uses negative Y)
     baked_intr[1, 1] *= -1.0
 
-    # Depth sign baked into extrinsic (OpenGL expects -Z forward)
-    # No change needed here; extr already has correct flips.
 
     return extr, baked_intr
 
-# def bake_extrinsic_intrinsic(
-#     M_cv: torch.Tensor,
-#     intr_norm: torch.Tensor,
-#     object_pose: torch.Tensor = None,
-#     scale: float = 1.0,
-# ):
-#     """
-#     Bake extrinsic/intrinsic for a renderer that expects camera->world extrinsics.
 
-#     Args:
-#         M_cv: [4,4] OpenCV world->camera matrix (cfg['frames'][idx]['transform_matrix'])
-#         intr_norm: [3,3] normalized intrinsics (fx/w, fy/h, cx/w, cy/h)
-#         object_pose: [4,4] object->world matrix or None
-#         scale: world scale factor
 
-#     Returns:
-#         extr_baked: [4,4] camera->world matrix
-#         intr_baked: [3,3] intrinsics (unchanged)
-#     """
 
-#     device = M_cv.device
-#     dtype = M_cv.dtype
 
-#     # 1. Start from world->camera (OpenCV)
-#     W2C = M_cv
 
-#     # 2. Convert to camera->world
-#     C2W = torch.linalg.inv(W2C)
 
-#     # 3. Apply world scale (same effect as scaling mv in nvdiffrecmc)
-#     S = torch.diag(torch.tensor([scale, scale, scale, 1.0], dtype=dtype, device=device))
-#     C2W = C2W @ S
 
-#     # 4. If object_pose is given, assume mesh is in object space and
-#     #    bake object->world into extrinsic as camera->object:
-#     if object_pose is not None:
-#         O2W = object_pose.to(device=device, dtype=dtype)
-#         W2O = torch.linalg.inv(O2W)
-#         C2O = C2W @ W2O
-#         extr_baked = C2O
-#     else:
-#         extr_baked = C2W
 
-#     intr_baked = intr_norm.clone()
-#     return extr_baked, intr_baked
 
 '''
 

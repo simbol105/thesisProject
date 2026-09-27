@@ -1,7 +1,6 @@
 import os 
 os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '1'
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"  # Can save GPU memory
-# os.environ["ATTN_BACKEND"] = 'xformers' # I couldn't get flash attention to work here. 
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import sys 
 sys.path.append("/home/simbol/Documents/thesis/thesis/projects/trellis/TRELLIS.2/")  
 import cv2
@@ -46,13 +45,11 @@ def optimize(config_path: Path, config_yaml: dict)-> List[MeshWithVoxel]:
     with open(config_path, 'r') as f:
         json_config = json.load(f)
     
-    # yaml_config = yaml.safe_load(config_yaml)
     with open(config_yaml, "r") as f:
         yaml_config = yaml.safe_load(f)
     path_dataset = Path(config_path).parent / "train"
     assert path_dataset.exists(), f"Dataset path {path_dataset} does not exist."
 
-    # load a random image from the dataset to use for extracting latent 
     image_paths = list(path_dataset.glob("*.png"))
     camera_matrices = json_config["frames"]
     intr = json_config["intrinsic"]
@@ -66,13 +63,11 @@ def optimize(config_path: Path, config_yaml: dict)-> List[MeshWithVoxel]:
     assert len(image_paths) > 0, f"No images found in dataset path {image_paths}."
     N = len(image_paths)
     input_image = Image.open(image_paths[torch.randint(0, N, (1,)).item()])
-    # load the pipeline
     pipeline = Trellis2ImageTo3DPipeline.from_pretrained("microsoft/TRELLIS.2-4B")
     pipeline.cuda()
 
     _, (shape_slat, tex_slat, res) = pipeline.run(input_image, return_latent=True, 
                                         pipeline_type='512')
-    # convert the latents to trainable parameters 
     shape_feats = nn.Parameter(shape_slat.feats.clone())
     tex_feats   = nn.Parameter(tex_slat.feats.clone())
     assert Path(yaml_config['envmap_path']).exists(), f"Envmap path {yaml_config['envmap_path']} doesn't exist!" 
@@ -102,8 +97,6 @@ def optimize(config_path: Path, config_yaml: dict)-> List[MeshWithVoxel]:
         for i in tqdm(indices, desc="Frames", leave=False):
             renderer = PbrMeshRenderer(device="cuda", rendering_options=render_options)
 
-            # shape_slat_opt = shape_slat.replace(feats=shape_feats)
-            # tex_slat_opt   = tex_slat.replace(feats=tex_feats)
             
             shape_slat_opt = shape_slat.replace(
                 feats=shape_feats,
@@ -132,28 +125,23 @@ def optimize(config_path: Path, config_yaml: dict)-> List[MeshWithVoxel]:
                 intrinsics=intr,
                 envmap=env_map
             )
-            rendered_image = buffers["shaded"].clone()  # [3, H, W]
+            rendered_image = buffers["shaded"].clone()
             rendered_image = rendered_image.detach().requires_grad_(True)
             ref = cv2.imread(image_paths[i])[:, :, ::-1]  
             ref = cv2.resize(ref, (res, res))
             ref = torch.tensor(ref).float().cuda() / 255.0
-            ref = ref.permute(2, 0, 1).detach()  # [3, H, W]
+            ref = ref.permute(2, 0, 1).detach()
 
             loss = torch.nn.functional.mse_loss(rendered_image, ref)
-            # print("Rendered requires_grad:", rendered_image.requires_grad)
 
-            #total_loss += loss
             loss.backward()
            
            
        
-        # total_loss.backward() 
         
             optimizer.step()
 
-        # outer.set_postfix(loss=total_loss.item() / N)
     
-    # decode the final mesh and the latents and return 
     final_shape_slat = shape_slat.replace(feats=shape_feats.detach())
     final_tex_slat   = tex_slat.replace(feats=tex_feats.detach())
     final_mesh = pipeline.decode_latent(final_shape_slat, final_tex_slat, res)[0]
@@ -169,12 +157,10 @@ if __name__ == "__main__":
         dtype=torch.float32, device='cuda'
     ))
     mesh, _, _  = optimize(config_path=config_path, config_yaml = config_yaml)
-    #final_mesh.simplify(16777216) # nvdiffrast limit
     video = render_utils.make_pbr_vis_frames(render_utils.render_video(mesh,
                                                                         envmap=env_map))
     imageio.mimsave("optimization_result_20.mp4", video, fps=15)
     
-    # Export the final result to .glb
     glb = o_voxel.postprocess.to_glb(
     vertices            =   mesh.vertices,
     faces               =   mesh.faces,
@@ -184,7 +170,6 @@ if __name__ == "__main__":
     voxel_size          =   mesh.voxel_size,
     aabb                =   [[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
     decimation_target   =   1000000,
-    #texture_size        =   4096,
     texture_size        =   1024,
     remesh              =   True,
     remesh_band         =   1,

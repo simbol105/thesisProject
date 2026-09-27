@@ -1,7 +1,6 @@
 import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-# os.environ["ATTN_BACKEND"] = 'xformers'
 
 import argparse
 import json
@@ -101,7 +100,6 @@ def copy_mesh(mesh: MeshWithVoxel) -> MeshWithVoxel:
 
 def get_mesh_from_ovoxel(coords, attrs, resolution=512):
      
-    # Extract geometry data from O-Voxel  
     dual_vertices = attrs['dual_vertices'] / 255.0  
     intersected = torch.cat([  
         attrs['intersected'] % 2,  
@@ -196,15 +194,15 @@ def refine_latents(
     ssaa = int(config_yaml.get("ssaa", 1))
     lamda  = float(config_yaml.get("lamda", 0.001))
     peel_layers = int(config_yaml.get("peel_layers", 8))
-    loss_type = str(config_yaml.get("loss_type", "mse"))  # loss_fn
+    loss_type = str(config_yaml.get("loss_type", "mse"))
     latent_l2_weight = float(config_yaml.get("latent_l2_weight", 0.0))
-    grad_clip_norm = float(config_yaml.get("grad_clip_norm", 0.0))  # 0 disables
+    grad_clip_norm = float(config_yaml.get("grad_clip_norm", 0.0))
     display_interval = int(config_yaml.get("display_interval", 20))
     out_dir = config_yaml.get("out_dir", "optimization_output")
     dmtet_res = int(config_yaml.get("dmtet_res", 64))
     
-    optimize_texture_only = bool(config_yaml.get("optimize_texture_only", False))  # NEW
-    optimizer_type = str(config_yaml.get("optimizer_type", "adam")).lower()  # NEW
+    optimize_texture_only = bool(config_yaml.get("optimize_texture_only", False))
+    optimizer_type = str(config_yaml.get("optimizer_type", "adam")).lower()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transforms = _load_json(transforms_json_path)
@@ -221,42 +219,35 @@ def refine_latents(
 
     prompt_idx = int(config_yaml.get("prompt_idx", np.random.randint(0, len(image_paths))))
 
-    # Load pipeline
 
     pipeline = Trellis2ImageTo3DPipeline.from_pretrained("microsoft/TRELLIS.2-4B")
     pipeline.low_vram = False
     pipeline.cuda()
 
 
-    # Build envmap and renderer
     envmap_img = cv2.imread(str(envmap_path), cv2.IMREAD_UNCHANGED)
     assert envmap_img is not None, f"Failed to read envmap: {envmap_path}"
     envmap_img = cv2.cvtColor(envmap_img, cv2.COLOR_BGR2RGB)
     env_map = EnvMap(torch.tensor(envmap_img, dtype=torch.float32, device=device))
 
-    # Run once on  prompt image to obtain latents and render resolution 
     prompt_img = Image.open(image_paths[prompt_idx]).convert("RGBA")
     
     mesh_= pipeline.run(
         prompt_img,
-        # return_latent=True,
         pipeline_type=pipeline_type,
     )[0]
     
     render_resolution = 512 
    
 
-    # Scale intrinsics to render_resolution.
     orig_img = Image.open(image_paths[prompt_idx])
     orig_w, orig_h = orig_img.size
     intr_scaled = _scale_opencv_intrinsics(intr, (orig_w, orig_h), render_resolution).to(device=device)
 
-    # camera extrinsics
     extrinsics = []
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
     
-    # Compute alignment transform for the mesh 
     if gt_mesh.exists():
         dtc_mesh = trimesh.load_mesh(gt_mesh) 
         with torch.no_grad():
@@ -286,11 +277,7 @@ def refine_latents(
         device=device.type,
     )
     
-    #LEO
-    # 1. Convert the predicted MeshWithVoxel to O-Voxel format
-    # I won't save explicitely, but the representation will be used for the optimization later. 
     
-    # export the mesh to glb 
     glb = o_voxel.postprocess.to_glb(
         vertices            =   mesh_.vertices,
         faces               =   mesh_.faces,
@@ -310,8 +297,6 @@ def refine_latents(
     mesh = glb
     vertices = mesh_.vertices.float().cpu()
     faces = mesh_.faces.long().cpu()
-    # vertices = torch.tensor(mesh_.vertices).float()
-    # faces = torch.tensor(mesh_.faces).long()
     
 
     
@@ -327,37 +312,28 @@ def refine_latents(
     )
 
     
-    # # sorting 
     vid = o_voxel.serialize.encode_seq(voxel_indices)
     mapping = torch.argsort(vid)
     voxel_indices = voxel_indices[mapping]
     dual_vertices = dual_vertices[mapping]
     intersected = intersected[mapping]
     
-    # # Material voxelization
-    # # mesh_vox = trimesh.Trimesh(vertices=vertices.cpu().numpy(), faces=faces.cpu().numpy())
-    # # tex = trimesh.visual.texture.TextureVisuals.from_color(mesh_vox.visual.vertex_colors)
-    # # mesh_vox.visual = tex
     voxel_indices_mat, attributes = o_voxel.convert.textured_mesh_to_volumetric_attr(
         mesh, 
         grid_size=render_resolution, 
         aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]], 
         timing=True
     )
-    # ## sorting 
     vid_mat = o_voxel.serialize.encode_seq(voxel_indices_mat)
     mapping_mat = torch.argsort(vid_mat)
     attributes = {k: v[mapping_mat] for k, v in attributes.items()}
  
-    # # packing
     dual_vertices = dual_vertices * render_resolution - voxel_indices
     dual_vertices = (torch.clamp(dual_vertices, 0, 1) * 255).type(torch.uint8)
     intersected = (intersected[:, 0:1] + 2 * intersected[:, 1:2] + 4 * intersected[:, 2:3]).type(torch.uint8)
     attributes['dual_vertices'] = dual_vertices 
     attributes['intersected'] = intersected 
-    # # o_voxel.io.write("ovoxel_helmet.vxz", voxel_indices, attributes)
    
-    # # 2. Extract and convert the optimization parameters from the O-Voxel representation 
     dual_vertices_opt = attributes['dual_vertices'].float() / 255.0
     gt_intersected = torch.cat([
         intersected % 2,
@@ -370,7 +346,6 @@ def refine_latents(
     
     quad_lerp = torch.nn.functional.softplus(torch.ones_like(dual_vertices[:, :1]) * 0.1)
     
-    # # Material attributes, base_color, metallic, rougness, alpha, normal, emissive. 
 
     
     base_color = attributes['base_color'].float() / 255.0
@@ -378,92 +353,40 @@ def refine_latents(
     intersected_f = intersected.float() / 7.0
     
     h_feats = torch.cat([
-        dual_vertices_opt, # 0-3
-        intersected_f, # 3-6
+        dual_vertices_opt,
+        intersected_f,
         quad_lerp, 
         base_color
     ], dim=-1).to(device=device)
     
-    # # print("H feats: \n", h_feats.shape)
     
-    # # Use a sparse tensor to hold the optimization parameters with gradients enabled
     h_feats = torch.nn.Parameter(h_feats)
     h = SparseTensor(
         feats= h_feats, 
         coords=torch.cat([torch.zeros_like(voxel_indices[:, 0:1]), voxel_indices], dim=-1) 
     ).to(device=device)
     
-    # print("H feats: \n", h_feats.shape)
-    # print("dual_vertices_opts: \n", dual_vertices_opt.shape)
-    # print("Intersected_f: \n", intersected_f.shape)
-    # print("Quard lerp: \n", quad_lerp.shape)
-    # print("Base color: \n", base_color.shape)
 
-    #========================DEBUG=====================================================
    
     
     
-    # extr_ = extrinsics_t[0] @ object_pose
-    
-    # v_ = dual_vertices / 255.0
-    
-    # packed_mesh = Mesh(*o_voxel.convert.flexible_dual_grid_to_mesh(  
-    #     voxel_indices.to(device=device),   
-    #     v_.to(device=device),   
-    #     gt_intersected.to(device=device),
-    #     (dual_vertices[:, :1] * 0.1).to(device=device),  
-    #     aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],  
-    #     grid_size=render_resolution,  
-    #     train=True  
-    # ), base_color.contiguous())
-    
-    # buff = renderer.render(
-    #     mesh=packed_mesh, 
-    #     extrinsics=extr_,
-    #     intrinsics=intr_scaled,
-    #     return_types=["mask", "normal"],
-    # )
-    # packed_normal = buff['normal']
-    # packed_mask = buff['mask']
-    # packed_img = torch.cat([packed_normal, packed_mask.repeat(3, 1, 1)], dim=2)
-    # packed_img = packed_img.permute(1, 2, 0)
-    # packed_img = packed_img.clamp(0.0, 1.0)
-    # packed_img = packed_img.detach().cpu().numpy()
-    # save_image(f"{out_dir}/rot_packed_normal_mask.png", packed_img)
     
     
     
     
-    #=================================================INITIAL MESH EXTRACTION=======================================================================
+    
+    
+    
 
     
-    # buffers = renderer.render(
-    #     mesh=mesh_,
-    #     extrinsics=extr_,
-    #     intrinsics=intr_scaled,
-    #     return_types=[ "mask", "normal"],
-    #     # return_types=["base_color"],
-    #     # return_types=["attr", "mask", "normal"], 
-    #     # transformation = object_pose
       
-    # )
-    # normal = buffers["normal"]      # (3, H, W)
-    # mask   = buffers["mask"][None]  # (1, H, W)
     
-    # img = torch.cat([normal, mask.repeat(3,1,1)], dim=2)  # (4, H, W)
-    # img = img.permute(1, 2, 0)  # (H, W, 4)
-    # img = img.clamp(0.0, 1.0)
-    # img_np = img.detach().cpu().numpy()
-
-    # save_image(f"{out_dir}/rot_initial_normal_mask.png", img_np)
-
-
-    #======================================================================================
-#----------------------------------------------OPTIMIZATION DEBUG--------------------------------------------------------------------------------------
 
 
 
-    # optimizer = torch.optim.Adam([h_feats, color], lr = lr)
+
+
+
     optimizer = torch.optim.Adam([h_feats], lr = lr)
     
     for i in range (num_iters+1): 
@@ -479,46 +402,27 @@ def refine_latents(
         ], dim=-1).bool()
       
     
-        # color = h_opt.feats[..., 5:8]#.transpose(0, 1) 
         color = torch.sigmoid(h_opt.feats[..., 5:8])
-        # quad_lerp = softplus_inverse(h_opt.feats[..., 4:5])
         quad_lerp = torch.nn.functional.softplus(h_opt.feats[..., 4:5])
-        # quad_lerp = h_opt.feats[..., 4:5]
         
         mesh_verts, mesh_faces = o_voxel.convert.flexible_dual_grid_to_mesh(  
             h_opt.coords[:, 1:],   
             vertices,   
-            # gt_intersected,
             intersected_logit,
             quad_lerp,  
             aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],  
             grid_size=render_resolution,  
             train=False 
         )  
-        #, vertex_attrs=color.contiguous() 
-        # L = (mesh_faces.shape[0] // 4) 
-        # original_vertex_count = vertices.shape[0]  
         
      
 
-        # quad_indices = mesh_faces[:L*4].reshape(-1, 4)[:, :4]  
         
         
 
-        # quad_colors = color[quad_indices]  
-        # mean_color_02 = (quad_colors[:, 0] + quad_colors[:, 2]) / 2  
-        # mean_color_13 = (quad_colors[:, 1] + quad_colors[:, 3]) / 2  
          
-        # split_weight_ws = quad_lerp[quad_indices]  
-        # split_weight_ws_02 = split_weight_ws[:, 0] * split_weight_ws[:, 2]  
-        # split_weight_ws_13 = split_weight_ws[:, 1] * split_weight_ws[:, 3]  
         
-        # mid_colors = (  
-        #     split_weight_ws_02 * mean_color_02 +  
-        #     split_weight_ws_13 * mean_color_13  
-        # ) / ((split_weight_ws_02 + split_weight_ws_13)  + 1e-8)
         
-        # extended_colors = torch.cat([color, mid_colors], dim=0) 
         
         
         
@@ -534,7 +438,7 @@ def refine_latents(
         total_loss = torch.zeros((), device=device)
 
         for idx in indices: 
-            extr = extrinsics_t[idx] #@ object_pose
+            extr = extrinsics_t[idx]
             buffer = renderer.render(
                 mesh=mesh,
                 extrinsics=extr,
@@ -543,7 +447,7 @@ def refine_latents(
                 transformation=object_pose 
             )
             
-            pred = buffer["attr"] #[:3]    
+            pred = buffer["attr"]
             gt   = ref_images[idx]
             gt_rgb = gt [:3]
             mask = buffer["mask"]
@@ -554,14 +458,13 @@ def refine_latents(
             loss += mask_loss
             total_loss += loss
             
-            # Visualization
             if display_interval and (idx % display_interval == 0 or idx == num_iters -1):
                 normal_vis = (normal - normal.min()) / (normal.max() - normal.min())
                 H, W = normal_vis.shape[1], normal_vis.shape[2]
                 alpha = torch.ones(1, H, W, device=normal_vis.device)
                 if mask is not None:
                     if mask.ndim == 2:
-                        mask = mask.unsqueeze(0)  # (1, H, W)
+                        mask = mask.unsqueeze(0)
                 else:
                     mask = alpha
 
@@ -585,201 +488,65 @@ def refine_latents(
     
     
     
-# -----------------------------------------------------------------------------------------------------------------------------------------------------
-
-    # if optimizer_type  == "sgd":
-    #     print(f"Using SGD Optimizer with lr={lr}")
-    #     optimizer = torch.optim.SGD([h_feats], lr=lr)
-    # else:
-    #     print(f"Using Adam Optimizer with lr={lr}")
-    #     optimizer = torch.optim.Adam([h_feats], lr=lr)
 
 
-# Main optimization loop 
-    # for it in range(num_iters):
-    #     indices = (
-    #         np.arange(N)
-    #         if frames_per_iter == N
-    #         else np.atleast_1d(rng.choice(N, size=frames_per_iter, replace=False))
-    #     )
+
         
-    #     h_opt = h.replace(feats = h_feats)
         
-    #     vertices = (1 + 2 * voxel_margin) *   torch.nn.functional.sigmoid(h_opt.feats[..., 0:3]) - voxel_margin
-    #     intersected_logit = (h_opt.feats[..., 	3:4] > 0)
 
         
 
-    #     quad_lerp = torch.nn.functional.softplus(h_opt.feats[..., 4:5])
-        
-    #     base_color = h_opt.feats[..., 5:8]
         
         
-    #     mesh = Mesh(*o_voxel.convert.flexible_dual_grid_to_mesh(  
-    #         h_opt.coords[:, 1:],   
-    #         vertices,   
-    #         gt_intersected,
-    #         quad_lerp,  
-    #         aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],  
-    #         grid_size=render_resolution,  
-    #         train=True  
-    #     ),base_color.contiguous()) 
+        
     
 
-    #     assert mesh is not None, f"The mesh is not valid"
-    #     optimizer.zero_grad(set_to_none=True)
         
-    #     total_loss = torch.zeros((), device=device)
         
               
-    #     for idx in indices:
             
             
-    #         extr = extrinsics_t[idx] #@ object_pose
-    #         # extr = R_yup_to_zup @ extr
            
            
-    #         buffers = renderer.render(
-    #             mesh=mesh,
-    #             extrinsics=extr,
-    #             intrinsics=intr_scaled,
-    #             return_types=["attr", "mask", "normal"],
-    #             # return_types=["base_color"],
-    #             # return_types=["attr", "mask", "normal"], 
-    #             transformation = object_pose
-    #             # envmap=env_map,
-    #         )
            
 
       
-    #         pred = buffers["attr"][:3] 
            
 
             
-    #         gt   = ref_images[idx]  
-    #         # mask = buffers["mask"]
-    #         # normal = buffers["normal"]
 
      
-    #         # if mask.ndim == 2:
-    #         #     mask = mask[None, ...]        
-    #         # elif mask.shape[0] != 1:
-    #         #     mask = mask.permute(2, 0, 1)
             
-    #         # Compare only RGB (first 3 channels) 
-    #         gt_rgb = gt[:3]  # Drop alpha if present
            
 
-    #         # diff = pred - gt_rgb
-    #         img_loss =  criterion(pred, gt_rgb)
-    #         # mask_loss = criterion(mask, gt[3:4] if gt.shape[0] >=4 else torch.ones_like(mask)) # if gt has alpha mask, add mask loss
-    #         # sdf_loss = dmtet_mesh.get_sdf_loss()
-    #         per_pix = img_loss #+ mask_loss #+ sdf_loss
 
              
 
             
-    #         if display_interval and (idx % display_interval == 0 or idx == num_iters -1):
-    #             # normal_vis = (normal - normal.min()) / (normal.max() - normal.min())
-    #             # H, W = normal_vis.shape[1], normal_vis.shape[2]
-    #             # alpha = torch.ones(1, H, W, device=normal_vis.device)
-    #             # normal_rgba = torch.cat([normal_vis, mask if mask is not None else alpha], dim=0)
                 
-    #             # Build display image with RGB channels only
-    #             # pred_rgba_vis = torch.cat([pred, mask], dim=0) if mask is not None else pred
-    #             # gt_vis = gt[:3] if gt.shape[0] >= 3 else gt  # RGB only
-    #             # gt_rgba_vis = torch.cat([gt_vis, torch.ones(1, H, W, device=gt.device)], dim=0)
                 
-    #             # img = torch.cat([pred_rgba_vis, gt, normal_rgba], dim=2)
                
-    #             img = torch.cat([pred, gt[:3]], dim=2)
-    #             img = img.permute(1, 2, 0)                     
-    #             img = img.clamp(0.0, 1.0)                        
-    #             img_np = img.detach().cpu().numpy()
                 
 
-    #             save_image(f"{out_dir}/opt_{it:04d}_{idx:02d}.png", img_np)
-    #             # display_image(img_np, title=f"Iter {it} - Frame {idx}")
 
      
-    #         loss = per_pix
 
-    #         total_loss = total_loss + loss
         
       
         
-    #     total_loss = total_loss / len(indices)
 
      
 
-    #     print(f"[iter {it}] loss={float(total_loss.detach().cpu()):.6f}")
-
-    #     total_loss.backward()
-
-    #     optimizer.step()
 
 
-    # # Decode final mesh for export
-    # with torch.no_grad():
-    #     h_opt = h.replace(feats = h_feats) 
-    #     vertices = (1 + 2 * voxel_margin) *   torch.nn.functional.sigmoid(h_opt.feats[..., 0:3]) - voxel_margin
-    #     intersected_logit = (h_opt.feats[..., 	3:4] > 0)
-    #     quad_lerp = torch.nn.functional.softplus(h_opt.feats[..., 4:5])
-    #     base_color = h_opt.feats[..., 5:8]
-    #     final_mesh = Mesh(*o_voxel.convert.flexible_dual_grid_to_mesh(  
-    #         h_opt.coords[:, 1:],   
-    #         vertices,   
-    #         intersected_logit,
-    #         quad_lerp,  
-    #         aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],  
-    #         grid_size=render_resolution,  
-    #         train=True  
-    #     ),base_color.contiguous()) 
+
+
         
 
-    # if output_glb_path is not None:
         
-    #     # import imageio
         
-    #     video = render_utils.make_pbr_vis_frames(render_utils.render_video(final_mesh, envmap=env_map))
-    #     imageio.mimsave("mesh_opt_video.mp4", video, fps=15)
 
-    #     # glb = postprocess.to_glb(
-    #     #     vertices=final_mesh.vertices,
-    #     #     faces=final_mesh.faces,
-    #     #     attr_volume=final_mesh.attrs,
-    #     #     coords=final_mesh.coords,
-    #     #     attr_layout=final_mesh.layout,
-    #     #     voxel_size=final_mesh.voxel_size,
-    #     #     aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-    #     #     decimation_target=int(config_yaml.get("decimation_target", 1_000_000)),
-    #     #     texture_size=int(config_yaml.get("texture_size", 1024)),
-    #     #     remesh=bool(config_yaml.get("remesh", True)),
-    #     #     remesh_band=int(config_yaml.get("remesh_band", 1)),
-    #     #     remesh_project=int(config_yaml.get("remesh_project", 0)),
-    #     #     verbose=True,
-    #     # )
-    #     glb = o_voxel.postprocess.to_glb(
-    #     vertices            =   final_mesh.vertices,
-    #     faces               =   final_mesh.faces,
-    #     attr_volume         =   final_mesh.attrs,
-    #     coords              =   final_mesh.coords,
-    #     attr_layout         =   final_mesh.layout,
-    #     voxel_size          =   final_mesh.voxel_size,
-    #     aabb                =   [[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-    #     decimation_target   =   1000000,
-    #     texture_size        =   1024,
-    #     remesh              =   True,
-    #     remesh_band         =   1,
-    #     remesh_project      =   0,
-    #     verbose             =   True
-    # )
-    #     output_glb_path.parent.mkdir(parents=True, exist_ok=True)
-    #     glb_path = output_glb_path / "mesh_opt.glb"
-    #     glb.export(str(glb_path), extension_webp=False)
-    #     print(f"Exported: {glb_path}")
 
-    # return final_mesh
 
 
 def main():

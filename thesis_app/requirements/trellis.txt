@@ -1,0 +1,32 @@
+# TRELLIS environment (conda env "trellis", CUDA 12.8), needs an H100: its
+# Gaussian rasterizer is built for sm_90 only.
+# The upstream installer is authoritative: third_party/trellis/setup.sh --new-env --basic
+#   --flash-attn --diffoctreerast --spconv --mipgaussian --kaolin --nvdiffrast
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.8.0
+torchvision==0.23.0
+numpy
+scipy
+opencv-python
+trimesh
+open3d
+imageio
+imageio-ffmpeg
+pillow
+einops
+easydict
+tqdm
+pyyaml
+safetensors
+huggingface-hub
+transformers
+lpips
+utils3d
+xatlas
+pyvista
+pymeshfix
+igraph
+rembg
+onnxruntime
+# built from source (see setup.sh): nvdiffrast, flash-attn, spconv, diff-gaussian-rasterization,
+# diffoctreerast, kaolin

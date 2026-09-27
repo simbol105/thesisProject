@@ -1,37 +1,0 @@
-Warning: Option --xmlout requires --html
-Warning: Option --xmlout requires --html
-Warning: Option --xmlout requires --html
-/opt/bwhpc/common/devel/cuda/12.8
-/home/fr/fr_fr/fr_ba122/miniforge3/envs/trellis2/lib/python3.10/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
-  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
-/home/fr/fr_fr/fr_ba122/miniforge3/envs/trellis2/lib/python3.10/site-packages/timm/models/registry.py:4: FutureWarning: Importing from timm.models.registry is deprecated, please import via timm.models
-  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.models", FutureWarning)
-[SPARSE] Conv backend: flex_gemm; Attention backend: flash_attn
-[ATTENTION] Using backend: flash_attn
-Sampling sparse structure:   0%|          | 0/12 [00:00<?, ?it/s]Sampling sparse structure:   8%|▊         | 1/12 [00:00<00:09,  1.13it/s]Sampling sparse structure:  17%|█▋        | 2/12 [00:01<00:04,  2.03it/s]Sampling sparse structure:  25%|██▌       | 3/12 [00:01<00:03,  2.70it/s]Sampling sparse structure:  33%|███▎      | 4/12 [00:01<00:02,  3.20it/s]Sampling sparse structure:  42%|████▏     | 5/12 [00:01<00:01,  3.56it/s]Sampling sparse structure:  50%|█████     | 6/12 [00:02<00:01,  3.82it/s]Sampling sparse structure:  58%|█████▊    | 7/12 [00:02<00:01,  4.01it/s]Sampling sparse structure:  67%|██████▋   | 8/12 [00:02<00:00,  4.14it/s]Sampling sparse structure:  75%|███████▌  | 9/12 [00:02<00:00,  4.24it/s]Sampling sparse structure:  83%|████████▎ | 10/12 [00:02<00:00,  4.31it/s]Sampling sparse structure:  92%|█████████▏| 11/12 [00:03<00:00,  5.14it/s]Sampling sparse structure: 100%|██████████| 12/12 [00:03<00:00,  5.90it/s]Sampling sparse structure: 100%|██████████| 12/12 [00:03<00:00,  3.85it/s]
-Sampling shape SLat:   0%|          | 0/12 [00:00<?, ?it/s]Sampling shape SLat:   8%|▊         | 1/12 [00:01<00:11,  1.03s/it]Sampling shape SLat:  17%|█▋        | 2/12 [00:01<00:06,  1.65it/s]Sampling shape SLat:  25%|██▌       | 3/12 [00:01<00:04,  2.13it/s]Sampling shape SLat:  33%|███▎      | 4/12 [00:01<00:03,  2.46it/s]Sampling shape SLat:  42%|████▏     | 5/12 [00:02<00:02,  2.69it/s]Sampling shape SLat:  50%|█████     | 6/12 [00:02<00:02,  2.85it/s]Sampling shape SLat:  58%|█████▊    | 7/12 [00:02<00:01,  2.97it/s]Sampling shape SLat:  67%|██████▋   | 8/12 [00:03<00:01,  3.04it/s]Sampling shape SLat:  75%|███████▌  | 9/12 [00:03<00:00,  3.10it/s]Sampling shape SLat:  83%|████████▎ | 10/12 [00:03<00:00,  3.70it/s]Sampling shape SLat:  92%|█████████▏| 11/12 [00:03<00:00,  4.26it/s]Sampling shape SLat: 100%|██████████| 12/12 [00:03<00:00,  4.75it/s]Sampling shape SLat: 100%|██████████| 12/12 [00:03<00:00,  3.03it/s]
-Sampling texture SLat:   0%|          | 0/12 [00:00<?, ?it/s]Sampling texture SLat:   8%|▊         | 1/12 [00:00<00:01,  6.49it/s]Sampling texture SLat:  17%|█▋        | 2/12 [00:00<00:01,  6.47it/s]Sampling texture SLat:  25%|██▌       | 3/12 [00:00<00:01,  6.48it/s]Sampling texture SLat:  33%|███▎      | 4/12 [00:00<00:01,  6.47it/s]Sampling texture SLat:  42%|████▏     | 5/12 [00:00<00:01,  6.47it/s]Sampling texture SLat:  50%|█████     | 6/12 [00:00<00:00,  6.48it/s]Sampling texture SLat:  58%|█████▊    | 7/12 [00:01<00:00,  6.47it/s]Sampling texture SLat:  67%|██████▋   | 8/12 [00:01<00:00,  6.46it/s]Sampling texture SLat:  75%|███████▌  | 9/12 [00:01<00:00,  6.46it/s]Sampling texture SLat:  83%|████████▎ | 10/12 [00:01<00:00,  6.46it/s]Sampling texture SLat:  92%|█████████▏| 11/12 [00:01<00:00,  6.46it/s]Sampling texture SLat: 100%|██████████| 12/12 [00:01<00:00,  6.47it/s]Sampling texture SLat: 100%|██████████| 12/12 [00:01<00:00,  6.47it/s]
-shape_slat_opt coords: torch.Size([4794, 4]) feats: torch.Size([4794, 32])
-Traceback (most recent call last):
-  File "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/refine_latents.py", line 437, in <module>
-    main()
-  File "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/refine_latents.py", line 429, in main
-    refine_latents(
-  File "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/refine_latents.py", line 269, in refine_latents
-    extr = torch.tensor(extrinsics_t[int(idx)], device=device)
-NameError: name 'extrinsics_t' is not defined. Did you mean: 'extrinsics'?
-
-============================= JOB FEEDBACK =============================
-
-NodeName=uc2n909
-Job ID: 3717943
-Cluster: uc3
-User/Group: fr_ba122/fr_fr
-State: FAILED (exit code 1)
-Nodes: 1
-Cores per node: 16
-CPU Utilized: 00:01:58
-CPU Efficiency: 2.27% of 01:26:40 core-walltime
-Job Wall-clock time: 00:05:25
-Memory Utilized: 14.07 GB
-Memory Efficiency: 11.30% of 124.51 GB (124.51 GB/node)

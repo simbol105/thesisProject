@@ -1,0 +1,83 @@
+# cubefeats optimization (TRELLIS1) for Cup_B08TWHJ33Q_Tan_Lighting001
+#
+#   mesh (recgen / SAM3D / TRELLIS) -> 64^3 voxels -> DINOv2 feats -> SLAT encoder -> SLAT
+#   -> mesh decoder (once) -> cubefeats @ 256^3 [optimized] -> flexicubes -> renders vs. the GT -> backprop into the cubefeats
+#
+#   sanity check (minutes):  python cubefeats_opt/hypothesis_mesh_cubefeats.py --yaml-config cubefeats_opt_configs/Cup_B08TWHJ33Q_Tan_Lighting001.yaml --check
+#   run:                     python cubefeats_opt/hypothesis_mesh_cubefeats.py --yaml-config cubefeats_opt_configs/Cup_B08TWHJ33Q_Tan_Lighting001.yaml --mesh-source recgen   (or sam3d / trellis / trellis2)
+#   every object:            python cubefeats_opt/run_all_cubefeats_opt.py --mesh-source recgen
+
+category: "Cup_B08TWHJ33Q_Tan_Lighting001"
+data_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Cup_B08TWHJ33Q_Tan_Lighting001"
+gt_mesh: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Cup_B08TWHJ33Q_Tan_Lighting001/model.glb"
+
+# --- what is optimized ------------------------------------------------------------------------
+optimize: cubefeats                     # the 101-channel decoder output @ 256^3 (sdf 8 | deform 24 |
+                                        #   flexicubes weights 21 | color 48), the transformer and
+                                        #   upsampling run once, only flexicubes is in the graph
+cubefeats_sdf_voxel_units: true         # optimize the SDF channels in voxel units (the rest is
+                                        #   already O(1)), so a single lr fits every channel
+
+# --- the reconstruction the SLAT is encoded from -------------------------------------------
+# the meshes benchmark/run_all.py generated from prompt set "v2" (train/im_0059, training frame 57)
+mesh_source: recgen                     # recgen | sam3d | trellis | trellis2   (CLI --mesh-source wins)
+recgen_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/recgen/Cup_B08TWHJ33Q_Tan_Lighting001/mesh.obj"
+sam3d_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/sam3d/Cup_B08TWHJ33Q_Tan_Lighting001/mesh.glb"
+trellis_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/trellis/Cup_B08TWHJ33Q_Tan_Lighting001/mesh.glb"
+trellis2_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/trellis2/Cup_B08TWHJ33Q_Tan_Lighting001/mesh.glb"
+prompt_image: "train/im_0059"
+prompt_idx: 57
+normalize_mesh: true                    # re-fit the mesh to [-0.5, 0.5]^3 before voxelizing
+fill_interior: false                    # true = flood-fill the interior (off-distribution for
+                                        # the decoder, which was trained on surface shells)
+
+# --- mesh -> SLAT --------------------------------------------------------------------------
+feature_cameras: trellis                # trellis: TRELLIS' own training rig (sphere Hammersley
+                                        #   views, radius 2, fov 40 deg) in the mesh frame
+                                        # dataset: the DTC cameras (in the mesh frame)
+feature_source: render                  # render: DINOv2 on renders of the source mesh
+                                        # dataset: DINOv2 on the GT photos (needs feature_cameras: dataset)
+feature_views: 150
+dino_batch: 8
+encoder_ckpt: "microsoft/TRELLIS-image-large/ckpts/slat_enc_swin8_B_64l8_fp16"
+model_name: "microsoft/TRELLIS-image-large"
+
+# --- mesh frame -> dataset world frame ------------------------------------------------------
+alignment: search                       # search: 24 axis rotations + ICP with scale, picked by
+                                        #   silhouette IoU | ransac | similarity | bbox | identity
+align_iou_views: 16
+align_top_k: 4
+alignment_path: ""                      # a saved alignment.npy skips the estimation
+
+# --- rendering -------------------------------------------------------------------------------
+near: 0.01
+far: 1000
+ssaa: 1
+
+# --- optimization ------------------------------------------------------------------------------
+optimizer: adam                         # adam | sgd
+lr: 0.01                                # cubefeats: sdf in voxel units, the rest raw
+num_iters: 500
+frames_per_iter: 10
+seed: 1
+grad_clip: 0.0                          # 0 disables
+loss_scaling: true                      # GradScaler; the mesh decoder runs in fp16
+
+weight: 1.5                             # image losses
+sdf_weight: 0.5                         # flexicubes reg loss
+tsdf_weight: 0.5                        # TSDF regression against the GT depth
+latent_l2_weight: 0.0                   # pull the variable back towards its initial value
+lambda_mask: 1.0
+lambda_depth: 1.2
+lambda_normal: 1.0
+lambda_color: 0.9
+lambda_ssim: 0.2
+lambda_lpips: 0.2
+
+# --- logging -------------------------------------------------------------------------------------
+display_interval: 25                  # train-view panel every N iters
+eval_interval: 50                     # test-view renders + metrics.jsonl every N iters
+eval_views: 8
+
+# {mesh_source} is substituted, so every combination keeps its own folder
+out_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/cubefeats_opt/v2/{mesh_source}/Cup_B08TWHJ33Q_Tan_Lighting001"

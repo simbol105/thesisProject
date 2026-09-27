@@ -3,10 +3,7 @@ os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["SPARSE_CONV_BACKEND"] = "spconv"
 
-# from trellis2.modules.sparse import config  
-# config.set_conv_backend('torchsparse')
 
-# os.environ["ATTN_BACKEND"] = 'xformers'
 
 import argparse
 import json
@@ -17,7 +14,6 @@ import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-# from torchmetrics.functional import structural_similarity_index_measure as ssim
 import torch.nn as nn
 import yaml
 from PIL import Image
@@ -43,12 +39,12 @@ from o_voxel import postprocess
 
 
 GENERATED_MESH_PATH = Path("/home/fr/fr_fr/fr_ba122/projects/recgen/out/mesh.obj")
-RES = 64 # ovoxel resolution. 
+RES = 64
 TARGET_NUM_VERTICES = 30000
 VOXEL_MARGIN = 0.5  
 
 TEST_INDEX = 4
-TEST_INTERVALS = [0, 1, 5, 10, 15, 20, 30, 35, 40, 45, 50] #  50, 100, 200,  500, 799, 999]
+TEST_INTERVALS = [0, 1, 5, 10, 15, 20, 30, 35, 40, 45, 50]
 
 def rot_x(theta):
     c, s = np.cos(theta), np.sin(theta)
@@ -78,7 +74,6 @@ def load_image(path):
     return image
 
 AXIS_SWAP = rot_z(np.pi/2)
-# AXIS_SWAP = np.eye(4, dtype=np.float32)
 
 
 def _load_json(path: Path) -> Dict:
@@ -108,7 +103,6 @@ def _scale_opencv_intrinsics(intr: dict, orig_wh: tuple[int, int]) -> torch.Tens
     fx, fy, cx, cy = float(intr["fx"]), float(intr["fy"]), float(intr["cx"]), float(intr["cy"])
     orig_w, orig_h = orig_wh
 
-    # Normalize parameters strictly to the [0, 1] range expected by TRELLIS2 intrinsics_to_projection
     fx_n = fx / float(orig_w)
     fy_n = fy / float(orig_h)
     cx_n = cx / float(orig_w)
@@ -130,11 +124,9 @@ def scale_opencv_intrinsics_for_render(
     fx, fy, cx, cy = float(intr["fx"]), float(intr["fy"]), float(intr["cx"]), float(intr["cy"])
     orig_w, orig_h = orig_wh
 
-    # Assume square render: (render_resolution, render_resolution)
     render_w = render_resolution
     render_h = render_resolution
 
-    # Scale intrinsics from original size to render size
     sx = render_w / orig_w
     sy = render_h / orig_h
 
@@ -143,7 +135,6 @@ def scale_opencv_intrinsics_for_render(
     cx_r = cx * sx
     cy_r = cy * sy
 
-    # Normalize to [0,1] for intrinsics_to_projection
     fx_n = fx_r / render_w
     fy_n = fy_r / render_h
     cx_n = cx_r / render_w
@@ -177,7 +168,6 @@ def freeze_pipeline(pipeline):
 
 def get_mesh_from_ovoxel(coords, attrs, resolution=512):
      
-    # Extract geometry data from O-Voxel  
     dual_vertices = attrs['dual_vertices'] / 255.0  
     intersected = torch.cat([  
         attrs['intersected'] % 2,  
@@ -217,10 +207,7 @@ def _decode_latent_differentiable(
     tex_slat_opt,
     resolution: int,
 ) -> List[MeshWithVoxel]:
-    """
-    Decode shape and texture latents to mesh with voxel attributes.
-    This is fully differentiable for gradient backpropagation.
-    """
+    """Decode shape and texture latents to mesh with voxel attributes."""
    
     assert shape_slat_opt.coords.shape[0] > 0
     assert not torch.isnan(shape_slat_opt.coords).any()
@@ -280,75 +267,24 @@ def downsample_tensors(a: torch.Tensor, b: torch.Tensor):
 
     return a, b
 
-# def match_sparse_voxels(pred_coords, pred_feats, gt_coords, gt_feats):
-#     """
-#     pred_coords: [N_pred, 3] int voxel coords
-#     pred_feats:  [N_pred, C] float features (CUDA)
-#     gt_coords:   [N_gt, 3] int voxel coords
-#     gt_feats:    [N_gt, C] float GT features (CPU or CUDA)
 
-#     Returns:
-#         pred_matched: [K, C]
-#         gt_matched:   [K, C]
-#         pred_only_mask: [N_pred] boolean
-#         gt_only_mask:   [N_gt] boolean
-#     """
 
-#     device = pred_feats.device
 
-#     # --- Ensure EVERYTHING is on the same device ---
-#     pred_coords = pred_coords.to(device)
-#     gt_coords   = gt_coords.to(device)
-#     gt_feats    = gt_feats.to(device)
 
-#     # Convert coords to linear indices
-#     pred_lin = o_voxel.serialize.encode_seq(pred_coords)   # [N_pred]
-#     gt_lin   = o_voxel.serialize.encode_seq(gt_coords)     # [N_gt]
 
-#     # Sort both
-#     pred_sort = torch.argsort(pred_lin)
-#     gt_sort   = torch.argsort(gt_lin)
 
-#     pred_lin_sorted = pred_lin[pred_sort]
-#     gt_lin_sorted   = gt_lin[gt_sort]
 
-#     # Broadcasting equality (device-safe)
-#     eq_matrix = pred_lin_sorted[:, None] == gt_lin_sorted[None, :]
 
-#     # Find matched pairs
-#     pred_idx, gt_idx = torch.nonzero(eq_matrix, as_tuple=True)
 
-#     # Matched features
-#     pred_matched = pred_feats[pred_sort[pred_idx]]
-#     gt_matched   = gt_feats[gt_sort[gt_idx]]
 
-#     # Voxels present only in prediction
-#     pred_only_mask = torch.ones(pred_coords.shape[0], dtype=torch.bool, device=device)
-#     pred_only_mask[pred_sort[pred_idx]] = False
 
-#     # Voxels present only in GT
-#     gt_only_mask = torch.ones(gt_coords.shape[0], dtype=torch.bool, device=device)
-#     gt_only_mask[gt_sort[gt_idx]] = False
 
-#     return pred_matched, gt_matched, pred_only_mask, gt_only_mask
 
-# def match_sparse_voxels_nn(pred_coords, pred_feats, gt_coords, gt_feats):
-#     device = pred_feats.device
 
-#     pred_coords = pred_coords.to(device).float()
-#     gt_coords   = gt_coords.to(device).float()
-#     gt_feats    = gt_feats.to(device)
 
-#     # Compute pairwise distances: [N_gt, N_pred]
-#     dists = torch.cdist(gt_coords, pred_coords)
 
-#     # For each GT voxel, find nearest predicted voxel
-#     nn_pred_idx = torch.argmin(dists, dim=1)
 
-#     pred_matched = pred_feats[nn_pred_idx]
-#     gt_matched   = gt_feats
 
-#     return pred_matched, gt_matched
 
 def build_pred_grid(pred_coords, RES):
     grid = -torch.ones((RES, RES, RES), dtype=torch.long, device=pred_coords.device)
@@ -364,20 +300,15 @@ from sklearn.neighbors import KDTree
 def match_sparse_voxels_nn(pred_coords, pred_feats, gt_coords, gt_feats):
     device = pred_feats.device
 
-    # Move coords to CPU for KDTree (KDTree is CPU-only)
     pred_coords_cpu = pred_coords.detach().cpu().numpy()
     gt_coords_cpu   = gt_coords.detach().cpu().numpy()
 
-    # Build KD-tree on predicted voxel coords
     tree = KDTree(pred_coords_cpu)
 
-    # Query nearest predicted voxel for each GT voxel
     dist, nn_pred_idx_cpu = tree.query(gt_coords_cpu, k=1)
 
-    # Convert indices back to torch
     nn_pred_idx = torch.from_numpy(nn_pred_idx_cpu.squeeze()).to(device)
 
-    # Gather matched features
     pred_matched = pred_feats[nn_pred_idx]
     gt_matched   = gt_feats.to(device)
 
@@ -412,30 +343,21 @@ def pad_sparse_features(gt_features, pred_features):
 
 
 def assign_vertex_colors(mesh_vertices, voxel_coords, voxel_colors, RES):
-    # mesh_vertices: [N_vertices, 3]
-    # voxel_coords:  [N_voxels, 3]
-    # voxel_colors:  [N_voxels, 3]
 
-    # Convert voxel coords to world positions
-    voxel_pos = voxel_coords.float() / RES - 0.5  # same coordinate system as mesh
+    voxel_pos = voxel_coords.float() / RES - 0.5
 
-    # Compute nearest voxel for each vertex
     dists = torch.cdist(mesh_vertices, voxel_pos)
     nn_idx = torch.argmin(dists, dim=1)
 
-    # Assign voxel color to vertex
     vertex_colors = voxel_colors[nn_idx]
     return vertex_colors
 
 def build_dense_color_grid(voxel_coords, voxel_colors, RES):
-    # voxel_colors: [N_voxels, 3]
-    # voxel_coords: [N_voxels, 3] integer coords in [0, RES)
 
     device = voxel_colors.device
 
     dense = torch.zeros(1, 3, RES, RES, RES, device=device)
 
-    # Fill dense grid
     x = voxel_coords[:, 0].long()
     y = voxel_coords[:, 1].long()
     z = voxel_coords[:, 2].long()
@@ -444,10 +366,7 @@ def build_dense_color_grid(voxel_coords, voxel_colors, RES):
     return dense
 
 def sample_vertex_colors(dense_grid, mesh_vertices_norm):
-    # dense_grid: [1, 3, RES, RES, RES]
-    # mesh_vertices_norm: [N_vertices, 3] in [-1,1]
 
-    # grid_sample expects shape [N, D, H, W, 3]
     coords = mesh_vertices_norm.view(1, -1, 1, 1, 3)
 
     sampled = torch.nn.functional.grid_sample(
@@ -457,19 +376,16 @@ def sample_vertex_colors(dense_grid, mesh_vertices_norm):
         align_corners=False
     )
 
-    # sampled: [1, 3, N_vertices, 1, 1]
-    vertex_colors = sampled.squeeze().T  # → [N_vertices, 3]
+    vertex_colors = sampled.squeeze().T
     return vertex_colors
 
 
 def normalize_vertices(mesh_vertices):
-    # mesh_vertices: [N_vertices, 3] in [-0.5, 0.5]
     verts = mesh_vertices.clone()
-    verts = (verts + 0.5) * 2 - 1   # map [-0.5,0.5] → [-1,1]
+    verts = (verts + 0.5) * 2 - 1
     return verts
 
 
-# Main function
 def refine_ovoxel(
     yaml_config_path: Path,
 ):
@@ -495,9 +411,9 @@ def refine_ovoxel(
     ssaa = int(config_yaml.get("ssaa", 1))
     lamda = float(config_yaml.get("lamda", 0.001))
     peel_layers = int(config_yaml.get("peel_layers", 8))
-    loss_type = str(config_yaml.get("loss_type", "mse"))  # loss_fn
+    loss_type = str(config_yaml.get("loss_type", "mse"))
     latent_l2_weight = float(config_yaml.get("latent_l2_weight", 0.0))
-    grad_clip_norm = float(config_yaml.get("grad_clip_norm", 0.0))  # 0 disables
+    grad_clip_norm = float(config_yaml.get("grad_clip_norm", 0.0))
     lambda_intersected = float(config_yaml.get("lambda_intersected", 0.1))
     lambda_vertice = float(config_yaml.get("lambda_vertice", 1e-2))
     lambda_geo = float(config_yaml.get("lambda_geo", 1e-1))
@@ -514,8 +430,8 @@ def refine_ovoxel(
     assert test_transforms_json_path.exists(), f"Test Transforms JSON Path does not exist: {test_transforms_json_path}"
     test_transforms = _load_json(test_transforms_json_path)
     
-    optimize_texture_only = bool(config_yaml.get("optimize_texture_only", False))  # Optimize texture latents only
-    optimizer_type = str(config_yaml.get("optimizer_type", "adam")).lower()  # adam or sgd
+    optimize_texture_only = bool(config_yaml.get("optimize_texture_only", False))
+    optimizer_type = str(config_yaml.get("optimizer_type", "adam")).lower()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transforms = _load_json(transforms_json_path)
@@ -531,30 +447,19 @@ def refine_ovoxel(
     intr = transforms["intrinsic"]
 
     prompt_idx = int(config_yaml.get("prompt_idx", np.random.randint(0, len(image_paths))))
-    # Load pipeline
     print("Loading TRELLIS.2 pipeline...")
     pipeline = Trellis2ImageTo3DPipeline.from_pretrained("microsoft/TRELLIS.2-4B")
     pipeline.low_vram = False
     pipeline.cuda()
-    # freeze_pipeline(pipeline)  # Freeze pipeline weights, only optimize latents
     print("Pipeline loaded")
     
    
     
-    # Run once on prompt image to extract latents
     print(f"Extracting latents from prompt image {prompt_idx}...")
-    # prompt_img = Image.open(image_paths[prompt_idx]).convert("RGBA")
     
-    # # Get initial mesh and latents from pipeline
-    # mesh_ = pipeline.run(
-    #     prompt_img,
-    #     # return_latent=True,  # Request latents
-    #     pipeline_type=pipeline_type,
-    # )[0]
     
     mesh_ = trimesh.load_mesh(GENERATED_MESH_PATH)
     
-    # mesh.visual = mesh.visual.to_color()
     mesh = Mesh(
         vertices=torch.from_numpy(np.array(mesh_.vertices)).float(),
         faces=torch.from_numpy(np.array(mesh_.faces)).long(),
@@ -568,7 +473,6 @@ def refine_ovoxel(
     faces = torch.from_numpy(np.array(mesh.faces)).float()
     print("Initial mesh vertices count after simplification: ", vertices.shape)
     print("Initial mesh faces count: \n", faces.shape)
-    # convert to ovoxel features 
     voxel_indices, dual_vertices, intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
         vertices=vertices,
         faces=faces,
@@ -586,7 +490,6 @@ def refine_ovoxel(
     intersected = intersected[mapping]
 
     
-    # # packing
     dual_vertices = dual_vertices * RES - voxel_indices
     dual_vertices = (torch.clamp(dual_vertices, 0, 1) * 255).type(torch.uint8)
     intersected = (intersected[:, 0:1] + 2 * intersected[:, 1:2] + 4 * intersected[:, 2:3]).type(torch.uint8)
@@ -621,14 +524,6 @@ def refine_ovoxel(
     intersected_sp = vertices_sp.replace(
         intersected_f
     )
-    # h_feats_init = torch.cat([
-    #     dual_vertices_opt, # 0-3
-    #     intersected_f, # 3-6
-    #     quad_lerp, 
-    #     base_color,
-    #     # attributes_opt
-    # ], dim=-1).to(device=device)
-    # h_feats = torch.nn.Parameter(h_feats_init)
     
     
   
@@ -661,20 +556,15 @@ def refine_ovoxel(
     criterion = nn.MSELoss() 
     l1_criterion = nn.L1Loss(reduction='mean')
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
-    # ref_images   = torch.stack(
-    #     [_resize_rgb_to_tensor(p, RES, device) for p in image_paths], dim=0
-    # )
     
     N = len(image_paths)
     print(f"Loaded {N} reference images for optimization.")
     rng = np.random.default_rng(seed=int(config_yaml.get("seed", 0)))
     
-    # optimization loop 
     
     intr_scaled = _scale_opencv_intrinsics(intr, (orig_w, orig_h)).to(device=device)
 
     
-    # alignment computation. 
     mesh = Mesh( *o_voxel.convert.flexible_dual_grid_to_mesh(  
                 coords=voxel_indices.to(device),   
                 dual_vertices=dual_vertices_opt.to(device),   
@@ -687,7 +577,6 @@ def refine_ovoxel(
                     base_color.contiguous()
         )
     
-    # NOTE: please provide gt mesh for rendering normal and mask
     dtc_mesh = trimesh.load_mesh(gt_mesh)
    
     dtc_mesh.visual = dtc_mesh.visual.to_color()
@@ -696,7 +585,6 @@ def refine_ovoxel(
         faces=torch.from_numpy(np.array(dtc_mesh.faces)).long(),
         vertex_attrs=torch.from_numpy(np.array(dtc_mesh.visual.vertex_colors)[:, :3] / 255.0).float() 
     )
-    # dtc_mesh.simplify(target = TARGET_NUM_VERTICES)
     print("GT mesh vertices count after simplification: ", dtc_mesh.vertices.shape)
     dtc_mesh.to(device=device)
     v = dtc_mesh.vertices
@@ -705,9 +593,8 @@ def refine_ovoxel(
     if gt_mesh.exists():
         
         with torch.no_grad():
-            # alignment = get_normalization_matrix(dtc_mesh, glb).to(device=device)
             alignment, _ = align_meshes_similarity(mesh, dtc_mesh) 
-            alignment = torch.from_numpy(alignment @ AXIS_SWAP  ).to(device=device, dtype=torch.float32) # @ AXIS_SWAP
+            alignment = torch.from_numpy(alignment @ AXIS_SWAP  ).to(device=device, dtype=torch.float32)
         
     else:
         print("No ground truth mesh provided, skipping alignment step.")
@@ -742,8 +629,6 @@ def refine_ovoxel(
             gt_intersected // 2 % 2, 
             gt_intersected// 4 % 2, 
         ], dim=-1).bool()
-    # gt_color = torch.ones_like(gt_vertices) * 0.5; 
-    # gt_quad_lerp = torch.nn.functional.softplus(torch.ones_like(gt_vertices[:, :1]) * 0.6)
     
     gt_coords_expanded = torch.cat([torch.zeros_like(gt_indices[:, 0:1]), gt_indices], dim=1).to(device=device)
     gt_vertices_sp = SparseTensor(
@@ -759,16 +644,7 @@ def refine_ovoxel(
     gt_vertices = gt_vertices.to(device)
 
 
-    # gt_h = SparseTensor(
-    #     feats=gt_h_feats_init,
-    #     coords=gt_coords_expanded,
-    #     shape=torch.Size([1, gt_h_feats_init.shape[-1]]),
-    #     spatial_shape=torch.Size([RES, RES, RES])
-    # )
     
-    # Get the dense representation
-    # gt_vertices_dense = gt_vertices_sp.to_dense()
-    # gt_intersected_dense = gt_intersected_sp.to_dense()
 
 
     print("Starting Optimization...")
@@ -785,12 +661,6 @@ def refine_ovoxel(
         
 
       
-        # vertices = decode_vertex_features(h_opt.feats[..., 0:3], voxel_margin)
-        # intersected_logits = h_opt.feats[..., 3:6]
-        # # intersected_flag = straight_through_threshold(intersected_logits).bool()
-        # intersected_flag = intersected_logits > 0.2
-        # color = torch.sigmoid(h_opt.feats[..., 7:10])
-        # quad_lerp = F.softplus(h_opt.feats[..., 6:7])
 
         vertices_sp = vertices_sp.replace(feats=vertices_f)
         intersected_sp = intersected_sp.replace(feats=intersected_f)
@@ -804,7 +674,6 @@ def refine_ovoxel(
         extracted_vertices, extracted_faces = o_voxel.convert.flexible_dual_grid_to_mesh(   
                 vertices_sp.coords[:, 1:],  
                 vertices,   
-                # gt_intersected_dense,
                 intersected_flag,
                 quad_lerp, 
                 aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],  
@@ -818,48 +687,16 @@ def refine_ovoxel(
    
 
         
-        # vertex_colors = assign_vertex_colors(
-        #     mesh.vertices,
-        #     vertices_sp.coords[:,1:],   # voxel coords
-        #     color,                      # voxel colors
-        #     RES
-        # )
 
-        # mesh = Mesh(mesh.vertices, mesh.faces, vertex_colors)
 
         
-        # vertices, gt_vertices = downsample_tensors(vertices, gt_vertices)
         mesh = Mesh( extracted_vertices, extracted_faces,
                     vertex_attrs=vertex_colors.contiguous()
         )
-        # loss_geom_anchor = torch.mean((h_opt.feats[..., 0:3] - dual_vertices_opt) ** 2)
         
-        # Convert to dense representation to compute loss 
-        # dense_pred = h_opt.to_dense()
-        # pred_intersected_dense = dense_pred[..., 3:6]
-        # pred_vertices_dense = dense_pred[..., 0:3]
-        # vertices_dense = vertices_sp.to_dense()
-        # intersected_dense = intersected_sp.to_dense()
 
-        # # Pad the dense tensors so both prediction and GT share the same shape.
-        # if intersected_dense.shape != gt_intersected_dense.shape:
-        #     intersected_dense, gt_intersected_dense = pad_sparse_features(
-        #         intersected_dense, gt_intersected_dense
-        #     )
-        # if vertices_dense.shape != gt_vertices_dense.shape:
-        #     vertices_dense, gt_vertices_dense = pad_sparse_features(
-        #         vertices_dense, gt_vertices_dense
-        #     )
 
-        # intersected_dense = intersected_dense.to(torch.float32)
-        # gt_intersected_dense = gt_intersected_dense.to(torch.float32)
 
-        # bce_loss = F.binary_cross_entropy_with_logits(
-        #     intersected_dense.reshape(-1).to(device),
-        #     gt_intersected_dense.reshape(-1).to(device)
-        # )
-        # # mask = gt_sparse_mask.bool() # boolean mask where GT has voxels
-        # mse_loss = F.mse_loss(vertices_dense.to(device), gt_vertices_dense.to(device))
         pred_intersected_matched, gt_intersected_matched = \
             match_sparse_voxels_nn(
                 pred_coords=vertices_sp.coords[:,1:], 
@@ -875,31 +712,22 @@ def refine_ovoxel(
         )
         
         
-        # begin 
         
-        # KD-tree nearest neighbor
         gt_coords_cpu = gt_indices.detach().cpu().numpy()
         pred_coords_cpu = vertices_sp.coords[:,1:].detach().cpu().numpy()
         tree = KDTree(pred_coords_cpu)
 
         distances_cpu, nn_pred_idx_cpu = tree.query(gt_coords_cpu, k=1)
 
-        # Move KD-tree outputs to CUDA
         distances = torch.from_numpy(distances_cpu.squeeze()).to(device)
         nn_pred_idx = torch.from_numpy(nn_pred_idx_cpu.squeeze()).to(device)
 
-        # ============================
-        # Topology Movement Losses
-        # ============================
 
-        # 1. Distance loss
         distance_loss = distances.mean()
 
-        # 2. Missing-voxel penalty
-        missing_mask = distances > 1.5   # threshold in voxel units
+        missing_mask = distances > 1.5
 
         if missing_mask.any():
-            # IMPORTANT: mask must be on CUDA
             missing_gt = gt_opt_intersected.float()[missing_mask.to(device)]
             missing_pred = intersected_f[nn_pred_idx[missing_mask.to(device)]]
 
@@ -910,7 +738,6 @@ def refine_ovoxel(
         else:
             missing_loss = torch.zeros((), device=device)
 
-        # 3. Extra-voxel penalty
         pred_only_mask = torch.ones(vertices_sp.coords.shape[0], dtype=torch.bool, device=device)
         pred_only_mask[nn_pred_idx] = False
 
@@ -920,7 +747,6 @@ def refine_ovoxel(
         else:
             extra_loss = torch.zeros((), device=device)
 
-        # Combine topology losses
         topology_loss = (
             1.0 * distance_loss +
             5.0 * missing_loss +
@@ -929,7 +755,6 @@ def refine_ovoxel(
 
         total_loss = total_loss + topology_loss
 
-        # end
 
 
         
@@ -946,7 +771,7 @@ def refine_ovoxel(
 
 
         
-        geo_loss = bce_loss + mse_loss #+ pred_only_penalty + gt_only_penalty
+        geo_loss = bce_loss + mse_loss
         if i==5:
             print("color shape:", color.shape)
             print("mesh.vertices shape:", mesh.vertices.shape)
@@ -956,7 +781,6 @@ def refine_ovoxel(
         
         print(f"Iteration {i} : Geometry Loss: {geo_loss.item():.3f}\n")
         for idx in indices:
-        # render
         
             extr = extrinsics_t[idx] @ object_pose
             
@@ -964,12 +788,9 @@ def refine_ovoxel(
             buffers = renderer.render(
                 mesh=mesh,
                 extrinsics=extr,
-                intrinsics=intr_scaled, # 
-                return_types=["attr", "mask", "normal", "depth"], # "attr", 
-                # transformation=base_object_pose
+                intrinsics=intr_scaled,
+                return_types=["attr", "mask", "normal", "depth"],
             )
-            # pred = buffers["attr"][:3]
-            # gt = ref_images[idx] 
             pred_img = buffers["attr"][:3] 
             mask = buffers["mask"]
             normal = buffers["normal"]
@@ -977,11 +798,7 @@ def refine_ovoxel(
             
            
             
-            # Compare only RGB (first 3 channels) 
-            # gt_rgb = gt[:3]  # Drop alpha if present
-            # pred = pred * mask
             
-            # render groundtruth normal and mask
             gt_buffers = renderer.render(
                 mesh=dtc_mesh.to(device=device),
                 extrinsics = extrinsics_t[idx] @ base_object_pose,
@@ -995,15 +812,12 @@ def refine_ovoxel(
 
             rgb_loss = criterion(pred_img, gt_img)
             
-            # losses
             mask_loss = l1_criterion(mask, gt_mask)
             normal_loss = l1_criterion(normal, gt_normal)
             depth_loss = l1_criterion(depth, gt_depth)
 
-            # Image loss
             loss = rgb_loss + lambda_mask * mask_loss + lambda_depth * depth_loss + lambda_normal * normal_loss
             
-            # img_loss = criterion(pred, gt_rgb)
             if mask.ndim == 2:
                 mask = mask[None, ...]  
                 gt_mask = gt_mask[None, ...]      
@@ -1031,10 +845,7 @@ def refine_ovoxel(
 
                 pred_rgba_vis = torch.cat([pred_img, mask], dim=0) if mask is not None else pred_img
                 gt_img_vis = torch.cat([gt_img[:3], gt_mask], dim=0) if gt_mask is not None else gt_img
-                # gt_vis = gt[:3] if gt.shape[0] >= 3 else gt
-                # gt_rgba_vis = torch.cat([gt_vis, torch.ones(1, H, W, device=gt.device)], dim=0)
                 
-                # img = torch.cat([pred_rgba_vis, gt_rgba_vis, normal_rgba], dim=2)   
                 
                 mask_rgba = gt_mask.repeat(4, 1, 1)
                 depth_rgba = gt_depth.repeat(4, 1, 1)
@@ -1077,12 +888,8 @@ def refine_ovoxel(
             
         total_loss += lambda_geo  * geo_loss
         total_loss = total_loss / len(indices)
-        # if latent_l2_weight > 0:
-        #     total_loss = total_loss + latent_l2_weight * torch.mean(h_feats.pow(2))
         print(f"[iter {i}] loss={float(total_loss.detach().cpu()):.6f}")
         total_loss.backward()
-        # if grad_clip_norm > 0:
-        #     torch.nn.utils.clip_grad_norm_(h_feats, grad_clip_norm)
         optimizer.step()
         
         print("Vertices Grad Mean:", vertices_sp.feats.grad.mean().item())
@@ -1092,7 +899,6 @@ def refine_ovoxel(
 
         
     print("Finished optimization...")
-    # extract final mesh and save. here 
 
     with torch.no_grad():
         vertices_sp = vertices_sp.replace(feats=vertices_f)
@@ -1107,7 +913,6 @@ def refine_ovoxel(
         extracted_vertices, extracted_faces = o_voxel.convert.flexible_dual_grid_to_mesh(   
                 vertices_sp.coords[:, 1:],  
                 vertices,   
-                # gt_intersected_dense,
                 intersected_flag,
                 quad_lerp, 
                 aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],  
@@ -1125,7 +930,6 @@ def refine_ovoxel(
     trimesh_obj = trimesh.Trimesh(vertices = final_mesh.vertices.cpu().detach().numpy(), 
                                   faces = final_mesh.faces.cpu().detach().numpy(),vertex_colors=color.detach().cpu().numpy())
     trimesh_obj.export(output_glb_path)
-    # print(f"Finish optimization, mesh exported to {output_glb_path}")
 
     
 

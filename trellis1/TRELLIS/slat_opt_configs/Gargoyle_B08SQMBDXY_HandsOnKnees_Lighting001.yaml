@@ -1,0 +1,82 @@
+# SLAT optimization for Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001
+#
+#   mesh (recgen / SAM3D / TRELLIS) -> 64^3 voxels -> DINOv2 feats -> SLAT encoder -> SLAT
+#   -> [optimized] -> mesh decoder -> flexicubes -> renders vs. the GT -> backprop into the SLAT
+#
+#   sanity check (minutes):  python slat_opt/hypothesis_mesh_slat.py --yaml-config slat_opt_configs/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001.yaml --check
+#   run:                     python slat_opt/hypothesis_mesh_slat.py --yaml-config slat_opt_configs/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001.yaml --mesh-source recgen   (or sam3d / trellis / trellis2)
+#   every object:            python slat_opt/run_all_slat_opt.py --mesh-source recgen
+
+category: "Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001"
+data_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001"
+gt_mesh: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/model.glb"
+
+# --- what is optimized ------------------------------------------------------------------------
+optimize: slat                          # slat: the 8-channel SLAT feats (normalized), decoded every
+                                        #   iteration by the full mesh decoder
+                                        # cubefeats: the 101-channel decoder output @ 256^3 (the old
+                                        #   cubefeats hypothesis, flexicubes only in the graph)
+
+# --- the reconstruction the SLAT is encoded from -------------------------------------------
+# the meshes benchmark/run_all.py generated from prompt set "v2" (train/im_0045, training frame 38)
+mesh_source: recgen                     # recgen | sam3d | trellis | trellis2   (CLI --mesh-source wins)
+recgen_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/recgen/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/mesh.obj"
+sam3d_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/sam3d/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/mesh.glb"
+trellis_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/trellis/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/mesh.glb"
+trellis2_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/trellis2/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/mesh.glb"
+prompt_image: "train/im_0045"
+prompt_idx: 38
+normalize_mesh: true                    # re-fit the mesh to [-0.5, 0.5]^3 before voxelizing
+fill_interior: false                    # true = flood-fill the interior (off-distribution for
+                                        # the decoder, which was trained on surface shells)
+
+# --- mesh -> SLAT --------------------------------------------------------------------------
+feature_cameras: trellis                # trellis: TRELLIS' own training rig (sphere Hammersley
+                                        #   views, radius 2, fov 40 deg) in the mesh frame
+                                        # dataset: the DTC cameras (in the mesh frame)
+feature_source: render                  # render: DINOv2 on renders of the source mesh
+                                        # dataset: DINOv2 on the GT photos (needs feature_cameras: dataset)
+feature_views: 150
+dino_batch: 8
+encoder_ckpt: "microsoft/TRELLIS-image-large/ckpts/slat_enc_swin8_B_64l8_fp16"
+model_name: "microsoft/TRELLIS-image-large"
+
+# --- mesh frame -> dataset world frame ------------------------------------------------------
+alignment: search                       # search: 24 axis rotations + ICP with scale, picked by
+                                        #   silhouette IoU | ransac | similarity | bbox | identity
+align_iou_views: 16
+align_top_k: 4
+alignment_path: ""                      # a saved alignment.npy skips the estimation
+
+# --- rendering -------------------------------------------------------------------------------
+near: 0.01
+far: 1000
+ssaa: 1
+
+# --- optimization ------------------------------------------------------------------------------
+optimizer: adam                         # adam | sgd
+lr: 0.06                                # slat: in normalized units (feats std ~ 1)
+num_iters: 500
+frames_per_iter: 10
+seed: 1
+grad_clip: 0.0                          # 0 disables
+loss_scaling: true                      # GradScaler; the mesh decoder runs in fp16
+
+weight: 1.5                             # image losses
+sdf_weight: 0.5                         # flexicubes reg loss
+tsdf_weight: 0.5                        # TSDF regression against the GT depth
+latent_l2_weight: 0.0                   # pull the variable back towards its initial value
+lambda_mask: 1.0
+lambda_depth: 1.2
+lambda_normal: 1.0
+lambda_color: 0.9
+lambda_ssim: 0.2
+lambda_lpips: 0.2
+
+# --- logging -------------------------------------------------------------------------------------
+display_interval: 25                  # train-view panel every N iters
+eval_interval: 50                     # test-view renders + metrics.jsonl every N iters
+eval_views: 8
+
+# {optimize} / {mesh_source} are substituted, so every combination keeps its own folder
+out_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/slat_opt/v2/{optimize}/{mesh_source}/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001"

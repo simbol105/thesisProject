@@ -1,0 +1,67 @@
+# TRELLIS.2 SLAT / o-voxel optimization for Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001
+#
+#   mesh -> o-voxel + PBR voxels -> TRELLIS.2 encoders -> shape + texture SLAT
+#   -> topology_study/slat_refinement.py (SLATs through the decoders) and/or ovoxel_refinement.py
+#
+#   check (encode + round trip): python slat_opt/hypothesis_mesh_slat.py --yaml-config slat_opt_configs/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001.yaml --mesh-source recgen --check
+#   run:                         python slat_opt/hypothesis_mesh_slat.py --yaml-config slat_opt_configs/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001.yaml --mesh-source recgen
+#   every object:                python slat_opt/run_all_slat_opt.py --mesh-source recgen
+
+category: "Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001"
+data_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001"
+gt_mesh: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/model.glb"
+
+# --- source meshes: prompt set "v2" of benchmark/run_all.py (im_0067)
+mesh_source: recgen                    # recgen | sam3d | trellis | trellis2   (CLI --mesh-source wins)
+recgen_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/recgen/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/mesh.obj"
+sam3d_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/sam3d/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/mesh.glb"
+trellis_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/trellis/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/mesh.glb"
+trellis2_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/generative_runs/v2/trellis2/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/mesh.glb"
+
+# --- mesh -> TRELLIS.2 SLAT ------------------------------------------------------------------
+encode_res: 512                       # o-voxel grid; the SLAT is at encode_res / 16 (512 -> 32^3, as the 512 pipeline)
+optimize: [slat, ovoxel]               # which refinements to run, in this order
+
+# --- alignment (TRELLIS.2 frame -> world) -----------------------------------------------------
+model_name: "microsoft/TRELLIS.2-4B"
+seed: 42
+align_iou_views: 16
+align_top_k: 4
+alignment_path: ""
+
+# --- rendering ---------------------------------------------------------------------------------
+near: 0.01
+far: 100
+
+# --- losses --------------------------------------------------------------------------------------
+weight: 1.0
+lambda_mask: 1.0
+lambda_depth: 1.2
+lambda_normal: 1.0
+lambda_color: 0.9
+lambda_ssim: 0.2
+lambda_lpips: 0.2
+
+# --- optimization (shared) --------------------------------------------------------------------
+num_iters: 300
+frames_per_iter: 8
+grad_clip: 0.0
+display_interval: 25
+eval_interval: 50
+eval_views: 8
+
+# --- SLAT refinement ------------------------------------------------------------------------------
+lr: 3e-2                               # normalized latent units
+optimize_shape: true
+optimize_texture: true
+latent_l2_weight: 0.0
+loss_scaling: true
+
+# --- o-voxel refinement ---------------------------------------------------------------------------
+lr_ovoxel: 1e-2
+lr_texture: 1e-2
+ovoxel_optimize: [dual_vertices, split_weight, texture]
+ovoxel_l2_weight: 0.0
+
+# {mesh_source} is substituted, so every source keeps its own folder
+out_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/optimization_output/slat_opt/v2/{mesh_source}/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001"

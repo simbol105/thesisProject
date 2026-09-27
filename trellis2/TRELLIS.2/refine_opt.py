@@ -2,7 +2,6 @@
 import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-# os.environ["ATTN_BACKEND"] = 'xformers'
 
 import argparse
 import json
@@ -45,14 +44,13 @@ def _resize_rgb_to_tensor(img_path: Path, render_resolution: int, device: torch.
     img = Image.open(img_path).convert("RGB")
     if img.size != (render_resolution, render_resolution):
         img = img.resize((render_resolution, render_resolution), Image.Resampling.BILINEAR)
-    arr = np.asarray(img).astype(np.float32) / 255.0  # HWC, [0,1]
-    t = torch.from_numpy(arr).to(device=device, dtype=torch.float32)  # HWC
-    t = t.permute(2, 0, 1).contiguous()  # CHW
+    arr = np.asarray(img).astype(np.float32) / 255.0
+    t = torch.from_numpy(arr).to(device=device, dtype=torch.float32)
+    t = t.permute(2, 0, 1).contiguous()
     return t
 
 
 def _scale_opencv_intrinsics(intr: Dict, orig_wh: Tuple[int, int], render_resolution: int) -> torch.Tensor:
-    # intrinsics are for pixel coordinates of the original images
     fx, fy, cx, cy = float(intr["fx"]), float(intr["fy"]), float(intr["cx"]), float(intr["cy"])
     orig_w, orig_h = orig_wh
 
@@ -96,16 +94,15 @@ def _decode_latent_differentiable(
     tex_voxels = pipeline.decode_tex_slat(tex_slat_opt, subs)
 
     out_mesh: List[MeshWithVoxel] = []
-    # Keep gradients flowing through vertices and attributes for optimization
     for m, v in zip(meshes, tex_voxels):
         out_mesh.append(
             MeshWithVoxel(
-                m.vertices,  # Keep gradients
+                m.vertices,
                 m.faces,
                 origin=[-0.5, -0.5, -0.5],
                 voxel_size=1.0 / resolution,
-                coords=v.coords[:, 1:],  # Keep gradients
-                attrs=v.feats,  # Keep gradients
+                coords=v.coords[:, 1:],
+                attrs=v.feats,
                 voxel_shape=torch.Size([*v.shape, *v.spatial_shape]),
                 layout=pipeline.pbr_attr_layout,
             )
@@ -148,12 +145,10 @@ def refine_latents(
     intr = transforms["intrinsic"]
     prompt_idx = int(config_yaml.get("prompt_idx", np.random.randint(0, len(image_paths))))
 
-    # Pipeline
     pipeline = Trellis2ImageTo3DPipeline.from_pretrained("microsoft/TRELLIS.2-4B")
     pipeline.low_vram = False
     pipeline.cuda()
 
-    # Envmap + renderer
     envmap_img = cv2.imread(str(envmap_path), cv2.IMREAD_UNCHANGED)
     assert envmap_img is not None, f"Failed to read envmap: {envmap_path}"
     envmap_img = cv2.cvtColor(envmap_img, cv2.COLOR_BGR2RGB)
@@ -174,7 +169,7 @@ def refine_latents(
         coords=tex_slat.coords.detach(),
         feats=tex_slat.feats.detach(),
     )
-    render_resolution = 256  # or int(res)
+    render_resolution = 256
 
     orig_img = Image.open(image_paths[prompt_idx]).convert("RGB")
     orig_w, orig_h = orig_img.size
@@ -183,7 +178,6 @@ def refine_latents(
     extrinsics = [torch.tensor(f["transform_matrix"], dtype=torch.float32) for f in frames]
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
 
-    # Trainable latent feature tensors.
     shape_coords = shape_slat.coords.detach()
     tex_coords   = tex_slat.coords.detach()
 
@@ -205,18 +199,14 @@ def refine_latents(
     for it in range(num_iters):
         optimizer.zero_grad(set_to_none=True)
 
-        # Build current SLATs
         shape_slat_opt = shape_slat.replace(feats=shape_feats, coords=shape_coords)
         tex_slat_opt   = tex_slat.replace(feats=tex_feats, coords=tex_coords)
 
-        # Decode mesh WITH gradients enabled so backprop reaches latent features
-        # This is essential: loss → rendered image → mesh geometry → latent features
         mesh = _decode_latent_differentiable(
             pipeline, shape_slat_opt, tex_slat_opt, render_resolution
         )[0]
 
 
-        # Choose subset of views
         if frames_per_iter == N:
             indices = np.arange(N)
         else:
@@ -244,7 +234,7 @@ def refine_latents(
                 intrinsics=intr_scaled,
                 envmap=env_map,
             )
-            pred = buffers["shaded"]  # [3,H,W]
+            pred = buffers["shaded"]
             gt   = _resize_rgb_to_tensor(
                 image_paths[int(idx)], render_resolution, device=device
             )
@@ -266,7 +256,6 @@ def refine_latents(
 
             total_loss = total_loss + loss
 
-        # Latent L2 regularization
         if latent_l2_weight > 0:
             l2 = (shape_feats - shape_feats_init).pow(2).mean() + \
                  (tex_feats   - tex_feats_init).pow(2).mean()
@@ -274,7 +263,6 @@ def refine_latents(
 
         print(f"[iter {it}] loss={float(total_loss.detach().cpu()):.6f}")
 
-        # Single backward on the full graph
         total_loss.backward()
 
         if grad_clip_norm and grad_clip_norm > 0:
@@ -287,10 +275,9 @@ def refine_latents(
                               (tex_feats,   tex_feats_init)]:
                 if torch.isnan(p).any() or torch.isinf(p).any():
                     p.copy_(p_init)
-                p.clamp_(-10.0, 10.0)  # Relaxed from ±5.0
+                p.clamp_(-10.0, 10.0)
 
 
-    # Final decode
     with torch.no_grad():
         shape_slat_opt = shape_slat.replace(feats=shape_feats, coords=shape_coords)
         tex_slat_opt = tex_slat.replace(feats=tex_feats, coords=tex_coords)

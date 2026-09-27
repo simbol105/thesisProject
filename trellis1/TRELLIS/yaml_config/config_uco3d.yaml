@@ -1,0 +1,53 @@
+# Config for hypothesis_slat_uco3d.py (uCO3D sequence, no GT mesh, no alignment)
+#   quick check (seconds):  python hypothesis_slat_uco3d.py --yaml-config yaml_config/config_uco3d.yaml --check
+#   optimization (sbatch):  python hypothesis_slat_uco3d.py --yaml-config yaml_config/config_uco3d.yaml
+
+data_dir: "/home/fr/fr_fr/fr_ba122/projects/dataset/UCO3D/uco3d/chair"
+out_dir: "/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/uco3d/chair"
+camera_convention: pytorch3d   # cameras.json "to_world": x left, y up, z forward (pytorch3d | opencv | opengl)
+seed: 1
+
+# --- SLAT initialisation (both live in the dataset's camera frame) ---
+slat_init: encode      # encode: SLAT encoder on multiview DINOv2 feats of the GT crops
+                       # flow:   SLAT flow model on the hull structure, conditioned on prompt_idx
+prompt_idx: 0          # index into split.train; flow conditioning + fixes the yaw of the normalized frame
+encoder_ckpt: "microsoft/TRELLIS-image-large/ckpts/slat_enc_swin8_B_64l8_fp16"
+flow_steps: 12
+flow_cfg_strength: 3.0
+downsample_factor: 1   # >1 averages factor^3 voxel blocks (as in hypothesis_slat_downsample.py)
+
+# --- canonical (pipeline.run SLAT) -> normalized frame, estimated from the GT masks ---
+align_to_hull: true       # false = identity (only right for SLATs built in the normalized frame)
+align_yaw_step: 10        # deg, grid search over the yaw
+align_search_up: false    # also try the other 5 canonical axes as up (if the object is not z-up)
+align_color_weight: 0.5   # color L1 next to the mask L1 (breaks front/back symmetry)
+align_search_res: 128
+align_refine_res: 256
+align_iters: 300
+align_lr: 1e-2
+
+# --- visual hull -> sparse structure ---
+mask_threshold: 0.5
+hull_view_frac: 1.0    # voxel kept if inside the (dilated) mask in this fraction of the views that see it
+hull_fill: 0.9         # longest hull axis spans this much of the [-0.5, 0.5] cube
+hull_shell: 2          # voxel layers kept under the hull surface; 0 = solid hull (use for deep concavities)
+crop_margin: 1.1       # square crop side = margin * projected hull bbox
+
+# --- optimization ---
+optimizer: adam        # adam | sgd
+lr: 5e-1
+num_iters: 500
+frames_per_iter: 8
+near: 0.1              # normalized units: cameras sit ~2 away from the object
+far: 10.0
+ssaa: 1
+
+lambda_mask: 1.0
+lambda_color: 1.0      # (L1 + lambda_ssim * SSIM + lambda_lpips * LPIPS) on object-on-black crops
+lambda_ssim: 0.2
+lambda_lpips: 0.2
+reg_weight: 0.5        # flexicubes reg loss
+latent_l2_weight: 0.0  # pull feats towards the initial SLAT
+
+display_interval: 25   # save train-view renders every N iters
+eval_interval: 50      # render test views + write metrics.jsonl every N iters

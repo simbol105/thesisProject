@@ -1,26 +1,63 @@
-**/.git
+# ---- assistant config, private notes, scratch -----------------------------------------------
+miscellaneous/
+.claude/
+.vscode/
+CLAUDE.md
 
-# Ignore all image files
+# ---- data, weights, caches -------------------------------------------------------------------
+dataset/
+*/dataset/
+**/dataset/
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+*.npz
+*.npy
+**/.cache/
+**/.pixi/
+**/__pycache__/
+*.pyc
+*.egg-info/
+
+# ---- experiment outputs (all regenerable, see README.md) --------------------------------------
+benchmark_output/
+benchmark_images/
+generative_runs/
+thesis_runs_logs/
+thesis_bench_logs/
+**/optimization_output/
+**/trellis_output/
+**/trellis2_output/
+**/sam3d_output/
+**/thesis_output/
+nvdiffrec/out/
+nvdiffrecmc/out/
+
+# ---- job logs ---------------------------------------------------------------------------------
+*.out
+slurm-*.out
+wget-log*
+
+# ---- media and meshes ---------------------------------------------------------------------------
 *.png
 *.jpg
 *.jpeg
 *.webp
 *.bmp
 *.tiff
-
-# Ignore all mesh files
+*.exr
+*.mp4
+*.gif
 *.obj
 *.ply
 *.stl
 *.glb
 *.gltf
+!benchmark/prompt_candidates/*.jpg
 
-# Ignore dataset folder (any level)
-dataset/
-*/dataset/
-**/dataset/
-
-# Ignore any images inside dataset folders
-dataset/**/*
-*/dataset/**/*
-**/dataset/**/*
+# ---- large third-party checkouts (cloned separately, see README.md) ---------------------------
+Stanford-ORB/
+hunyuan3d/
+foundationpose/
+**/.git

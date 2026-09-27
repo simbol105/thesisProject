@@ -1,0 +1,20 @@
+# SAM3D checkpoint pipeline config used by notebook/inference.py
+checkpoint_path: "/home/fr/fr_fr/fr_ba122/projects/sam3d/sam-3d-objects/checkpoints/hf/pipeline.yaml"
+trellis_root: "/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS"
+gt_mesh: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/model.glb"
+
+transforms_json: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/transforms_train.json"
+prompt_idx: 4
+out_dir: "/home/fr/fr_fr/fr_ba122/projects/sam3d/sam-3d-objects/optimization_output/birdhouse_slat"
+
+lr: 1e-2
+optimizer: adam
+num_iters: 1000
+frames_per_iter: 10
+display_interval: 10
+resolution: 512
+near: 0.01
+far: 1000.0
+ssaa: 1
+seed: 42
+device: cuda

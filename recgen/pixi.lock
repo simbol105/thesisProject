@@ -2869,7 +2869,7 @@ packages:
   requires_dist:
   - torch>=2.0
   - torchvision
-  - numpy
+  - numpy<2
   - scipy
   - pillow
   - trimesh

@@ -1,0 +1,75 @@
+# FlexiCubes optimization for Mallard_B082D168CK_MintGreen_Lighting001
+#
+#   mesh (recgen / SAM3D) -> SDF on a 128^3 cube grid -> free sdf/deform/weight/colour
+#   -> FlexiCubes -> renders vs. the DTC GT mesh -> backprop. No TRELLIS model is loaded.
+#
+#   This is the ablation partner of cubefeats_configs/Mallard_B082D168CK_MintGreen_Lighting001.yaml: same object, alignment,
+#   cameras, losses and metrics -- only the parameterization differs.
+#
+#   sanity check (minutes):  python flexicubes/hypothesis_mesh_flexicubes.py --yaml-config cubefeats_configs/Mallard_B082D168CK_MintGreen_Lighting001.yaml --check
+#   run:                     sbatch flexicubes/run_flexicubes.sh cubefeats_configs/Mallard_B082D168CK_MintGreen_Lighting001.yaml
+#   run on the SAM3D mesh:   sbatch flexicubes/run_flexicubes.sh cubefeats_configs/Mallard_B082D168CK_MintGreen_Lighting001.yaml --mesh-source sam3d
+
+category: "Mallard_B082D168CK_MintGreen_Lighting001"
+data_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Mallard_B082D168CK_MintGreen_Lighting001"
+gt_mesh: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Mallard_B082D168CK_MintGreen_Lighting001/model.glb"
+
+# --- the reconstruction the SDF is seeded from ---------------------------------------------
+mesh_source: recgen                     # recgen | sam3d   (CLI --mesh-source wins)
+recgen_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/recgen/thesis_output/Mallard_B082D168CK_MintGreen_Lighting001/mesh.obj"
+sam3d_mesh_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/sam3d/sam-3d-objects/sam3d_output/Mallard_B082D168CK_MintGreen_Lighting001/mesh.glb"
+normalize_mesh: true                    # re-fit the mesh to [-0.5, 0.5]^3 before sampling the SDF
+
+# --- mesh -> SDF ------------------------------------------------------------------------------
+grid_res: 128                            # FlexiCubes grid; params scale as res^3
+sdf_init: floodfill                     # floodfill: unsigned distance + exterior flood fill
+                                        #   (the Sparc3D algorithm). The recgen/SAM3D meshes are
+                                        #   NOT watertight, so this is the only sign test that
+                                        #   recovers a solid: measured on Birdhouse it puts
+                                        #   18.9% of the grid inside vs 6.8% for raycast
+                                        #   (the DTC GT mesh is 24.1%).
+                                        # raycast:  open3d closest-triangle-normal signed distance
+                                        # sparc3d:  the exact backend the trellis2 DMTet run uses
+                                        #   (needs sparc3d_path and kaolin on a GPU)
+sdf_tau_scale: 1.0                      # flood fill keeps cells further than
+                                        #   tau_scale * sqrt(3)/(2*res) from the surface
+# sparc3d_path: "/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/third_parties/Sparc3Dsdf/src"
+
+optimize_weights: true                  # FlexiCubes' 21 dual weights per cube
+optimize_color: true                    # per-grid-vertex colour (sigmoid inside FlexiCubes)
+
+# --- mesh frame -> dataset world frame ------------------------------------------------------
+alignment: ransac                       # ransac | similarity | bbox | identity
+                                        # folded into the cameras, never applied to the grid
+
+# --- rendering -------------------------------------------------------------------------------
+near: 0.01
+far: 1000
+ssaa: 1
+
+# --- optimization ------------------------------------------------------------------------------
+optimizer: adam                         # adam | sgd
+lr: 1e-2                                # an SDF in world units, not a latent: much smaller than
+                                        #   the cubefeats lr
+num_iters: 500
+frames_per_iter: 10
+seed: 1
+grad_clip: 0.0                          # 0 disables
+
+weight: 1.5                             # image losses
+sdf_weight: 0.5                         # FlexiCubes regularizer (sdf sign BCE + L_dev + weights)
+tsdf_weight: 0.5                        # TSDF regression against the GT depth
+tsdf_band: 3.0                          # only grid verts within this many voxels of the surface
+sdf_l2_weight: 0.0                      # pull the SDF back towards its initialization
+lambda_depth: 1.2
+lambda_ssim: 0.2
+lambda_lpips: 0.2
+lambda_color: 0.9
+
+# --- logging -------------------------------------------------------------------------------------
+display_interval: 25                  # train-view triptych (pred | gt | normal) every N iters
+eval_interval: 50                     # test-view renders + metrics.jsonl every N iters
+eval_views: 8
+
+# {mesh_source} is substituted with recgen / sam3d, so both runs keep their own folder
+out_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/flexicubes/{mesh_source}/Mallard_B082D168CK_MintGreen_Lighting001"

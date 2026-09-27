@@ -11,7 +11,6 @@ class OVoxelOptimizer:
         self.device = device  
         self.renderer = MeshRenderer({'near': 1, 'far': 3, 'resolution': 1024}, device=device)  
           
-        # Loss weights (from ShapeVaeTrainer)  
         self.lambda_intersected = 0.1  
         self.lambda_vertice = 1e-2  
         self.lambda_mask = 1  
@@ -36,13 +35,11 @@ class OVoxelOptimizer:
         """Direct regression losses on O-Voxel features"""  
         terms = {}  
           
-        # Intersected flag BCE loss  
         if self.lambda_intersected > 0:  
             terms["direct/intersected"] = F.binary_cross_entropy_with_logits(  
                 pred_intersected.flatten(), gt_intersected.flatten().float()  
             )  
           
-        # Vertex MSE loss  
         if self.lambda_vertice > 0:  
             terms["direct/vertice"] = F.mse_loss(pred_vertices, gt_vertices)  
           
@@ -52,17 +49,13 @@ class OVoxelOptimizer:
         """Rendering losses on extracted meshes"""  
         terms = {}  
           
-        # Render both meshes  
         gt_renders = self._render_single(gt_mesh, cameras)  
         pred_renders = self._render_single(pred_mesh, cameras)  
           
-        # Mask loss  
         terms['render/mask'] = l1_loss(pred_renders['mask'], gt_renders['mask'])  
           
-        # Depth loss  
         terms['render/depth'] = l1_loss(pred_renders['depth'], gt_renders['depth'])  
           
-        # Normal losses  
         terms['render/normal/l1'] = l1_loss(pred_renders['normal'], gt_renders['normal'])  
         terms['render/normal/ssim'] = 1 - ssim(pred_renders['normal'], gt_renders['normal'])  
         terms['render/normal/lpips'] = lpips(pred_renders['normal'], gt_renders['normal'])  
@@ -99,10 +92,8 @@ class OVoxelOptimizer:
         """  
         optimizer.zero_grad()  
           
-        # Threshold logits to boolean for mesh extraction  
         pred_intersected_flag = pred_intersected_logits > 0  
           
-        # Extract meshes  
         gt_vertices, gt_faces = self.extract_mesh(  
             gt_coords, gt_dual_vertices, gt_intersected, None, train=False  
         )  
@@ -110,19 +101,15 @@ class OVoxelOptimizer:
             pred_coords, pred_dual_vertices, pred_intersected_flag, pred_quad_lerp, train=True  
         )  
           
-        # Create Mesh objects  
         gt_mesh = Mesh(gt_vertices, gt_faces)  
         pred_mesh = Mesh(pred_vertices, pred_faces)  
           
-        # Compute direct losses  
         direct_terms = self.compute_direct_losses(  
             pred_dual_vertices, pred_intersected_logits, gt_dual_vertices, gt_intersected  
         )  
           
-        # Compute rendering losses  
         render_terms = self.compute_rendering_losses(pred_mesh, gt_mesh, cameras)  
           
-        # Combine losses  
         total_loss = 0.0  
         for key, value in direct_terms.items():  
             if 'intersected' in key:  
@@ -142,7 +129,6 @@ class OVoxelOptimizer:
             elif 'normal/lpips' in key:  
                 total_loss += self.lambda_normal * self.lambda_lpips * value  
           
-        # Backward pass  
         total_loss.backward()  
         optimizer.step()  
           
@@ -156,28 +142,23 @@ class OVoxelOptimizer:
 def optimize():
     optimizer = OVoxelOptimizer(resolution=512, device='cuda')  
   
-    # Your O-Voxel features (make them trainable)  
-    pred_coords = torch.randn(N, 3, requires_grad=False, device='cuda')  # Usually fixed  
+    pred_coords = torch.randn(N, 3, requires_grad=False, device='cuda')
     pred_dual_vertices = torch.randn(N, 3, requires_grad=True, device='cuda')  
     pred_intersected_logits = torch.randn(N, 3, requires_grad=True, device='cuda')  
     pred_quad_lerp = torch.rand(N, 1, requires_grad=True, device='cuda')  
     
-    # Ground truth  
-    gt_coords = ...  # From your dataset  
-    gt_dual_vertices = ...  # From your dataset  
-    gt_intersected = ...  # From your dataset (boolean)  
+    gt_coords = ...
+    gt_dual_vertices = ...
+    gt_intersected = ...
     
-    # Optimizer for trainable parameters  
     opt = torch.optim.Adam([pred_dual_vertices, pred_intersected_logits, pred_quad_lerp], lr=1e-3)  
     
-    # Camera parameters (simplified)  
     cameras = {  
         'extrinsics': ...,  
         'intrinsics': ...,  
         'near': 1.0  
     }  
     
-    # Optimization loop  
     for step in range(1000):  
         losses = optimizer.optimization_step(  
             pred_coords, pred_dual_vertices, pred_intersected_logits, pred_quad_lerp,  

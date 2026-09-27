@@ -1,0 +1,26 @@
+
+latent_l2_weight: 0.0  
+lr: 6e-1
+num_iters: 1001
+
+
+# 47
+prompt_idx: 5
+frames_per_iter: 10
+display_interval: 10
+near: 0.01
+far: 1000
+dmtet_res: 64
+lambda_geo: 1.0
+seed: 1
+weight: 1.5
+sdf_weight: 5e-1
+tsdf_weight: 5e-1
+
+
+out_dir: "/home/fr/fr_fr/fr_ba122/projects/trellis1/thesis_outputs/Birdhouse_Lighting001"
+
+data_dir: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001"
+
+recgen_mesh_path: "/home/fr/fr_fr/fr_ba122/projects/recgen/thesis_output/Birdhouse_Lighting001"
+

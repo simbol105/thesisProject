@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "thesis3d"
+version = "0.1.0"
+description = "CLI for latent-space refinement of 3D reconstructions (TRELLIS / TRELLIS.2)"
+requires-python = ">=3.9"
+dependencies = ["typer>=0.9", "pyyaml>=6.0"]
+
+[project.scripts]
+thesis3d = "thesis3d.cli:main"
+
+[tool.setuptools]
+packages = ["thesis3d"]

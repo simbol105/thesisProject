@@ -1,5 +1,5 @@
 import os
-os.environ['ATTN_BACKEND'] = 'xformers'   # or flash-attn if you want
+os.environ['ATTN_BACKEND'] = 'xformers'
 os.environ['SPCONV_ALGO'] = 'native'
 
 import torch
@@ -23,7 +23,7 @@ import trimesh
 
 try:
     import utils3d.torch
-except Exception:  # pragma: no cover
+except Exception:
     utils3d = None
 
 RES = 512
@@ -105,25 +105,21 @@ def refine_latent_minimal(config_path: Path):
 
     prompt_img = Image.open(image_paths[prompt_idx])
 
-    # Run pipeline
     outputs = pipeline.run(prompt_img, seed=1, return_latent=True)
     slat = outputs["latent"]
     coords = slat.coords
     mesh0 = outputs["mesh"][0]
 
-    # Camera intrinsics/extrinsics
     intr = transforms["intrinsic"]
     intr_scaled = scale_intrinsics(intr, prompt_img.size, RES).to(device)
 
     extrinsics = torch.stack([torch.tensor(f["transform_matrix"], dtype=torch.float32) for f in frames]).to(device)
 
-    # Renderer
     renderer = MeshRenderer(
         rendering_options={"resolution": RES, "near": 0.01, "far": 100.0, "ssaa": 1},
         device=device.type,
     )
 
-    # Decoder
     decoder_args = {
         "resolution": DECODER_RES,
         "model_channels": 768,
@@ -140,31 +136,23 @@ def refine_latent_minimal(config_path: Path):
     decoder.load_state_dict(pipeline.models["slat_decoder_mesh"].state_dict())
     decoder.eval()
 
-    # Output directory
     out_dir = config_yaml.get("out_dir", "jitter_output")
     Path(out_dir).mkdir(exist_ok=True)
 
-    # SLAT features to modify
     slat_feats = slat.feats.clone().to(device)
 
     print("Starting minimal jitter loop...")
     for it in range(10):
-        # Add small random noise
         noise = 0.01* torch.randn_like(slat_feats)
         slat_jitter = SparseTensor(feats=slat_feats + noise, coords=coords)
-        # slat.replace(feats=slat_feats + noise)
 
-        # Decode to mesh
         mesh = decoder(slat_jitter)[0]
 
-        # Extract vertices & faces (Trellis mesh stores them as torch tensors)
         verts = mesh.vertices.detach().cpu().numpy()
         faces = mesh.faces.detach().cpu().numpy()
 
-        # Build trimesh object
         tm = trimesh.Trimesh(vertices=verts, faces=faces, process=False)
 
-        # Save mesh
         mesh_path = f"{out_dir}/jitter_{it:03d}.obj"
         tm.export(mesh_path)
 

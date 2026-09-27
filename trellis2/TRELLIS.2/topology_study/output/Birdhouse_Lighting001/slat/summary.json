@@ -1,0 +1,32 @@
+{
+  "chamfer_mm": [
+    2.5501128882486985,
+    2.321594812378939
+  ],
+  "topology_init": {
+    "V": 1343424,
+    "E": 4165468,
+    "F": 2813640,
+    "euler": -8404,
+    "components": 15,
+    "boundary_edges": 105981,
+    "nonmanifold_edges": 200497,
+    "genus_closed": 4217.0
+  },
+  "topology_final": {
+    "V": 1398584,
+    "E": 4450975,
+    "F": 3080186,
+    "euler": 27795,
+    "components": 223,
+    "boundary_edges": 146114,
+    "nonmanifold_edges": 366755,
+    "genus_closed": -13674.5
+  },
+  "gate_changes": {
+    "voxels_added": 772441,
+    "voxels_removed": 716413,
+    "intersected_flips": 432289,
+    "active_quads": 1549570
+  }
+}

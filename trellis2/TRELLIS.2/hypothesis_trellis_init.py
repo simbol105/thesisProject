@@ -3,7 +3,6 @@ import os
 from matplotlib import colors
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-# os.environ["ATTN_BACKEND"] = 'xformers'
 
 import argparse
 import json
@@ -70,7 +69,7 @@ def load_image(path):
 render_resolution = 512 
 model_name = "trellis_init"
 TEST_INDEX = 4
-TEST_INTERVALS = [0, 1, 50,100, 200,  500, 799, 999] # 0 is the initialization, 1 is the result after the dmtet sdf calculation. 
+TEST_INTERVALS = [0, 1, 50,100, 200,  500, 799, 999]
 angle = 90
 AXIS_SWAP = rot_z(np.pi/2)
 def _load_json(path: Path) -> Dict:
@@ -128,7 +127,6 @@ def refine_latents(
     assert transforms_json_path.exists(), f"Transforms JSON path does not exist: {transforms_json_path}"
     test_transforms_json_path = Path(config_yaml.get("test_transforms_json", ""))
     assert test_transforms_json_path.exists(), f"Test Transforms JSON Path does not exist: {test_transforms_json_path}"
-    # output_glb_path = Path(config_yaml.get("output_path", "optimization_output/trellis_init.glb"))
 
     pipeline_type = str(config_yaml.get("pipeline_type", '512'))
     frames_per_iter = config_yaml.get("frames_per_iter", None)
@@ -137,9 +135,9 @@ def refine_latents(
     ssaa = int(config_yaml.get("ssaa", 1))
     lamda  = float(config_yaml.get("lamda", 0.001))
     peel_layers = int(config_yaml.get("peel_layers", 8))
-    loss_type = str(config_yaml.get("loss_type", "mse"))  # loss_fn
+    loss_type = str(config_yaml.get("loss_type", "mse"))
     latent_l2_weight = float(config_yaml.get("latent_l2_weight", 0.0))
-    grad_clip_norm = float(config_yaml.get("grad_clip_norm", 0.0))  # 0 disables
+    grad_clip_norm = float(config_yaml.get("grad_clip_norm", 0.0))
     display_interval = int(config_yaml.get("display_interval", 20))
     out_dir = config_yaml.get("out_dir", "optimization_output/hypothesis")
     
@@ -170,27 +168,13 @@ def refine_latents(
 
     prompt_idx = int(config_yaml.get("prompt_idx", np.random.randint(0, len(image_paths))))
 
-    # Load pipeline
 
     pipeline = Trellis2ImageTo3DPipeline.from_pretrained("microsoft/TRELLIS.2-4B")
     pipeline.low_vram = False
     pipeline.cuda()
 
 
-    # Build envmap and renderer
-    # envmap_img = cv2.imread(str(envmap_path), cv2.IMREAD_UNCHANGED)
-    # # assert envmap_img is not None, f"Failed to read envmap: {envmap_path}"
-    # envmap_img = cv2.cvtColor(envmap_img, cv2.COLOR_BGR2RGB)
-    # env_map = EnvMap(torch.tensor(envmap_img, dtype=torch.float32, device=device))
 
-    # prompt_img = Image.open(image_paths[prompt_idx]).convert("RGB")
-    # raw_img = Image.open(image_paths[prompt_idx]).convert("RGBA")
-    # black_bg = Image.new("RGBA", raw_img.size, (0, 0, 0, 255))
-    # prompt_img = Image.alpha_composite(black_bg, raw_img) 
-    # raw_img = Image.open(image_paths[prompt_idx]).convert("RGBA")
-    # prompt_img = load_image(image_paths[prompt_idx])
-    # arr = np.array(raw_img).astype(np.float32)
-    # prompt_img = Image.fromarray((arr[:, :, :3] * (arr[:, :, 3:] / 255.0)).astype(np.uint8), mode="RGB")
     ''' 
     prompt_img = Image.open(image_paths[prompt_idx])
     w, h = prompt_img.size 
@@ -210,9 +194,7 @@ def refine_latents(
     w, h = 2000, 2000
     intr_scaled = _scale_opencv_intrinsics(intr, (w, h), render_resolution).to(device=device)
     mesh_ = trimesh.load_mesh(GENERATED_MESH_PATH)
-    # attr = mesh_.attrs.clone().detach().to(device).requires_grad_(True)
    
-    # camera extrinsics
     extrinsics = []
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
@@ -237,29 +219,16 @@ def refine_latents(
         device=device.type,
     )
 
-    # Position the predicted mesh with the alignment transform  
     if gt_mesh.exists():
         dtc_mesh = trimesh.load_mesh(gt_mesh)
-        # mesh_alignment = align_meshes_ransac_icp( mesh_, dtc_mesh)
         mesh_alignment, _ = align_meshes_similarity(mesh_, dtc_mesh)
-        # mesh_alignment = align_meshes_pca(dtc_mesh, mesh_)
-        # mesh_.vertices = mesh_.vertices @ torch.from_numpy(mesh_alignment[:3, :3]).float().to(device)
-        # R = torch.from_numpy(mesh_alignment[:3, :3]).float().to(device)
-        # t = torch.from_numpy(mesh_alignment[:3, 3]).float().to(device)
-        # T = np.eye(4)
-        # T[:3, :3] = R
-        # T[:3, 3] = t
-        # mesh_.vertices = mesh_.vertices @ R.T + t
         print("Alignment matrix for mesh alignment: \n", mesh_alignment)
-        mesh_alignment = mesh_alignment @ AXIS_SWAP# swap the axis. 
+        mesh_alignment = mesh_alignment @ AXIS_SWAP
         mesh_.apply_transform(mesh_alignment)
 
-    # visualize the alignment. 
     if hasattr(mesh_.visual, "to_color"):
         mesh_.visual = mesh_.visual.to_color()
         
-    # print("Color type", mesh_.visual.kind)
-    # print(mesh_.visual.to_dict())
 
     vertices = np.asarray(mesh_.vertices).copy()
     faces = np.asarray(mesh_.faces)
@@ -271,20 +240,16 @@ def refine_latents(
         vertex_attrs=torch.from_numpy(colors).to(device).to(torch.float32)
     )
 
-    # alignment_mesh = Mesh(vertices=mesh_.vertices.copy(), faces=mesh_.faces, vertex_attrs=mesh_.visual.vertex_colors[:, :3] / 255.0)
-    # align_mat = torch.tensor(mesh_alignment, dtype=torch.float32, device=device)
     extrr = torch.tensor(test_transforms["frames"][TEST_INDEX]["transform_matrix"], dtype=torch.float32, device=device)
     buf_align = renderer.render(mesh=alignment_mesh, 
                                 extrinsics=extrr @ base_object_pose,
                                 intrinsics=intr_scaled, return_types=["attr", "normal"])
     rgb_align = buf_align["attr"][:3]
     cv2.imwrite(f"{test_out_dir}/alignment_check.png", (rgb_align.permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8))
-    # colors = mesh_.visual.vertex_colors[:, :3] / 255.0  # (N, 3)
     colors = np.asarray(mesh_.visual.vertex_colors) / 255.0
     attr = torch.tensor(colors, dtype=torch.float32, device=device).requires_grad_(True)
 
     attrs = nn.Parameter(attr)
-    # compute sdf from initial trelli2 mesh 
     sdf_init_time_ = time.time()
 
     dmtet = DmTetGeometry(
@@ -297,28 +262,13 @@ def refine_latents(
     sdf_init_time = time.time() - sdf_init_time_
     
     object_transforms_fixed, _ = align_meshes_similarity(initial_mesh, dtc_mesh)
-    # object_transforms_fixed = object_transforms_fixed @ AXIS_SWAP  # swap the axis. 
     print("Alignment matrix for the rendering part: \n", object_transforms_fixed)
-    # visualize the first mesh derived. 
     trimesh.Trimesh(vertices=initial_mesh.vertices.detach().cpu().numpy(), 
                     faces=initial_mesh.faces.detach().cpu().numpy()).export(f"{out_dir}/extracted_sdf_mesh.obj")
-     # Compute alignment transform for the mesh 
-    # if gt_mesh.exists():
         
-        # print("[Alignment] Ground truth mesh found, computing alignment...")
-        # with torch.no_grad():
-            # object_transforms_fixed = align_meshes_pca(dtc_mesh, initial_mesh)
-            # object_transforms_fixed = align_meshes_ransac_icp( dtc_mesh, initial_mesh)
-            # object_transforms_fixed = torch.from_numpy(object_transforms_fixed).float().to(device)
-    # else:
-    #     print("No ground truth mesh provided, using identity alignment.")
-    #     object_transforms_fixed = torch.eye(4, device=device)
     
-    # Apply coordinate system flip (OpenCV to OpenGL convention)
-    # object_transforms_fixed = torch.diag(torch.tensor([1.0, -1.0, -1.0, 1.0], device=device)) @ object_transforms_fixed
         
     object_pose = base_object_pose  @ torch.tensor(object_transforms_fixed, dtype=torch.float32, device=device)
-    # object_pose = base_object_pose #@ mesh_alignment
     
     if optimizer_type == "adam":
         optimizer = torch.optim.Adam([attrs], lr=lr)
@@ -340,15 +290,12 @@ def refine_latents(
         dmtet_optimizer.zero_grad()
       
 
-        # print("mesh.vertices.requires_grad:", mesh.vertices.requires_grad)
 
 
         vmin = mesh.vertices.min(dim=0).values
         vmax = mesh.vertices.max(dim=0).values
         extents = vmax - vmin
 
-        # print("DTC extents:", dtc_mesh.extents)
-        # print("Pred extents:", extents)
 
         indices = (
             np.arange(N)
@@ -365,12 +312,8 @@ def refine_latents(
                                      )
             
             img = buffer["attr"][:3]
-            # print(f"Rendered buffer attr size: \n", buffer["attr"].shape) 
             mask = buffer["mask"]
-            # print(f"Rendered buffer mask size: \n", buffer["mask"].shape)
             normal = buffer["normal"]
-            # print(f"Rendered buffer normal size: \n", buffer["normal"].shape)
-            # depth = buffer["depth"]
 
             ref_img = ref_images[i]
             loss = criterion(img, ref_img[:3])
@@ -394,7 +337,6 @@ def refine_latents(
 
                 normal_rgba = torch.cat([normal_vis, mask_ch], dim=0)
 
-                # pred_rgba_vis = torch.cat([img, mask_ch], dim=0) if mask is not None else img  # RGB only
                 pred_rgba_vis = buffer["attr"][:4]   
                 img = torch.cat([pred_rgba_vis, ref_img, normal_rgba], dim=2)   
                 img = img.permute(1, 2, 0)                     
@@ -402,7 +344,6 @@ def refine_latents(
                 img_np = img.detach().cpu().numpy()
                 save_image(f"{out_dir}/opt_{idx:04d}_{i:02d}.png", img_np)
                 
-                # print("img.requires_grad:", img.requires_grad)
         if idx in TEST_INTERVALS:
             test_cam_extr = torch.tensor(test_transforms["frames"][TEST_INDEX]["transform_matrix"], dtype=torch.float32, device=device)
             test_pose = test_cam_extr @ object_pose
@@ -415,17 +356,7 @@ def refine_latents(
             test_mask = test_buffer["mask"]
             test_depth = test_buffer["depth"]
             test_normal_vis = (test_normal - test_normal.min()) / (test_normal.max() - test_normal.min())
-            # H, W = test_normal_vis.shape[1], test_normal_vis.shape[2]
-            # alpha = torch.ones(1, H, W, device=test_normal_vis.device)
-            # if test_mask is not None:
-            #     if test_mask.dim() == 2:
-            #         test_mask_ch = test_mask.unsqueeze(0)
-            #     else:
-            #         test_mask_ch = test_mask
-            # else:
-            #     test_mask_ch = alpha
 
-            # test_normal_rgba = torch.cat([test_normal_vis, test_mask_ch], dim=0)
             test_depth_vis = test_depth.unsqueeze(0).repeat(3, 1, 1)
             test_img = torch.cat([ test_depth_vis, test_normal_vis ], dim=2)   
             test_img = test_img.permute(1, 2, 0)                     
@@ -438,15 +369,11 @@ def refine_latents(
         total_loss = total_loss / len(indices)
         print(f"[iter {idx}] loss={float(total_loss.detach().cpu()):.6f}")
         total_loss.backward()
-        # print("Attribute grad norm: \n", dmtet.sdf.grad.norm())
-        # print("sdf grad norm:\n", dmtet.sdf.grad.norm())
-        # print("deform grad norm:\n", dmtet.sdf.grad.norm())
 
 
         optimizer.step()
         dmtet_optimizer.step()
     optimization_time = time.time() - optimization_time_
-    # Export final mesh
     final_mesh = dmtet.get_mesh(vertex_attr = attrs)
     output_glb_path.parent.mkdir(parents=True, exist_ok=True)
     color = attrs.detach().cpu().numpy()
@@ -455,7 +382,6 @@ def refine_latents(
     trimesh_obj.export(output_glb_path)
     Path(f"{out_dir}/timings").mkdir(parents=True, exist_ok=True)
     with open(f"{out_dir}/timings/timing.txt", "a") as f:
-        # f.write(f"Mesh generation time: {mesh_generation_time:.2f} seconds\n")
         f.write(f"SDF calculation time: {sdf_init_time:.2f} seconds\n")
         f.write(f"Total optimization time for  {num_iters} iterations: {optimization_time:.2f} seconds\n")
 

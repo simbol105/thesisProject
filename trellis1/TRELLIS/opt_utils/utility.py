@@ -16,42 +16,29 @@ import open3d as o3d
 
 
 def align_meshes_fixed_scale_ransac(pred_mesh, dtc_mesh):
-    """
-    Explicitly scales and centers the models before feature extraction
-    to prevent FPFH feature mismatching.
-    """
-    # 1. Uniformly sample surface points to fix variable vertex density
-    # This ensures flat walls and roofs have equal point representations
+    """Explicitly scales and centers the models before feature extraction"""
     source_pts, _ = trimesh.sample.sample_surface(unwrap_mesh(pred_mesh), 20000)
     target_pts, _ = trimesh.sample.sample_surface(unwrap_mesh(dtc_mesh), 20000)
 
-    # 2. Extract bounding metadata
     s_min, s_max = source_pts.min(axis=0), source_pts.max(axis=0)
     t_min, t_max = target_pts.min(axis=0), target_pts.max(axis=0)
 
-    # Compute bounding box diagonal scales
     diag_source = np.linalg.norm(s_max - s_min)
     diag_target = np.linalg.norm(t_max - t_min)
     
-    # Calculate uniform target scale scale
     scale_factor = diag_target / diag_source
 
-    # 3. Center and normalize scales explicitly in coordinate space
     c_source = (s_max + s_min) / 2.0
     c_target = (t_max + t_min) / 2.0
 
-    # Scale and bring source to target origin
     source_normalized_pts = (source_pts - c_source) * scale_factor + c_target
 
-    # 4. Initialize Open3D objects with scale-matched data
     source = o3d.geometry.PointCloud()
     source.points = o3d.utility.Vector3dVector(source_normalized_pts)
     
     target = o3d.geometry.PointCloud()
     target.points = o3d.utility.Vector3dVector(target_pts)
 
-    # 5. Adapt Voxel Size dynamically based on the final target size
-    # This guarantees the search radius makes physical sense for the house
     voxel_size = diag_target * 0.03 
 
     source_down = source.voxel_down_sample(voxel_size)
@@ -60,13 +47,11 @@ def align_meshes_fixed_scale_ransac(pred_mesh, dtc_mesh):
     source_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
     target_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
 
-    # 6. Extract FPFH (Now safe because density and scales match exactly)
     source_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
         source_down, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 5, max_nn=100))
     target_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
         target_down, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 5, max_nn=100))
 
-    # 7. Run pure rigid RANSAC (No scale estimation needed here)
     distance_threshold = voxel_size * 1.5
     result_ransac = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
         source_down, target_down, source_fpfh, target_fpfh, False, distance_threshold,
@@ -75,22 +60,17 @@ def align_meshes_fixed_scale_ransac(pred_mesh, dtc_mesh):
          o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(distance_threshold)],
         o3d.pipelines.registration.RANSACConvergenceCriteria(100000, 0.999))
 
-    # 8. Local Refinement
-        # 8. Local Refinement Alternative: Point-to-Point requires zero normals
     result_icp = o3d.pipelines.registration.registration_icp(
         source, target, voxel_size * 0.5, result_ransac.transformation,
         o3d.pipelines.registration.TransformationEstimationPointToPoint())
 
 
-    # 9. Reconstruct the global 4x4 matrix mapping the original unscaled source
-    # We must embed our explicit manual scaling and centering steps back into the matrix
     T_norm = np.eye(4)
     T_norm[:3, :3] *= scale_factor
     T_norm[:3, 3] = c_target - scale_factor * c_source
 
     T_rigid = result_icp.transformation
     
-    # Combined sequence pipeline
     final_transform = T_rigid @ T_norm
     return final_transform
 
@@ -98,18 +78,8 @@ def align_meshes_fixed_scale_ransac(pred_mesh, dtc_mesh):
 
 
 def align_meshes(dtc_mesh, pred_mesh, n_samples=10000):
-    """
-    Align pred_mesh to dtc_mesh using:
-        - bounding-box scale
-        - PCA rotation (computed on sampled surface points)
-        - centroid translation
+    """Align pred_mesh to dtc_mesh using:"""
 
-    Returns:
-        T : (4,4) similarity transform mapping pred -> dtc
-        scale : float
-    """
-
-    # unwrap
     dtc = unwrap_mesh(dtc_mesh)
     pred = unwrap_mesh(pred_mesh)
 
@@ -139,7 +109,6 @@ def align_meshes(dtc_mesh, pred_mesh, n_samples=10000):
 
     R = R_dtc @ R_pred.T
 
-    # Fix reflection if needed
     if np.linalg.det(R) < 0:
         R[:, -1] *= -1
 
@@ -160,39 +129,19 @@ def align_meshes_similarity(
     dtc_mesh,
     n_samples=10000,
 ):
-    """
-    Align pred_mesh to gt_mesh.
+    """Align pred_mesh to gt_mesh."""
 
-    Returns
-    -------
-    T : (4,4)
-        Similarity transform matrix mapping
-        pred -> gt
-
-    scale : float
-        Uniform scale factor
-    """
-
-    # --------------------------------------------------
-    # Sample surfaces
-    # --------------------------------------------------
     pred_mesh = unwrap_mesh(pred_mesh)
     gt_mesh = unwrap_mesh(dtc_mesh)
     src, _ = trimesh.sample.sample_surface(pred_mesh, n_samples)
     tgt, _ = trimesh.sample.sample_surface(gt_mesh, n_samples)
 
-    # --------------------------------------------------
-    # Initial centering
-    # --------------------------------------------------
     src_center = src.mean(axis=0)
     tgt_center = tgt.mean(axis=0)
 
     src0 = src - src_center
     tgt0 = tgt - tgt_center
 
-    # --------------------------------------------------
-    # Initial scale estimate
-    # --------------------------------------------------
     src_radius = np.sqrt(np.mean(np.sum(src0**2, axis=1)))
     tgt_radius = np.sqrt(np.mean(np.sum(tgt0**2, axis=1)))
 
@@ -200,11 +149,6 @@ def align_meshes_similarity(
 
     tgt_tree = cKDTree(tgt)
 
-    # --------------------------------------------------
-    # Chamfer objective
-    # params:
-    # [rx ry rz tx ty tz log_scale]
-    # --------------------------------------------------
     def objective(params):
         rx, ry, rz, tx, ty, tz, log_s = params
 
@@ -226,9 +170,6 @@ def align_meshes_similarity(
 
         return chamfer
 
-    # --------------------------------------------------
-    # Initialization
-    # --------------------------------------------------
     x0 = np.array([
         0.0,
         0.0,
@@ -256,10 +197,6 @@ def align_meshes_similarity(
         [rx, ry, rz]
     ).as_matrix()
 
-    # --------------------------------------------------
-    # Build homogeneous transform
-    # x_gt = scale * R @ x_pred + t
-    # --------------------------------------------------
     T = np.eye(4)
     T[:3, :3] = scale * R
     T[:3, 3] = [tx, ty, tz]
@@ -269,14 +206,7 @@ def align_meshes_similarity(
 
 
 def transf3d(pts3d, transf4x4):
-    """
-    Args:
-        pts3d (torch.Tensor): ...x3
-        transf4x4 (torch.Tensor): ...x4x4
-
-    Returns:
-        pts3d_transf (torch.Tensor): ...x3
-    """
+    """Args:"""
     device = pts3d.device
     dtype = pts3d.dtype
     transf4x4 = transf4x4.to(device)
@@ -307,14 +237,11 @@ def transf3d_broadcast(pts3d, transf4x4):
 
 
 
-#----------------------------------------------------------------------------
-# Image save/load helper.
-#----------------------------------------------------------------------------
 
 def save_image(fn, x : np.ndarray) -> np.ndarray:
     try:
         if os.path.splitext(fn)[1] == ".png":
-            imageio.imwrite(fn, np.clip(np.rint(x * 255.0), 0, 255).astype(np.uint8), compress_level=3) # Low compression for faster saving
+            imageio.imwrite(fn, np.clip(np.rint(x * 255.0), 0, 255).astype(np.uint8), compress_level=3)
         else:
             imageio.imwrite(fn, np.clip(np.rint(x * 255.0), 0, 255).astype(np.uint8))
     except:
@@ -335,20 +262,15 @@ def normalize_matrix(M):
     return M
 
 def push_camera_back(E, d):
-    # E is 4x4 world→camera extrinsic
     R = E[:3, :3]
     t = E[:3, 3]
 
-    # camera center in world space
     C = -R.T @ t
 
-    # camera forward direction in world space (OpenCV: +Z)
     fwd = R.T @ torch.tensor([0.0, 0.0, 1.0], device=E.device)
 
-    # move camera backward by distance d
     C_new = C - d * fwd
 
-    # recompute translation
     t_new = -R @ C_new
 
     E_new = E.clone()
@@ -358,15 +280,12 @@ def push_camera_back(E, d):
 
 
 
-# import trimesh
-# import numpy as np
 
 def unwrap_mesh(mesh):
     
     if isinstance(mesh, trimesh.Trimesh):
         return mesh
     
-    # Trellis2 MeshWithVoxel: has vertices + faces
     if hasattr(mesh, "vertices") and hasattr(mesh, "faces"):
         verts = np.asarray(mesh.vertices.detach().cpu().numpy())
         faces = np.asarray(mesh.faces.detach().cpu().numpy())
@@ -380,35 +299,28 @@ def pca_rotation(mesh):
     cov = np.cov(verts.T)
     eigvals, eigvecs = np.linalg.eigh(cov)
     
-    idx = np.argsort(eigvals)[::-1]  # descending
+    idx = np.argsort(eigvals)[::-1]
     eigvecs = eigvecs[:, idx]
     return eigvecs
 
 R_opengl_to_trellis = np.array([
-    [1, 0, 0],   # X stays X
-    [0, 0, 1],   # Y -> Z
-    [0, 1, 0],   # Z -> Y
+    [1, 0, 0],
+    [0, 0, 1],
+    [0, 1, 0],
 ])
 
 import numpy as np
 
 def kabsch_rotation(A, B):
-    """
-    A, B: (N, 3) arrays of corresponding points
-    returns R: (3, 3) optimal rotation aligning A -> B
-    """
-    # Center
+    """A, B: (N, 3) arrays of corresponding points"""
     Ac = A - A.mean(axis=0)
     Bc = B - B.mean(axis=0)
 
-    # Covariance
     H = Ac.T @ Bc
 
-    # SVD
     U, S, Vt = np.linalg.svd(H)
     R = Vt.T @ U.T
 
-    # Fix reflection
     if np.linalg.det(R) < 0:
         Vt[-1, :] *= -1
         R = Vt.T @ U.T
@@ -459,63 +371,23 @@ def get_global_rotations():
     }
     
 def normalize_custom(verts):
-    # verts: torch tensor [N, 3]
     vmin = verts.min(dim=0).values
     vmax = verts.max(dim=0).values
     centroid = (vmin + vmax) * 0.5
     extents = vmax - vmin
-    scale = extents.norm()  # diagonal of bounding box
+    scale = extents.norm()
 
     verts_norm = (verts - centroid) / scale
     return verts_norm, centroid, scale
 
-# def get_normalization_matrix(dtc_mesh, pred_mesh):
-#     # unwrap to get verts/faces as torch tensors
-#     pred_mesh.simplify(target=100000)
-#     dtc = unwrap_mesh(dtc_mesh)
-#     pred = unwrap_mesh(pred_mesh)
 
-#     # --- Normalize BEFORE converting to trimesh ---
-#     A_verts, A_centroid, A_scale = normalize_custom(torch.tensor(dtc.vertices))
-#     B_verts, B_centroid, B_scale = normalize_custom(torch.tensor(pred.vertices))
 
-#     # Convert to trimesh
-#     A = trimesh.Trimesh(vertices=A_verts.numpy(), faces=dtc.faces)
-#     B = trimesh.Trimesh(vertices=B_verts.numpy(), faces=pred.faces)
 
-#     # --- ICP on normalized meshes ---
-#     T_init, _ = trimesh.registration.mesh_other(
-#         A, B,
-#         scale=False,
-#         icp_first=10,     # coarse alignment
-#         samples=5000
-#     )
 
-#     # T_norm, _ = trimesh.registration.mesh_other(
-#     #     A, B,
-#     #     scale=False,
-#     #     samples=10000,
-#     #     initial=T_init
-#     # )
-#     T_norm, _, _ = trimesh.registration.icp(
-#         A.vertices,
-#         B.vertices,
-#         initial=T_init,   # now allowed
-#         scale=False,
-#         max_iterations=50
-#     )
 
-#     # --- Build un-normalization transforms ---
-#     S_A = np.eye(4); S_A[:3, :3] *= A_scale.item()
-#     S_B = np.eye(4); S_B[:3, :3] *= B_scale.item()
 
-#     T_A = np.eye(4); T_A[:3, 3] = A_centroid.numpy()
-#     T_B = np.eye(4); T_B[:3, 3] = B_centroid.numpy()
 
-#     # Final transform in original units
-#     T_final = T_A @ S_A @ T_norm @ np.linalg.inv(S_B) @ np.linalg.inv(T_B)
 
-#     return torch.tensor(T_final, dtype=torch.float32, device=pred_mesh.device)
 
 
 def normalize(mesh):
@@ -525,71 +397,25 @@ def normalize(mesh):
     mesh.apply_scale(scale)
     return mesh
 
-# def get_normalization_matrix(dtc_mesh, pred_mesh):
-#     pred_mesh.simplify(50000)
-#     device = pred_mesh.device
-#     dtc = unwrap_mesh(dtc_mesh)
-#     pred = unwrap_mesh(pred_mesh)
-#     A_verts, A_centroid, A_scale = normalize_custom(torch.tensor(dtc.vertices))
-#     B_verts, B_centroid, B_scale = normalize_custom(torch.tensor(pred.vertices))
-#     A = trimesh.Trimesh(vertices=A_verts.numpy(), faces=dtc.faces)
-#     B = trimesh.Trimesh(vertices=B_verts.numpy(), faces=pred.faces)
-#     # Coarse alignment
-#     T_init, _ = trimesh.registration.mesh_other(A, B, scale=True, samples=10000)
-#     T_norm, _, _ = trimesh.registration.icp(
-#         A.vertices, 
-#         B.vertices, 
-#         initial=T_init,
-#         scale=True,
-#         max_iterations=50
-#     )
-#     S_A = np.eye(4); S_A[:3, :3] *= A_scale.item()
-#     S_B = np.eye(4); S_B[:3, :3] *= B_scale.item()
-#     T_A = np.eye(4); T_A[:3, 3] = A_centroid.numpy()
-#     T_B = np.eye(4); T_B[:3, 3] = B_centroid.numpy()
-#     T_final = T_A @ S_A @ T_norm @ np.linalg.inv(S_B) @ np.linalg.inv(T_B)
     
-#     return torch.tensor(T_final, dtype=torch.float32, device=device)
     
 
 def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, icp_iterations=50):
-    """
-    Compute robust ICP-based alignment transformation from predicted mesh to ground truth mesh.
-    
-    This function aligns two meshes by:
-    1. Simplifying the predicted mesh
-    2. Computing centroids and scaling
-    3. Using ICP registration on normalized meshes
-    4. Properly denormalizing the result
-    
-    Args:
-        dtc_mesh: Ground truth mesh (trimesh.Trimesh or MeshWithVoxel)
-        pred_mesh: Predicted mesh to be aligned (trimesh.Trimesh or MeshWithVoxel)
-        simplify_target: Target vertex count for simplification
-        icp_iterations: Number of ICP iterations
-        
-    Returns:
-        T_final: 4x4 transformation matrix that aligns pred_mesh to dtc_mesh space (torch.Tensor)
-    """
+    """Compute robust ICP-based alignment transformation from predicted mesh to ground truth mesh."""
     device = pred_mesh.device if hasattr(pred_mesh, 'device') else torch.device('cpu')
     
-    # Simplify predicted mesh first
     if hasattr(pred_mesh, 'simplify'):
         pred_mesh.simplify(simplify_target)
     
-    # Unwrap mesh objects
     dtc_trimesh = unwrap_mesh(dtc_mesh)
     pred_trimesh = unwrap_mesh(pred_mesh)
     
-    # Work with copies to avoid modifying originals
     dtc_verts = dtc_trimesh.vertices.copy()
     pred_verts = pred_trimesh.vertices.copy()
     
-    # Compute centroids
     dtc_centroid = dtc_verts.mean(axis=0)
     pred_centroid = pred_verts.mean(axis=0)
     
-    # Compute scale from bounding box diagonals
     dtc_bbox_min, dtc_bbox_max = dtc_verts.min(axis=0), dtc_verts.max(axis=0)
     pred_bbox_min, pred_bbox_max = pred_verts.min(axis=0), pred_verts.max(axis=0)
     
@@ -601,11 +427,9 @@ def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, 
     print(f"[Alignment] DTC diag: {dtc_diag:.4f}, Pred diag: {pred_diag:.4f}, Scale: {scale:.4f}")
     print(f"[Alignment] DTC centroid: {dtc_centroid}, Pred centroid: {pred_centroid}")
     
-    # Normalize vertices to unit scale, centered at origin
     dtc_norm_verts = (dtc_verts - dtc_centroid) / (dtc_diag / 2.0)
     pred_norm_verts = (pred_verts - pred_centroid) / (pred_diag / 2.0)
     
-    # Use ICP for alignment in normalized space
     try:
         T_icp, _, _ = trimesh.registration.icp(
             dtc_norm_verts,
@@ -620,29 +444,15 @@ def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, 
         print(f"[Alignment] ICP failed: {e}. Using identity.")
         T_icp = np.eye(4)
     
-    # Construct transformation in original space
-    # T_final transforms points: p_dtc_space = T_final @ p_pred_space
-    # Derivation:
-    #   1. Center pred at origin: p' = p - pred_centroid
-    #   2. Normalize pred scale: p'' = p' / (pred_diag/2)
-    #   3. Apply ICP in normalized space: p''' = T_icp @ p''
-    #   4. Denormalize: p'''' = p''' * (dtc_diag/2)
-    #   5. Re-center at dtc: p_final = p'''' + dtc_centroid
     
-    # Compose transforms as 4x4 matrices:
-    # T_denorm_pred: undo normalization for pred (center and scale)
     T_denorm_pred = np.eye(4)
     T_denorm_pred[:3, :3] = (pred_diag / 2.0) * np.eye(3)
     T_denorm_pred[:3, 3] = pred_centroid
     
-    # T_norm_dtc: normalize dtc mesh (inverse of above)
     T_norm_dtc = np.eye(4)
     T_norm_dtc[:3, :3] = (2.0 / dtc_diag) * np.eye(3)
     T_norm_dtc[:3, 3] = -dtc_centroid * (2.0 / dtc_diag)
     
-    # Compose: denorm_pred -> icp -> norm_dtc -> scale
-    # p_out = inv(T_norm_dtc) @ T_icp @ T_norm_pred @ p_in
-    # which is: p_out = denorm_dtc @ T_icp @ norm_pred @ p_in
     
     T_norm_pred = np.eye(4)
     T_norm_pred[:3, :3] = (2.0 / pred_diag) * np.eye(3)
@@ -652,26 +462,19 @@ def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, 
     T_denorm_dtc[:3, :3] = (dtc_diag / 2.0) * np.eye(3)
     T_denorm_dtc[:3, 3] = dtc_centroid
     
-    # Apply scale to account for different mesh sizes
     T_scale = np.eye(4)
     T_scale[:3, :3] *= scale
     
-    # Compose transformations - IMPORTANT: only scale the translation, not rotation
-    # First apply ICP in normalized space
-    T_icp_result = T_icp @ T_norm_pred  # Normalize and register
+    T_icp_result = T_icp @ T_norm_pred
     
-    # Extract rotation and translation from ICP result
     R_icp = T_icp_result[:3, :3]
     t_icp = T_icp_result[:3, 3]
     
-    # Apply denormalization: scale and translate
-    # p_final = denorm_dtc(scale * denorm_pred_inv(p_icp))
     t_scaled = scale * t_icp + dtc_centroid - scale * pred_centroid
     
-    # Build final matrix with proper rotation
     T_final = np.eye(4)
-    T_final[:3, :3] = R_icp  # Keep rotation from ICP
-    T_final[:3, 3] = t_scaled  # Scale translation only
+    T_final[:3, :3] = R_icp
+    T_final[:3, 3] = t_scaled
     
     print(f"[Alignment] Final transformation matrix:\n{T_final}")
     print(f"[Alignment] Rotation part preserved from ICP, translation scaled")
@@ -679,18 +482,13 @@ def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, 
     return torch.tensor(T_final, dtype=torch.float32, device=device)
 
 
-# Legacy function kept for backward compatibility
 def get_normalization_matrix(dtc_mesh, pred_mesh):
-    """
-    DEPRECATED: Use compute_icp_alignment_transform instead.
-    This function is kept for backward compatibility.
-    """
+    """DEPRECATED: Use compute_icp_alignment_transform instead."""
     return compute_icp_alignment_transform(dtc_mesh, pred_mesh)
 
 
 
 
-# Loss Utils 
 
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -753,54 +551,39 @@ def _ssim(img1, img2, window, window_size, channel, size_average=True):
 from scipy.spatial import cKDTree
 
 def align_meshes_pca(dtc_mesh, pred_mesh):
-    """
-    Aligns two identical shapes globally using Principal Component Analysis (PCA).
-    No initial guess is required.
-    """
-    # 1. Get vertex arrays
+    """Aligns two identical shapes globally using Principal Component Analysis (PCA)."""
     source_mesh = unwrap_mesh(dtc_mesh)
     target_mesh = unwrap_mesh(pred_mesh)
     src_pts = source_mesh.vertices
     tgt_pts = target_mesh.vertices
     
-    # 2. Compute centers of mass and center the points
     src_center = np.mean(src_pts, axis=0)
     tgt_center = np.mean(tgt_pts, axis=0)
     
     src_centered = src_pts - src_center
     tgt_centered = tgt_pts - tgt_center
     
-    # 3. Compute Covariance Matrices and Singular Value Decomposition (SVD)
-    # This gives us the principal geometric axes of both shapes
     _, _, Vt_src = np.linalg.svd(src_centered, full_matrices=False)
     _, _, Vt_tgt = np.linalg.svd(tgt_centered, full_matrices=False)
     
     R_src = Vt_src.T
     R_tgt = Vt_tgt.T
     
-    # 4. Handle PCA sign/flip ambiguity
-    # Test all 8 possible sign flips for the axes to find the correct orientation
     best_error = float('inf')
     best_R = np.eye(3)
     
-    # Build a KD-Tree of the target for rapid distance checking
     tgt_tree = cKDTree(tgt_centered)
     
-    # Generate all sign combinations for 3D space: [[1,1,1], [1,1,-1], ...]
     sign_flips = np.array(np.meshgrid([1, -1], [1, -1], [1, -1])).T.reshape(-1, 3)
     
     for flip in sign_flips:
-        # Apply the flip to the source axes
         R_src_flipped = R_src * flip
         
-        # Candidate rotation matrix to map source axes to target axes
         R_cand = R_tgt @ R_src_flipped.T
         
-        # Enforce a valid rotation matrix (determinant must be +1)
         if np.linalg.det(R_cand) < 0:
             continue
             
-        # Test how close the points match under this rotation
         test_pts = src_centered @ R_cand.T
         distances, _ = tgt_tree.query(test_pts, k=1)
         mean_error = np.mean(distances)
@@ -809,8 +592,6 @@ def align_meshes_pca(dtc_mesh, pred_mesh):
             best_error = mean_error
             best_R = R_cand
 
-    # 5. Build final 4x4 Transformation Matrix
-    # T maps: src -> center -> rotate -> translate to target
     T = np.eye(4)
     T[:3, :3] = best_R
     T[:3, 3] = tgt_center - best_R @ src_center
@@ -824,53 +605,44 @@ def align_meshes_ransac_icp(pred_mesh, dtc_mesh, voxel_size=0.05):
    
     source_mesh = unwrap_mesh(pred_mesh)
     target_mesh = unwrap_mesh(dtc_mesh)
-    # 1. Convert Trimesh structures into Open3D Point Clouds
     source = o3d.geometry.PointCloud()
     source.points = o3d.utility.Vector3dVector(source_mesh.vertices)
     
     target = o3d.geometry.PointCloud()
     target.points = o3d.utility.Vector3dVector(target_mesh.vertices)
     
-    # scale both
-    # source_extent = source.get_max_bound() - source.get_min_bound()
-    # scale_factor = max(source_extent) 
-    # target.scale(scale_factor, center=(0, 0, 0))
     
     
-    # 2. Downsample and estimate geometric surface normals
     source_down = source.voxel_down_sample(voxel_size)
     target_down = target.voxel_down_sample(voxel_size)
     
     source_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
     target_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
 
-    # 3. Extract FPFH local shape descriptors
     source_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
         source_down, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 5, max_nn=100))
     target_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
         target_down, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 5, max_nn=100))
 
-    # 4. Run RANSAC Global Registration (The global rough alignment step)
     distance_threshold = voxel_size * 1.5
     result_ransac = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
         source_down, target_down, source_fpfh, target_fpfh, False, distance_threshold,
-        o3d.pipelines.registration.TransformationEstimationPointToPoint(True), 3, # False
-        [o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.3), # 0.9
+        o3d.pipelines.registration.TransformationEstimationPointToPoint(True), 3,
+        [o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.3),
          o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(distance_threshold)],
         o3d.pipelines.registration.RANSACConvergenceCriteria(100000, 0.999))
 
     rough_alignment = result_ransac.transformation
 
-    # 5. Run Point-to-Plane ICP to fine-tune the final position
     source.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
     target.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
     
     result_icp = o3d.pipelines.registration.registration_icp(
         source, target, voxel_size * 0.4, rough_alignment,
-        o3d.pipelines.registration.TransformationEstimationPointToPlane()) # False
+        o3d.pipelines.registration.TransformationEstimationPointToPlane())
 
  
-    return result_icp.transformation # 4 x 4 matrix 
+    return result_icp.transformation
 
 
 

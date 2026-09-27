@@ -1,63 +1,4 @@
-"""
-Differentiable O-Voxel Optimization using Voxel Rasterization
-
-Key Improvements Over voxel_opt.py:
-==================================
-
-1. DIFFERENTIABLE RENDERING PIPELINE
-   - Uses VoxelRenderer from o_voxel.rasterize instead of non-differentiable mesh extraction
-   - Renders directly from voxel grid representation
-   - Gradients flow through the rasterizer back to optimized voxel features
-   
-2. GRADIENT-BASED OPTIMIZATION
-   - All voxel features are differentiable:
-     * base_color: RGB color per voxel (currently optimized)
-     * dual_vertices: Per-voxel position offsets (prepared for future optimization)
-     * intersected: Voxel activity/visibility state (prepared for future optimization)
-     * quad_lerp: Quad splitting weights (prepared for future optimization)
-   
-3. CURRENT APPROACH (Stable)
-   - Optimizes voxel base_color using differentiable rendering
-   - Keeps voxel coordinates fixed from initial mesh-to-voxel conversion
-   - All voxels remain active (no topology filtering to preserve gradient flow)
-   - Fully differentiable from rendering output back to color parameters
-
-4. EXTENSIONS FOR GEOMETRY OPTIMIZATION
-   To optimize geometry features (dual_vertices, intersected, quad_lerp):
-   
-   a) Smooth Alpha Modulation:
-      - Use sigmoid(intersected_logit) to smoothly control per-voxel opacity
-      - Geometry changes visible through alpha/visibility changes
-      - Requires implementing custom VoxelRenderer or modifying attrs with alpha
-      
-   b) Differentiable Dual Grid to Mesh:
-      - Wrap o_voxel.convert.flexible_dual_grid_to_mesh in torch autograd function
-      - Implement manual forward/backward using nvdiffrast for rendering
-      - This would enable full topology and geometry optimization
-      
-   c) Two-Stage Optimization:
-      - Stage 1: Render voxels, optimize colors (current)
-      - Stage 2: Extract mesh with gradients enabled, render mesh, backprop
-      - Less efficient but cleaner to implement
-
-USAGE:
-======
-python hypothesis_voxel_optimization.py <path_to_config.yaml>
-
-YAML CONFIG REQUIREMENTS (see voxel_opt.py for reference):
-========================================================
-- lr: learning rate
-- num_iters: number of optimization iterations
-- render_resolution: voxel grid resolution (e.g., 512)
-- transforms_json: path to camera transforms and image metadata
-- envmap_path: path to environment map HDR image
-- gt_mesh: ground truth mesh for alignment (optional)
-- output_path: directory for saving optimization results
-- display_interval: visualize every N iterations
-- optimizer_type: 'adam' or 'sgd'
-- frames_per_iter: frames per optimization step (None = all frames)
-- seed: random seed for reproducibility
-"""
+"""Differentiable O-Voxel Optimization using Voxel Rasterization"""
 
 import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
@@ -172,26 +113,12 @@ def softplus_inverse(y):
 
 
 class DifferentiableVoxelOptimizer:
-    """
-    Optimizes O-Voxel representation using differentiable voxel rasterization.
-    
-    CURRENT IMPLEMENTATION: Optimizes voxel base_color with fixed geometry
-    - Renders directly from voxel representation using VoxelRenderer
-    - All voxel features have gradients enabled for future geometry optimization
-    - Provides a stable, working baseline for differentiable voxel optimization
-    
-    Key Advantages Over Mesh-based Optimization:
-    - Avoids non-differentiable mesh extraction step
-    - Gradients flow directly through rasterizer to voxel features
-    - Supports smooth topology changes through soft alpha modulation (ready to implement)
-    - More efficient per-iteration computation
-    """
+    """Optimizes O-Voxel representation using differentiable voxel rasterization."""
     
     def __init__(self, yaml_config_path: Path):
         self.config_yaml = yaml.safe_load(open(yaml_config_path, "r"))
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
-        # Parse config
         self.lr = float(self.config_yaml["lr"])
         self.num_iters = int(self.config_yaml["num_iters"])
         self.envmap_path = Path(self.config_yaml["envmap_path"])
@@ -216,7 +143,6 @@ class DifferentiableVoxelOptimizer:
         self.optimize_color_only = bool(self.config_yaml.get("optimize_color_only", False))
         self.voxel_margin = float(self.config_yaml.get("voxel_margin", 0.5))
         
-        # Create output directory
         Path(self.out_dir).mkdir(parents=True, exist_ok=True)
         
     def validate_paths(self):
@@ -243,20 +169,16 @@ class DifferentiableVoxelOptimizer:
         
         intr = transforms["intrinsic"]
         
-        # Get prompt image index (same as voxel_opt.py)
         self.prompt_idx = int(self.config_yaml.get("prompt_idx", np.random.randint(0, len(image_paths))))
         
-        # Get original image size for intrinsic scaling
         orig_img = Image.open(image_paths[self.prompt_idx])
         orig_w, orig_h = orig_img.size
         self.intr_scaled = _scale_opencv_intrinsics(intr, (orig_w, orig_h), self.render_resolution).to(device=self.device)
         
-        # Load extrinsics
         extrinsics = []
         for f in frames:
             extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
         
-        # Load reference images
         ref_images = torch.stack(
             [_resize_rgb_to_tensor(p, self.render_resolution, self.device) for p in image_paths], dim=0
         )
@@ -268,22 +190,14 @@ class DifferentiableVoxelOptimizer:
         
         print(f"Loaded {self.num_images} reference images for optimization.")
         
-        # Compute object pose alignment
         if self.gt_mesh.exists():
             dtc_mesh = trimesh.load_mesh(self.gt_mesh)
-            # You would need a function to align mesh_ to dtc_mesh
-            # For now, use identity
             self.object_pose = self.base_object_pose
         else:
             self.object_pose = self.base_object_pose
     
     def initialize_ovoxel_features(self, mesh_: MeshWithVoxel):
-        """
-        Initialize O-Voxel optimization parameters from the predicted mesh.
-        
-        This converts the mesh to O-Voxel format and creates differentiable parameters.
-        """
-        # Convert mesh to O-Voxel representation
+        """Initialize O-Voxel optimization parameters from the predicted mesh."""
         glb = o_voxel.postprocess.to_glb(
             vertices=mesh_.vertices,
             faces=mesh_.faces,
@@ -304,7 +218,6 @@ class DifferentiableVoxelOptimizer:
         vertices = mesh_.vertices.float().cpu()
         faces = mesh_.faces.long().cpu()
         
-        # Convert mesh to flexible dual grid representation
         voxel_indices, dual_vertices, intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
             vertices=torch.tensor(mesh.vertices, dtype=torch.float32),
             faces=torch.tensor(mesh.faces, dtype=torch.float32), 
@@ -316,14 +229,12 @@ class DifferentiableVoxelOptimizer:
             timing=True
         )
         
-        # Sort voxels by encoded index for consistency
         vid = o_voxel.serialize.encode_seq(voxel_indices)
         mapping = torch.argsort(vid)
         voxel_indices = voxel_indices[mapping]
         dual_vertices = dual_vertices[mapping]
         intersected = intersected[mapping]
         
-        # Get material attributes
         voxel_indices_mat, attributes = o_voxel.convert.textured_mesh_to_volumetric_attr(
             mesh, 
             grid_size=self.render_resolution, 
@@ -331,12 +242,10 @@ class DifferentiableVoxelOptimizer:
             timing=True
         )
         
-        # Sort attributes
         vid_mat = o_voxel.serialize.encode_seq(voxel_indices_mat)
         mapping_mat = torch.argsort(vid_mat)
         attributes = {k: v[mapping_mat] for k, v in attributes.items()}
         
-        # Pack geometry information
         dual_vertices_packed = dual_vertices * self.render_resolution - voxel_indices
         dual_vertices_packed = (torch.clamp(dual_vertices_packed, 0, 1) * 255).type(torch.uint8)
         intersected_packed = (intersected[:, 0:1] + 2 * intersected[:, 1:2] + 4 * intersected[:, 2:3]).type(torch.uint8)
@@ -344,31 +253,25 @@ class DifferentiableVoxelOptimizer:
         attributes['dual_vertices'] = dual_vertices_packed
         attributes['intersected'] = intersected_packed
         
-        # Initialize optimization parameters
         dual_vertices_opt = attributes['dual_vertices'].float() / 255.0
         
-        # Create base color from attributes
         base_color = attributes['base_color'].float() / 255.0
         
-        # Pack all features for optimization
-        # Features: [dual_vertices (3), intersected (1), quad_lerp (1), base_color (3)]
         quad_lerp = torch.nn.functional.softplus(torch.ones_like(dual_vertices[:, :1]) * 0.1)
         
         h_feats = torch.cat([
-            dual_vertices_opt,     # 0-2: dual vertex offsets
-            intersected_packed.float() / 7.0,  # 3: intersected state
-            torch.log(quad_lerp + 1e-6),  # 4: quad_lerp (log space for softplus)
-            base_color              # 5-7: base color
+            dual_vertices_opt,
+            intersected_packed.float() / 7.0,
+            torch.log(quad_lerp + 1e-6),
+            base_color
         ], dim=-1).to(device=self.device)
         
-        # Create sparse tensor representation
         h_feats_param = torch.nn.Parameter(h_feats)
         h = SparseTensor(
             feats=h_feats_param, 
             coords=torch.cat([torch.zeros_like(voxel_indices[:, 0:1]), voxel_indices], dim=-1).to(self.device)
         )
         
-        # Store voxel coordinates for position computation
         self.voxel_coords = voxel_indices.to(self.device)
         self.h_feats_param = h_feats_param
         self.h = h
@@ -376,29 +279,16 @@ class DifferentiableVoxelOptimizer:
         return h, h_feats_param, voxel_indices.to(self.device)
     
     def create_voxel_representation(self, h_opt, voxel_coords):
-        """
-        Create a Voxel representation from optimized O-Voxel features.
-        
-        This is the key step for differentiable rendering - we create a Voxel object
-        that the VoxelRenderer can directly render.
-        
-        Key insight: Keep all voxels active to maintain gradient flow. The voxel rasterizer
-        handles visibility and compositing automatically. Topology changes can be achieved
-        by modulating per-voxel alpha through the intersected feature.
-        """
-        # Decode features from optimization parameters
+        """Create a Voxel representation from optimized O-Voxel features."""
         base_color_raw = h_opt.feats[..., 5:8]
         
-        # Apply sigmoid to map to [0, 1] color range
-        base_color = torch.sigmoid(base_color_raw)  # [N, 3]
+        base_color = torch.sigmoid(base_color_raw)
         
-        # Create voxel representation with all voxels
-        # VoxelRenderer will handle proper compositing and alpha generation
         voxel = Voxel(
             origin=[-0.5, -0.5, -0.5],
             voxel_size=1.0 / self.render_resolution,
             coords=voxel_coords,
-            attrs=base_color,  # [N, 3] - RGB colors
+            attrs=base_color,
             layout={'base_color': slice(0, 3)},
             device=self.device
         )
@@ -410,13 +300,11 @@ class DifferentiableVoxelOptimizer:
         self.validate_paths()
         self.setup_data()
         
-        # Load and run pipeline once to get initial mesh
         print("Loading Trellis2 pipeline...")
         pipeline = Trellis2ImageTo3DPipeline.from_pretrained("microsoft/TRELLIS.2-4B")
         pipeline.low_vram = False
         pipeline.cuda()
         
-        # Run on prompt image to get initial mesh
         prompt_img = Image.open(self.image_paths[self.prompt_idx]).convert("RGBA")
         
         print("Generating initial mesh...")
@@ -425,11 +313,9 @@ class DifferentiableVoxelOptimizer:
             pipeline_type=self.pipeline_type,
         )[0]
         
-        # Initialize O-Voxel features
         print("Initializing O-Voxel features...")
         h, h_feats_param, voxel_coords = self.initialize_ovoxel_features(mesh_)
         
-        # Create voxel renderer for differentiable rendering
         voxel_renderer = VoxelRenderer(rendering_options={
             "resolution": self.render_resolution,
             "near": self.near,
@@ -437,30 +323,24 @@ class DifferentiableVoxelOptimizer:
             "ssaa": self.ssaa,
         })
         
-        # Setup optimizer
         if self.optimizer_type == "sgd":
             optimizer = torch.optim.SGD([h_feats_param], lr=self.lr)
         else:
             optimizer = torch.optim.Adam([h_feats_param], lr=self.lr, betas=(0.9, 0.999))
         
-        # Loss function
         criterion = nn.MSELoss(reduction='mean')
         
-        # Random number generator
         rng = np.random.default_rng(seed=int(self.config_yaml.get("seed", 0)))
         
         print(f"Starting optimization for {self.num_iters} iterations...")
         print(f"Optimizing with {h_feats_param.shape[0]} voxels")
         
-        # Optimization loop
         for iteration in range(self.num_iters + 1):
             optimizer.zero_grad()
             
-            # Create updated voxel representation
             h_opt = h.replace(feats=h_feats_param)
             voxel = self.create_voxel_representation(h_opt, voxel_coords)
             
-            # Sample frames for this iteration
             indices = (
                 np.arange(self.num_images)
                 if self.frames_per_iter is None or self.frames_per_iter == self.num_images
@@ -469,11 +349,9 @@ class DifferentiableVoxelOptimizer:
             
             total_loss = torch.zeros((), device=self.device)
             
-            # Render and compute loss for each sampled frame
             for frame_idx in indices:
                 extr = self.extrinsics_t[frame_idx]
                 
-                # Render voxel representation using differentiable voxel rasterizer
                 render_output = voxel_renderer.render(
                     voxel=voxel,
                     extrinsics=extr,
@@ -487,15 +365,12 @@ class DifferentiableVoxelOptimizer:
                     print(f"Warning: render_output keys are {render_output.keys()}")
                     continue
                 
-                # Get ground truth
                 gt = self.ref_images[frame_idx]
                 gt_rgb = gt[:3]
                 gt_alpha = gt[3:4]
                 
-                # Compute RGB loss
                 rgb_loss = criterion(pred_color, gt_rgb)
                 
-                # Compute alpha/mask loss if available
                 frame_loss = rgb_loss
                 if pred_alpha is not None:
                     if pred_alpha.ndim == 2:
@@ -505,25 +380,20 @@ class DifferentiableVoxelOptimizer:
                 
                 total_loss += frame_loss
                 
-                # Visualization
                 if self.display_interval > 0 and (iteration % self.display_interval == 0):
                     self._visualize_frame(
                         pred_color, gt_rgb, pred_alpha, gt_alpha,
                         iteration, frame_idx
                     )
             
-            # Average loss over frames
             total_loss = total_loss / len(indices)
             print(f"[iter {iteration}] loss={float(total_loss.detach().cpu()):.6f}")
             
-            # Backward pass
             total_loss.backward()
             
-            # Gradient clipping
             if self.grad_clip_norm > 0:
                 torch.nn.utils.clip_grad_norm_([h_feats_param], self.grad_clip_norm)
             
-            # Optimizer step
             optimizer.step()
             
             if iteration % 10 == 0:
@@ -534,22 +404,18 @@ class DifferentiableVoxelOptimizer:
     
     def _visualize_frame(self, pred_rgb, gt_rgb, pred_alpha, gt_alpha, iteration, frame_idx):
         """Save visualization of prediction vs ground truth."""
-        # Handle alpha channel
         if pred_alpha is not None:
             if pred_alpha.ndim == 2:
                 pred_alpha = pred_alpha.unsqueeze(0)
             pred_rgba = torch.cat([pred_rgb, pred_alpha], dim=0)
         else:
-            # Create dummy alpha from ones
             h, w = pred_rgb.shape[1], pred_rgb.shape[2]
             dummy_alpha = torch.ones(1, h, w, device=pred_rgb.device, dtype=pred_rgb.dtype)
             pred_rgba = torch.cat([pred_rgb, dummy_alpha], dim=0)
         
-        # Handle gt alpha
         gt_alpha_expanded = gt_alpha if gt_alpha.shape[0] == 1 else gt_alpha[:1]
         gt_rgba = torch.cat([gt_rgb, gt_alpha_expanded], dim=0)
         
-        # Combine into one image: pred on left, gt on right
         img = torch.cat([pred_rgba, gt_rgba], dim=2)
         img = img.permute(1, 2, 0)
         img = img.clamp(0.0, 1.0)
@@ -559,11 +425,8 @@ class DifferentiableVoxelOptimizer:
     
     def _save_results(self, h_opt, voxel_coords):
         """Save final optimized voxel representation."""
-        # Convert final voxel representation to mesh for export
         voxel = self.create_voxel_representation(h_opt, voxel_coords)
         
-        # Try to reconstruct mesh from voxels (optional - depends on o_voxel capabilities)
-        # For now, save the voxel representation
         print(f"Saved optimized voxel representation with {voxel.coords.shape[0]} active voxels")
         print(f"Output saved to {self.out_dir}")
 

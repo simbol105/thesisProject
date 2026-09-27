@@ -1,13 +1,4 @@
-"""Run RecGen single-view inference from the command line.
-
-Example:
-    python scripts/run_inference.py \
-        --rgb examples/ex0_rgb.png \
-        --depth examples/ex0_depth.png \
-        --mask examples/ex0_mask.png \
-        --intrinsics examples/intrinsics.yaml \
-        --name ex0
-"""
+"""Run RecGen single-view inference from the command line."""
 
 import argparse
 import os

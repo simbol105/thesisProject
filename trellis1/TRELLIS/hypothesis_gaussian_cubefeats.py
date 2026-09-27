@@ -1,6 +1,6 @@
 
 import os
-os.environ['ATTN_BACKEND'] =  'flash-attn'    # 'flash-attn'  # 'xformers' # 
+os.environ['ATTN_BACKEND'] =  'flash-attn'
 os.environ['SPCONV_ALGO'] = 'native' 
 import sys
 from pathlib import Path
@@ -28,7 +28,7 @@ from trellis.utils.loss_utils import l1_loss, smooth_l1_loss, ssim, lpips, l2_lo
 
 try:
     import utils3d.torch
-except Exception:  # pragma: no cover
+except Exception:
     utils3d = None
 
 
@@ -38,8 +38,7 @@ import json
 from typing import List, Dict, Tuple, Optional, Union
 import trimesh
 
-# Global settings 
-RES = 512 # The render/grid resolution
+RES = 512
 DECODER_RES = 64
 TEST_INDEX = 4
 TEST_INTERVALS = [0, 1, 50, 100, 200,  500, 799, 999]
@@ -84,12 +83,7 @@ def tsdf_reg_loss(
     intrinsics: Union[torch.Tensor, List[torch.Tensor]],
     renderer: Optional[MeshRenderer] = None,
 ) -> torch.Tensor:
-    """
-    Project the current optimization mesh's TSDF samples into the GT camera view,
-    render the GT mesh depth, and regress the current TSDF values to the pseudo-TSDF
-    derived from that GT depth. This merges the trainer's `_tsdf_reg_loss` and
-    `_calc_tsdf_loss` behavior into a single callable helper.
-    """
+    """Project the current optimization mesh's TSDF samples into the GT camera view,"""
     if isinstance(rep, (list, tuple)):
         if not isinstance(gt_mesh, (list, tuple)):
             gt_mesh = [gt_mesh] * len(rep)
@@ -146,14 +140,12 @@ def load_image(path):
     image = image.astype(np.uint8)
     return image
 
-# rot_x(np.pi) @ 
 AXIS_SWAP =   rot_z(np.pi / 2) 
-# AXIS_SWAP = np.eye(4, dtype=np.float32)
 
 
 def dilate_sparse_tensor(  
     x: sp.SparseTensor,  
-    res: int,                        # MUST equal SparseFeatures2Mesh.res exactly (e.g. self.res, not res+1)  
+    res: int,
     radius: int = 1,  
     kernel: Optional[Tuple[Tuple[int, int, int], ...]] = None,  
     sdf_channel: int = 0,  
@@ -170,7 +162,6 @@ def dilate_sparse_tensor(
     if coords.dim() != 2 or coords.shape[1] != 4:  
         raise ValueError(f"Expected coords [N,4] (batch,x,y,z), got shape={tuple(coords.shape)}")  
   
-    # Sanity: input coords must already be within [0, res-1]  
     max_in = coords[:, 1:].max().item()  
     if max_in > res - 1:  
         raise ValueError(  
@@ -190,19 +181,15 @@ def dilate_sparse_tensor(
   
     kernel_t = torch.as_tensor(kernel, device=coords.device, dtype=coords.dtype)  
     RES_MIN = 0
-    # Use the maximum spatial coordinate present in the input SLAT as the upper bound
-    # This prevents dilation from creating coordinates outside the original SLAT grid
-    # even if the caller passes a larger `res` (e.g., render resolution).
     RES_MAX = int(coords[:, 1:].max().item())
   
     new_coords_list = []  
     for b in coords[:, 0].unique().tolist():  
         batch_mask = coords[:, 0] == b  
-        batch_coords = coords[batch_mask][:, 1:]  # [M, 3]  
+        batch_coords = coords[batch_mask][:, 1:]
   
         shifted = (batch_coords.unsqueeze(1) + kernel_t.unsqueeze(0)).reshape(-1, 3)  
   
-        # --- Clip strictly to [0, res-1] on ALL three axes independently ---  
         valid = (shifted >= RES_MIN).all(dim=1) & (shifted <= RES_MAX).all(dim=1)  
         shifted = shifted[valid]  
         if shifted.numel() == 0:  
@@ -214,11 +201,9 @@ def dilate_sparse_tensor(
         )  
         batch_candidates = torch.unique(batch_candidates, dim=0)  
   
-        # Vectorized removal of coords already present in this batch  
         existing_batch = coords[batch_mask]  
         combined = torch.cat([existing_batch, batch_candidates], dim=0)  
         uniq, inverse, counts = torch.unique(combined, dim=0, return_inverse=True, return_counts=True)  
-        # rows that came ONLY from batch_candidates (count==1) are genuinely new  
         is_new_uniq = counts == 1  
         cand_inverse = inverse[existing_batch.shape[0]:]  
         new_only = batch_candidates[is_new_uniq[cand_inverse]]  
@@ -230,10 +215,8 @@ def dilate_sparse_tensor(
         return x  
   
     new_coords = torch.cat(new_coords_list, dim=0)
-    # Ensure dilated coordinates do not step outside the original SLAT spatial range [0, RES_MAX].
     new_coords[:, 1:] = new_coords[:, 1:].clamp(0, RES_MAX)
   
-    # --- Hard assertion: catch any bug before it reaches SparseTensor/get_dense_attrs ---  
     assert new_coords[:, 1:].min().item() >= 0, "Negative coordinate after dilation"
     assert new_coords[:, 1:].max().item() <= RES_MAX, (
         f"Out-of-range coordinate after dilation: max={new_coords[:, 1:].max().item()}, "
@@ -251,12 +234,10 @@ def dilate_sparse_tensor(
     merged_coords = torch.cat([coords, new_coords], dim=0).to(dtype=torch.int32)  
     merged_feats = torch.cat([feats, new_feats], dim=0)  
   
-    # Final, redundant guard (kept intentionally paranoid)  
     bad_mask = ~(((merged_coords[:, 1:] >= 0) & (merged_coords[:, 1:] <= RES_MAX)).all(dim=1))
     if bad_mask.any():
         raise IndexError(f"Found out-of-range coordinates after dilation (RES_MAX={RES_MAX}): {merged_coords[bad_mask][:5]}")
   
-    # Sort for batch-contiguity, as required by SparseTensor (see DEBUG assert in basic.py)  
     key = (  
         merged_coords[:, 0].to(torch.int64) * (res ** 3)  
         + merged_coords[:, 1].to(torch.int64) * (res ** 2)  
@@ -267,9 +248,8 @@ def dilate_sparse_tensor(
     merged_coords = merged_coords[order].contiguous()  
     merged_feats = merged_feats[order].contiguous()  
     
-    # Mask for the new tensors
     is_new_mask = torch.zeros(coords.shape[0] + new_coords.shape[0], dtype=torch.bool, device=feats.device)
-    is_new_mask[coords.shape[0]:] = True # Mark the appended tokens as true
+    is_new_mask[coords.shape[0]:] = True
     is_new_mask = is_new_mask[order] 
   
     if merged_feats.shape[0] != merged_coords.shape[0]:  
@@ -313,49 +293,29 @@ def _resize_rgb_to_tensor(img_path: Path, render_resolution: int, device: torch.
     return t   
 
 def ensure_nchw(x):
-    """Normalize tensor to NCHW format.
-
-    Accepts tensors in shapes:
-    - (C, H, W)
-    - (H, W, C)
-    - (B, C, H, W)
-    - (B, H, W, C)
-    - (H, W)
-    - (C, H, W) with no batch dim
-    Returns tensor with shape (B, C, H, W).
-    """
+    """Normalize tensor to NCHW format."""
     if x is None:
         return None
-    # ensure tensor
     if not isinstance(x, torch.Tensor):
         x = torch.as_tensor(x)
 
     if x.dim() == 4:
-        # could be (B, C, H, W) or (B, H, W, C)
         B, a, b, c = x.shape
-        # If last dim is small (<=4) and second dim is large, assume NHWC
         if c <= 4 and a > c:
             return x.permute(0, 3, 1, 2)
-        # If second dim is small (<=4) and looks like channels, assume NCHW
         if a <= 4 and a <= 16:
             return x
-        # Fallback: if last dim is small, permute
         if c <= 16:
             return x.permute(0, 3, 1, 2)
         return x
     elif x.dim() == 3:
-        # could be (C, H, W), (H, W, C), or (B, H, W)
         a, b, c = x.shape
-        # HWC: last dim small
         if c <= 4 and a > c:
             return x.permute(2, 0, 1).unsqueeze(0)
-        # CHW: first dim small
         if a <= 4 and b > 16 and c > 16:
             return x.unsqueeze(0)
-        # B,H,W -> add channel
         return x.unsqueeze(1)
     elif x.dim() == 2:
-        # single-channel image (H, W)
         return x.unsqueeze(0).unsqueeze(0)
 
     return x
@@ -407,27 +367,16 @@ def refine_latent(config_path: Path):
     outputs = pipeline.run(
         prompt_img,
         seed=seed,
-        # Optional parameters
-        # sparse_structure_sampler_params={
-        #     "steps": 12,
-        #     "cfg_strength": 7.5,
-        # },
-        # slat_sampler_params={
-        #     "steps": 12,
-        #     "cfg_strength": 5,
-        # },
         return_latent=True,
     )
     
     orig_w, orig_h = prompt_img.size
     intr_scaled = _scale_opencv_intrinsics(intr, (orig_w, orig_h), RES).to(device=device)
 
-    # camera extrinsics
     extrinsics = []
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
     
-    # setup renderer
     renderer = MeshRenderer(
         rendering_options={
                     "resolution": RES,
@@ -451,8 +400,6 @@ def refine_latent(config_path: Path):
     mesh = outputs['mesh'][0]
     gs = outputs['gaussian'][0]
     
-    # slat_opt = nn.Parameter(slat.feats.clone().detach())
-    # slat_opt.requires_grad_(True)
 
     
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
@@ -467,7 +414,7 @@ def refine_latent(config_path: Path):
         with torch.no_grad():
             dtc_mesh.apply_transform(base_object_pose.detach().cpu().numpy())
             alignment = align_meshes_fixed_scale_ransac(mesh, dtc_mesh)
-            alignment = torch.from_numpy(alignment  ).to(device=device, dtype=torch.float32) # @ AXIS_SWAP
+            alignment = torch.from_numpy(alignment  ).to(device=device, dtype=torch.float32)
         
         dtc_mesh.visual = dtc_mesh.visual.to_color()
         colors = np.array(dtc_mesh.visual.vertex_colors)[:, :3] / 255.0
@@ -480,7 +427,7 @@ def refine_latent(config_path: Path):
     else:
         print("No ground truth mesh provided, skipping alignment step.")
         alignment = torch.eye(4, device=device) 
-    object_pose = alignment #base_object_pose @ alignment
+    object_pose = alignment
     print(" Starting latent optimization...")
 
     l1_criterion = nn.L1Loss(reduction="mean")
@@ -489,8 +436,6 @@ def refine_latent(config_path: Path):
 
     
    
-    # decoder = pipeline.models['slat_decoder_gs']
-    # decoder.to(device=device)
     decoder_args = {
                 "resolution": 64,
                 "model_channels": 768,
@@ -525,13 +470,11 @@ def refine_latent(config_path: Path):
     decoder.to(device=device)
     decoder.train()
     
-    # get the cube feats from the latent
     gs_cubefeats = decoder.forward(slat, return_latent=True)
     
     gs_slat_opt = nn.Parameter(gs_cubefeats.feats.clone().detach())
     gs_slat_opt.requires_grad_(True)
     
-    # setup optimizer 
     if config_yaml.get("optimizer", "") == "sgd":
         optimizer = torch.optim.SGD([gs_slat_opt] , lr=lr)
         
@@ -547,7 +490,6 @@ def refine_latent(config_path: Path):
         )
         optimizer.zero_grad()
         
-        # x = sp.SparseTensor(feats=slat_opt, coords=slat.coords) 
         x = gs_cubefeats.replace(feats=gs_slat_opt)
 
         gaussian_splats = decoder.to_representation(x)
@@ -587,10 +529,10 @@ def refine_latent(config_path: Path):
 
             if display_interval and (idx % display_interval == 0 or idx == frames_per_iter - 1):
     
-                pred_rgb_n   = ensure_nchw(pred_rgb)        # (1,3,H,W)
-                ref_rgb_n    = ensure_nchw(ref_rgb[:3])     # (1,3,H,W)
+                pred_rgb_n   = ensure_nchw(pred_rgb)
+                ref_rgb_n    = ensure_nchw(ref_rgb[:3])
 
-                vis = torch.cat([pred_rgb_n, ref_rgb_n], dim=3)   # concat along width
+                vis = torch.cat([pred_rgb_n, ref_rgb_n], dim=3)
 
                 vis_hwc = vis[0].permute(1, 2, 0).clamp(0.0, 1.0)
 
@@ -615,12 +557,10 @@ def refine_latent(config_path: Path):
         
         reps = [gs]
 
-        # volume regularization
         scales = torch.cat([g.get_scaling for g in reps], dim=0)
         volume = torch.prod(scales, dim=1)
         reg_vol = volume.mean()
 
-        # opacity regularization
         opacity = torch.cat([g.get_opacity for g in reps], dim=0)
         reg_opacity = (opacity - 1).pow(2).mean()
 

@@ -13,7 +13,7 @@ license = {text = "LicenseRef-TRI-NC"}
 dependencies = [
     "torch>=2.0",
     "torchvision",
-    "numpy",
+    "numpy<2",
     "scipy",
     "Pillow",
     "trimesh",

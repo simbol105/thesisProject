@@ -480,6 +480,7 @@ class InferencePipeline:
         use_stage1_distillation=False,
         use_stage2_distillation=False,
         decode_formats=None,
+        return_slat=False,
     ) -> dict:
         """
         Parameters:
@@ -531,6 +532,7 @@ class InferencePipeline:
             return {
                 **ss_return_dict,
                 **outputs,
+                **({"slat": slat} if return_slat else {}),
             }
 
     def postprocess_slat_output(

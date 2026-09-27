@@ -1,0 +1,4 @@
+# SAM3D environment (conda env "sam3d", CUDA 12.8)
+# upstream lists its own pins: third_party/sam3d/requirements.txt and requirements.inference.txt
+# CUDA_HOME must point at the env (the pipeline reads it from CONDA_PREFIX), or gsplat fails
+-r ../../sam3d/sam-3d-objects/requirements.inference.txt

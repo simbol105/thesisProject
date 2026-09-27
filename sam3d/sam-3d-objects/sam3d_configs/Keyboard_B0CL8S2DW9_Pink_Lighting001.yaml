@@ -1,0 +1,8 @@
+category: "Keyboard_B0CL8S2DW9_Pink_Lighting001"
+image_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Keyboard_B0CL8S2DW9_Pink_Lighting001/train/im_0005.png"
+output_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/sam3d/sam-3d-objects/sam3d_output/Keyboard_B0CL8S2DW9_Pink_Lighting001"
+checkpoint_path: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/sam3d/sam-3d-objects/checkpoints/hf/pipeline.yaml"
+seed: 42
+save_video: true
+with_mesh_postprocess: false
+with_texture_baking: true

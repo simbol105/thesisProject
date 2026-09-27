@@ -1,0 +1,55 @@
+# TRELLIS.2 topology check: SLAT refinement and o-voxel refinement from the same starting point.
+#
+#   python topology_study/run_both.py --yaml-config topology_study/config.yaml
+#
+# Both scripts share <out_root>/init_state.pt (latents from pipeline.run + the alignment); pass
+# --regenerate to sample again.
+
+data_dir: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001"
+gt_mesh: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/model.glb"
+out_root: "/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/topology_study/output/Birdhouse_Lighting001"
+
+# --- generation -------------------------------------------------------------------------------
+model_name: "microsoft/TRELLIS.2-4B"
+pipeline_type: "512"                   # 512 | 1024 | 1024_cascade | 1536_cascade
+prompt_idx: 37                         # frames[prompt_idx]; 37 = the image recgen used for this object
+seed: 42
+
+# --- alignment (TRELLIS.2 frame -> world) -----------------------------------------------------
+align_iou_views: 16
+align_top_k: 4
+alignment_path: ""                     # a saved 4x4 .npy skips the search
+
+# --- rendering ----------------------------------------------------------------------------------
+near: 0.01
+far: 100
+
+# --- losses (same terms as the TRELLIS1 runs) ---------------------------------------------------
+weight: 1.0
+lambda_mask: 1.0
+lambda_depth: 1.2
+lambda_normal: 1.0
+lambda_color: 0.9
+lambda_ssim: 0.2
+lambda_lpips: 0.2
+
+# --- shared optimization settings ---------------------------------------------------------------
+num_iters: 300
+frames_per_iter: 8
+grad_clip: 0.0
+display_interval: 25
+eval_interval: 50
+eval_views: 8
+
+# --- slat_refinement.py -------------------------------------------------------------------------
+lr: 3e-2                               # normalized latent units (latent std ~ 1 after normalization)
+optimize_shape: true
+optimize_texture: true
+latent_l2_weight: 0.0
+loss_scaling: true                     # GradScaler; both decoders run in fp16
+
+# --- ovoxel_refinement.py -----------------------------------------------------------------------
+lr_ovoxel: 1e-2                        # on the raw decoder logits (vertex / split channels)
+lr_texture: 1e-2                       # on the PBR voxel values in [0, 1]
+ovoxel_optimize: [dual_vertices, split_weight, texture]   # add `intersected` to show it gets no gradient
+ovoxel_l2_weight: 0.0

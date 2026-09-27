@@ -1,0 +1,3 @@
+# the CLI itself; the experiments run inside the per-method environments (requirements/)
+typer>=0.9
+pyyaml>=6.0

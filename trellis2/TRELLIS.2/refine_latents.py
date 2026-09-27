@@ -1,7 +1,6 @@
 import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-# os.environ["ATTN_BACKEND"] = 'xformers'
 
 import argparse
 import json
@@ -101,7 +100,6 @@ def copy_mesh(mesh: MeshWithVoxel) -> MeshWithVoxel:
 
 def get_mesh_from_ovoxel(coords, attrs, resolution=512):
      
-    # Extract geometry data from O-Voxel  
     dual_vertices = attrs['dual_vertices'] / 255.0  
     intersected = torch.cat([  
         attrs['intersected'] % 2,  
@@ -192,15 +190,15 @@ def refine_latents(
     ssaa = int(config_yaml.get("ssaa", 1))
     lamda  = float(config_yaml.get("lamda", 0.001))
     peel_layers = int(config_yaml.get("peel_layers", 8))
-    loss_type = str(config_yaml.get("loss_type", "mse"))  # loss_fn
+    loss_type = str(config_yaml.get("loss_type", "mse"))
     latent_l2_weight = float(config_yaml.get("latent_l2_weight", 0.0))
-    grad_clip_norm = float(config_yaml.get("grad_clip_norm", 0.0))  # 0 disables
+    grad_clip_norm = float(config_yaml.get("grad_clip_norm", 0.0))
     display_interval = int(config_yaml.get("display_interval", 20))
     out_dir = config_yaml.get("out_dir", "optimization_output")
     dmtet_res = int(config_yaml.get("dmtet_res", 64))
     
-    optimize_texture_only = bool(config_yaml.get("optimize_texture_only", False))  # NEW
-    optimizer_type = str(config_yaml.get("optimizer_type", "adam")).lower()  # NEW
+    optimize_texture_only = bool(config_yaml.get("optimize_texture_only", False))
+    optimizer_type = str(config_yaml.get("optimizer_type", "adam")).lower()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transforms = _load_json(transforms_json_path)
@@ -217,50 +215,35 @@ def refine_latents(
 
     prompt_idx = int(config_yaml.get("prompt_idx", np.random.randint(0, len(image_paths))))
 
-    # Load pipeline
 
     pipeline = Trellis2ImageTo3DPipeline.from_pretrained("microsoft/TRELLIS.2-4B")
     pipeline.low_vram = False
     pipeline.cuda()
 
 
-    # Build envmap and renderer
     envmap_img = cv2.imread(str(envmap_path), cv2.IMREAD_UNCHANGED)
     assert envmap_img is not None, f"Failed to read envmap: {envmap_path}"
     envmap_img = cv2.cvtColor(envmap_img, cv2.COLOR_BGR2RGB)
     env_map = EnvMap(torch.tensor(envmap_img, dtype=torch.float32, device=device))
 
-    # Run once on  prompt image to obtain latents and render resolution 
     prompt_img = Image.open(image_paths[prompt_idx]).convert("RGBA")
     mesh= pipeline.run(
         prompt_img,
-        # return_latent=True,
         pipeline_type=pipeline_type,
     )[0]
     render_resolution = 512 
    
 
-    # This is for ovoxel optimization. 
-    # coords = mesh.coords  
-    # attrs = mesh.split_attrs() 
-    # voxel_size = mesh.voxel_size 	
-    # pos = torch.tensor(coords / render_resolution - 0.5, device=device, requires_grad=True)	
-    # color = torch.tensor((attrs['base_color'] [:, :3] / 255.0), device=device, requires_grad=True)
-    # position = nn.Parameter(pos)
-    # base_color = nn.Parameter(color)
   
     
     
-    # Scale intrinsics to render_resolution.
     orig_img = Image.open(image_paths[prompt_idx])
     orig_w, orig_h = orig_img.size
     intr_scaled = _scale_opencv_intrinsics(intr, (orig_w, orig_h), render_resolution).to(device=device)
 
-    # camera extrinsics
     extrinsics = []
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
-    # extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)  # [N,4,4]
     
     renderer = MeshRenderer(
         rendering_options={
@@ -272,10 +255,6 @@ def refine_latents(
         device=device.type,
     )
 
-    # This is the ovoxel renderer, which takes in the position and base color directly. It is non differentiable. 
-    # renderer = o_voxel.rasterize.VoxelRenderer(
-    #     rendering_options={"resolution": render_resolution, "ssaa": 2}
-    # )
 
 
     vertices = mesh.vertices.clone().detach().to(device).requires_grad_(True)
@@ -288,23 +267,10 @@ def refine_latents(
     layout = mesh.layout
 
     opt_vert = nn.Parameter(vertices)
-    # opt_coords = nn.Parameter(coords)
     opt_attrs = nn.Parameter(attrs)
-    # opt_faces = nn.Parameter(faces)
 
 
 
-    # Trainable latent feature tensors.
-    # shape_coords = shape_slat.coords.detach().to(device)
-    # tex_coords = tex_slat.coords.detach().to(device)
-    # shape_feats_init = shape_slat.feats.detach().clone()
-    # tex_feats_init = tex_slat.feats.detach().clone()
-    # shape_feats_init = shape_feats_init.to(device)
-    # tex_feats_init = tex_feats_init.to(device)
-    # shape_feats = nn.Parameter(shape_slat.feats.detach().to(device))
-    # tex_feats   = nn.Parameter(tex_slat.feats.detach().to(device))
-    # shape_feats = nn.Parameter(shape_slat.feats)
-    # tex_feats   = nn.Parameter(tex_slat.feats)
     
    
    
@@ -317,13 +283,10 @@ def refine_latents(
     N = len(image_paths)
     print(f"Loaded {N} reference images for optimization.")
     rng = np.random.default_rng(seed=int(config_yaml.get("seed", 0)))
-    # flip_zy = torch.diag(torch.tensor([1.0, -1.0, -1.0, 1.0], device=device))
 
    
-    # I only used this to align predicted mesh for rendering, not for loss computation. 
     if gt_mesh.exists():
         dtc_mesh = trimesh.load_mesh(gt_mesh)
-         # Compute alignment transformation at the beginning 
         with torch.no_grad():
             object_transforms_fixed = get_normalization_matrix(dtc_mesh, mesh)
            
@@ -335,26 +298,10 @@ def refine_latents(
     object_pose = base_object_pose @ object_transforms_fixed
     criterion = nn.MSELoss(reduction='mean') 
 
-    # R_yup_to_zup = torch.tensor([  
-    #     [1, 0, 0, 0],  
-    #     [0, 0, -1, 0],  
-    #     [0, 1, 0, 0],  
-    #     [0, 0, 0, 1]  
-    # ], dtype=torch.float32, device=device)
     
 
-    # dmtet parameters 
-    # dmtet_mesh = DmTetGeometry(res=dmtet_res, scale=1.0, init_mesh=initial_mesh, device=device)
-    # dmtet_mesh = DmTetGeometry(res=dmtet_res, scale=1.0, init_mesh=None, device=device)
-    # pbr_att_layout = pipeline.pbr_attr_layout 
     
-    # voxel_feats = nn.Parameter(tex_slat.feats)
-    # voxel_coords = tex_slat.coords
-    # voxel_shape = tex_slat.shape
-    # spatial_shape = tex_slat.spatial_shape
     
-    # Edit the optimization variable depending on the optimization type. 
-    # For voxel optimization, it is the base color, for mesh optimization, it is the latent features. 
    
     
     if optimizer_type  == "sgd":
@@ -364,7 +311,6 @@ def refine_latents(
         print(f"Using Adam Optimizer with lr={lr}")
         optimizer = torch.optim.Adam([opt_vert, opt_attrs], lr=lr)
 
-    # dmtet_optimizer = dmtet_mesh.getOptimizer(lr_pos=lr)
     for it in range(num_iters):
         indices = (
             np.arange(N)
@@ -375,14 +321,8 @@ def refine_latents(
            
 
         optimizer.zero_grad(set_to_none=True)
-        # dmtet_optimizer.zero_grad(set_to_none=True)
        
-        # shape_slat_opt = shape_slat.replace(feats=shape_feats, coords=shape_coords)
-        # tex_slat_opt   = tex_slat.replace(feats=tex_feats, coords=tex_coords)
         
-        # mesh = _decode_latent_differentiable(
-        #     pipeline, shape_slat_opt, tex_slat_opt, render_resolution
-        # )[0]
         mesh = MeshWithVoxel(
             vertices=opt_vert,
             faces=faces,
@@ -394,9 +334,6 @@ def refine_latents(
             layout=layout,
         )
 
-        # This is for dmtet optimization, set all dmtet parameters before using it.  
-        # mesh = dmtet_mesh.get_mesh(pbr_att_layout=pbr_att_layout, resolution=render_resolution,
-        #                            coords = voxel_coords, feats = voxel_feats, shape=voxel_shape, spatial_shape=spatial_shape )
 
         
         total_loss = torch.zeros((), device=device)
@@ -406,7 +343,6 @@ def refine_latents(
             
             
             extr = extrinsics_t[idx] @ object_pose
-            # extr = R_yup_to_zup @ extr
            
            
             buffers = renderer.render(
@@ -414,50 +350,29 @@ def refine_latents(
                 extrinsics=extr,
                 intrinsics=intr_scaled,
                 return_types=["attr", "mask", "normal"], 
-                # transformation = object_pose
-                # envmap=env_map,
             )
 
-            # For ovoxel rendering, used base_color and position as the inputs. 
-            # print("Position requires grad: ", position.requires_grad)
-            # print("Base color requires grad: ", base_color.requires_grad)
             
-            # buffers = renderer.render(  
-            #     position=position,  
-            #     attrs=base_color,  
-            #     voxel_size=voxel_size,  
-            #     extrinsics=extr,  
-            #     intrinsics=intr_scaled 
-            # )
             
             pred = buffers["base_color"]
-            # pred = buffers["attr"]  # This is for ovoxel, which outputs all the attributes together. 
             
             
             gt   = ref_images[idx]  
             mask = buffers["mask"]
             normal = buffers["normal"]
 
-            # These are for ovoxel rasterization. 
-            # mask = buffers["alpha"]
-            # normal = buffers["depth"]
             
             if mask.ndim == 2:
                 mask = mask[None, ...]        
             elif mask.shape[0] != 1:
                 mask = mask.permute(2, 0, 1)
             
-            # Compare only RGB (first 3 channels) 
-            gt_rgb = gt[:3]  # Drop alpha if present
-            # print("Pred max, min: ", pred.max().item(), pred.min().item())
-            # print("GT max, min: ", gt_rgb.max().item(), gt_rgb.min().item())
+            gt_rgb = gt[:3]
         
 
-            # diff = pred - gt_rgb
             img_loss =  criterion(pred, gt_rgb)
-            mask_loss = criterion(mask, gt[3:4] if gt.shape[0] >=4 else torch.ones_like(mask)) # if gt has alpha mask, add mask loss
-            # sdf_loss = dmtet_mesh.get_sdf_loss()
-            per_pix = img_loss + mask_loss #+ sdf_loss
+            mask_loss = criterion(mask, gt[3:4] if gt.shape[0] >=4 else torch.ones_like(mask))
+            per_pix = img_loss + mask_loss
 
              
 
@@ -468,9 +383,8 @@ def refine_latents(
                 alpha = torch.ones(1, H, W, device=normal_vis.device)
                 normal_rgba = torch.cat([normal_vis, mask if mask is not None else alpha], dim=0)
                 
-                # Build display image with RGB channels only
                 pred_rgba_vis = torch.cat([pred, mask], dim=0) if mask is not None else pred
-                gt_vis = gt[:3] if gt.shape[0] >= 3 else gt  # RGB only
+                gt_vis = gt[:3] if gt.shape[0] >= 3 else gt
                 gt_rgba_vis = torch.cat([gt_vis, torch.ones(1, H, W, device=gt.device)], dim=0)
                 
                 img = torch.cat([pred_rgba_vis, gt, normal_rgba], dim=2)   
@@ -480,13 +394,7 @@ def refine_latents(
                 
 
                 save_image(f"{out_dir}/opt_{it:04d}_{idx:02d}.png", img_np)
-                # display_image(img_np, title=f"Iter {it} - Frame {idx}")
 
-            # if mask is not None:
-            #     per_pix = per_pix * mask.unsqueeze(0)
-            #     denom = mask.sum().clamp_min(1.0)
-            #     loss = per_pix.sum() / denom
-            # else:
             loss = per_pix
 
             total_loss = total_loss + loss
@@ -495,52 +403,26 @@ def refine_latents(
         
         total_loss = total_loss / len(indices)
 
-        # if latent_l2_weight > 0:
-        #     l2 = (shape_feats - shape_feats_init).pow(2).mean() + (tex_feats - tex_feats_init).pow(2).mean()
-        #     total_loss = total_loss + latent_l2_weight * l2
         
 
         print(f"[iter {it}] loss={float(total_loss.detach().cpu()):.6f}")
 
         total_loss.backward()
        
-        # print("Opt vertices grad :", opt_vert.grad)
-        # # print("Opt coords grad :", opt_coords.grad)
-        # print("Opt attrs grad:", opt_attrs.grad)
 
        
        
 
-        # if grad_clip_norm and grad_clip_norm > 0:
-        #         torch.nn.utils.clip_grad_norm_([shape_feats, tex_feats], grad_clip_norm)
 
         optimizer.step()
-        # dmtet_optimizer.step()
 
 
      
 
-        # with torch.no_grad():
-        #     params_to_clamp = [(tex_feats, tex_feats_init)] if optimize_texture_only else [(shape_feats, shape_feats_init), (tex_feats, tex_feats_init)]
-        #     for p, p_init in params_to_clamp:
-        #         if torch.isnan(p).any() or torch.isinf(p).any():
-        #             p.copy_(p_init)
-        #         p.clamp_(-10.0, 10.0)
   
 
 
-    # Decode final mesh for export
     with torch.no_grad():
-        # shape_slat_opt = shape_slat.replace(feats=shape_feats, coords=shape_coords)
-        # tex_slat_opt = tex_slat.replace(feats=tex_feats, coords=tex_coords)
-        # final_mesh = _decode_latent_differentiable(pipeline, shape_slat_opt, tex_slat_opt, render_resolution)[0]
-        # final_mesh = pipeline.decode_latent(shape_slat_opt, tex_slat_opt, render_resolution)[0]
-        # final_mesh = dmtet_mesh.get_mesh(pbr_att_layout=pbr_att_layout, resolution=render_resolution,
-        #                            coords = voxel_coords, feats = voxel_feats.detach(), shape=voxel_shape,
-        #                            spatial_shape=spatial_shape)
-        # coords = position.detach() * render_resolution + render_resolution / 2
-        # attr = torch.cat([base_color.detach(), attrs['metallic'] [:, 3:4] / 255, attrs['roughness'] [:, 4:5] / 255, attrs['alpha'] [:, 5:6] / 255], dim=-1)
-        # final_mesh = get_mesh_from_ovoxel(coords, attr, resolution=render_resolution)
         final_mesh = MeshWithVoxel(
             vertices=opt_vert.detach(),
             faces=faces,
@@ -555,7 +437,6 @@ def refine_latents(
 
     if output_glb_path is not None:
         
-        # import imageio
         
         video = render_utils.make_pbr_vis_frames(render_utils.render_video(final_mesh, envmap=env_map))
         imageio.mimsave("mesh_opt_video.mp4", video, fps=15)
