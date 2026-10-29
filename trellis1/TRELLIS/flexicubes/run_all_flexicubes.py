@@ -1,11 +1,4 @@
-"""Run every FlexiCubes config sequentially (one mesh source per invocation).
-
-    python flexicubes/run_all_flexicubes.py --mesh-source recgen
-    python flexicubes/run_all_flexicubes.py --mesh-source sam3d --check
-
-Configs whose source mesh is missing (e.g. SAM3D still generating) are skipped with a note,
-and so are runs whose final mesh already exists -- so the batch can simply be resubmitted.
-"""
+"""Run every FlexiCubes config sequentially (one mesh source per invocation)."""
 
 import argparse
 import subprocess

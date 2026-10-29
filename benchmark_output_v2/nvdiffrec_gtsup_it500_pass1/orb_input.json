@@ -1,0 +1,1048 @@
+{
+  "info": {
+    "Birdhouse_Lighting001": {
+      "view": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0030.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0030.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0039.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0039.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0041.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0041.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0082.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0082.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0086.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0086.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0089.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0089.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0111.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0111.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0112.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0112.exr"
+        }
+      ],
+      "light": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0030.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0030.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0039.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0039.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0041.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0041.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0082.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0082.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0086.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0086.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0089.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0089.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0111.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0111.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/view/im_0112.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test/im_0112.exr"
+        }
+      ],
+      "geometry": [
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/depth/im_0030.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/z_depth/im_0030.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/normal/im_0030.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/normal/im_0030.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0030.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/depth/im_0039.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/z_depth/im_0039.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/normal/im_0039.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/normal/im_0039.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0039.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/depth/im_0041.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/z_depth/im_0041.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/normal/im_0041.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/normal/im_0041.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0041.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/depth/im_0082.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/z_depth/im_0082.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/normal/im_0082.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/normal/im_0082.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0082.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/depth/im_0086.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/z_depth/im_0086.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/normal/im_0086.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/normal/im_0086.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0086.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/depth/im_0089.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/z_depth/im_0089.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/normal/im_0089.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/normal/im_0089.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0089.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/depth/im_0111.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/z_depth/im_0111.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/normal/im_0111.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/normal/im_0111.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0111.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/depth/im_0112.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/z_depth/im_0112.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/normal/im_0112.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/normal/im_0112.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0112.png"
+        }
+      ],
+      "material": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/albedo/im_0030.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/albedo/im_0030.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0030.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/albedo/im_0039.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/albedo/im_0039.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0039.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/albedo/im_0041.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/albedo/im_0041.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0041.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/albedo/im_0082.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/albedo/im_0082.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0082.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/albedo/im_0086.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/albedo/im_0086.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0086.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/albedo/im_0089.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/albedo/im_0089.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0089.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/albedo/im_0111.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/albedo/im_0111.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0111.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/albedo/im_0112.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/albedo/im_0112.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/test_mask/im_0112.png"
+        }
+      ],
+      "shape": {
+        "output_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Birdhouse_Lighting001/mesh_world.obj",
+        "target_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Birdhouse_Lighting001/mesh.obj"
+      }
+    },
+    "Cup_B08TWHJ33Q_Tan_Lighting001": {
+      "view": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0045.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0045.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0063.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0063.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0070.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0070.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0075.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0075.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0077.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0077.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0084.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0084.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0088.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0088.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0100.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0100.exr"
+        }
+      ],
+      "light": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0045.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0045.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0063.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0063.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0070.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0070.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0075.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0075.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0077.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0077.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0084.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0084.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0088.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0088.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/view/im_0100.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test/im_0100.exr"
+        }
+      ],
+      "geometry": [
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0045.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/z_depth/im_0045.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0045.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0045.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0045.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0063.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/z_depth/im_0063.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0063.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0063.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0063.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0070.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/z_depth/im_0070.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0070.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0070.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0070.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0075.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/z_depth/im_0075.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0075.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0075.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0075.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0077.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/z_depth/im_0077.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0077.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0077.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0077.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0084.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/z_depth/im_0084.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0084.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0084.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0084.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0088.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/z_depth/im_0088.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0088.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0088.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0088.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0100.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/z_depth/im_0100.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0100.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/normal/im_0100.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0100.png"
+        }
+      ],
+      "material": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0045.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0045.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0045.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0063.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0063.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0063.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0070.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0070.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0070.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0075.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0075.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0075.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0077.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0077.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0077.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0084.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0084.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0084.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0088.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0088.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0088.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0100.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/albedo/im_0100.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/test_mask/im_0100.png"
+        }
+      ],
+      "shape": {
+        "output_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Cup_B08TWHJ33Q_Tan_Lighting001/mesh_world.obj",
+        "target_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Cup_B08TWHJ33Q_Tan_Lighting001/mesh.obj"
+      }
+    },
+    "Figurine_B08FYFNYP4_LionKing_Lighting001": {
+      "view": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0013.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0013.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0024.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0024.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0035.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0035.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0053.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0053.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0061.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0061.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0082.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0082.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0113.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0113.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0116.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0116.exr"
+        }
+      ],
+      "light": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0013.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0013.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0024.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0024.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0035.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0035.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0053.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0053.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0061.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0061.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0082.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0082.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0113.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0113.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/view/im_0116.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test/im_0116.exr"
+        }
+      ],
+      "geometry": [
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/depth/im_0013.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/z_depth/im_0013.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0013.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0013.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0013.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/depth/im_0024.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/z_depth/im_0024.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0024.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0024.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0024.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/depth/im_0035.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/z_depth/im_0035.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0035.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0035.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0035.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/depth/im_0053.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/z_depth/im_0053.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0053.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0053.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0053.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/depth/im_0061.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/z_depth/im_0061.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0061.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0061.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0061.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/depth/im_0082.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/z_depth/im_0082.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0082.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0082.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0082.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/depth/im_0113.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/z_depth/im_0113.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0113.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0113.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0113.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/depth/im_0116.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/z_depth/im_0116.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0116.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/normal/im_0116.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0116.png"
+        }
+      ],
+      "material": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0013.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0013.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0013.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0024.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0024.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0024.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0035.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0035.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0035.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0053.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0053.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0053.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0061.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0061.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0061.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0082.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0082.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0082.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0113.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0113.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0113.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0116.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/albedo/im_0116.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/test_mask/im_0116.png"
+        }
+      ],
+      "shape": {
+        "output_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Figurine_B08FYFNYP4_LionKing_Lighting001/mesh_world.obj",
+        "target_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Figurine_B08FYFNYP4_LionKing_Lighting001/mesh.obj"
+      }
+    },
+    "Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+      "view": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0009.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0009.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0026.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0026.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0032.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0032.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0033.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0033.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0040.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0040.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0043.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0043.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0067.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0067.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0097.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0097.exr"
+        }
+      ],
+      "light": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0009.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0009.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0026.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0026.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0032.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0032.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0033.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0033.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0040.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0040.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0043.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0043.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0067.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0067.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/view/im_0097.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test/im_0097.exr"
+        }
+      ],
+      "geometry": [
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/depth/im_0009.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/z_depth/im_0009.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0009.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0009.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0009.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/depth/im_0026.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/z_depth/im_0026.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0026.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0026.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0026.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/depth/im_0032.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/z_depth/im_0032.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0032.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0032.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0032.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/depth/im_0033.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/z_depth/im_0033.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0033.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0033.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0033.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/depth/im_0040.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/z_depth/im_0040.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0040.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0040.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0040.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/depth/im_0043.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/z_depth/im_0043.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0043.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0043.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0043.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/depth/im_0067.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/z_depth/im_0067.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0067.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0067.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0067.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/depth/im_0097.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/z_depth/im_0097.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0097.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/normal/im_0097.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0097.png"
+        }
+      ],
+      "material": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0009.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0009.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0009.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0026.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0026.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0026.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0032.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0032.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0032.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0033.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0033.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0033.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0040.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0040.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0040.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0043.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0043.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0043.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0067.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0067.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0067.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0097.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/albedo/im_0097.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/test_mask/im_0097.png"
+        }
+      ],
+      "shape": {
+        "output_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/mesh_world.obj",
+        "target_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001/mesh.obj"
+      }
+    },
+    "Mallard_B082D168CK_MintGreen_Lighting001": {
+      "view": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0001.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0001.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0004.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0004.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0005.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0005.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0035.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0035.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0058.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0058.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0068.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0068.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0090.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0090.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0106.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0106.exr"
+        }
+      ],
+      "light": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0001.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0001.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0004.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0004.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0005.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0005.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0035.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0035.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0058.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0058.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0068.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0068.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0090.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0090.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/view/im_0106.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test/im_0106.exr"
+        }
+      ],
+      "geometry": [
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/depth/im_0001.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/z_depth/im_0001.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0001.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0001.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0001.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/depth/im_0004.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/z_depth/im_0004.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0004.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0004.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0004.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/depth/im_0005.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/z_depth/im_0005.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0005.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0005.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0005.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/depth/im_0035.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/z_depth/im_0035.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0035.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0035.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0035.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/depth/im_0058.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/z_depth/im_0058.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0058.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0058.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0058.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/depth/im_0068.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/z_depth/im_0068.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0068.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0068.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0068.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/depth/im_0090.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/z_depth/im_0090.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0090.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0090.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0090.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/depth/im_0106.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/z_depth/im_0106.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0106.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/normal/im_0106.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0106.png"
+        }
+      ],
+      "material": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0001.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0001.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0001.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0004.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0004.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0004.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0005.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0005.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0005.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0035.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0035.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0035.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0058.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0058.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0058.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0068.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0068.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0068.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0090.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0090.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0090.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0106.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/albedo/im_0106.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/test_mask/im_0106.png"
+        }
+      ],
+      "shape": {
+        "output_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mallard_B082D168CK_MintGreen_Lighting001/mesh_world.obj",
+        "target_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mallard_B082D168CK_MintGreen_Lighting001/mesh.obj"
+      }
+    },
+    "Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+      "view": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0019.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0019.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0022.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0022.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0080.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0080.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0081.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0081.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0085.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0085.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0086.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0086.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0104.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0104.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0120.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0120.exr"
+        }
+      ],
+      "light": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0019.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0019.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0022.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0022.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0080.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0080.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0081.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0081.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0085.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0085.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0086.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0086.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0104.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0104.exr"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/view/im_0120.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test/im_0120.exr"
+        }
+      ],
+      "geometry": [
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/depth/im_0019.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/z_depth/im_0019.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0019.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0019.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0019.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/depth/im_0022.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/z_depth/im_0022.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0022.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0022.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0022.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/depth/im_0080.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/z_depth/im_0080.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0080.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0080.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0080.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/depth/im_0081.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/z_depth/im_0081.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0081.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0081.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0081.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/depth/im_0085.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/z_depth/im_0085.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0085.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0085.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0085.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/depth/im_0086.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/z_depth/im_0086.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0086.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0086.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0086.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/depth/im_0104.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/z_depth/im_0104.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0104.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0104.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0104.png"
+        },
+        {
+          "output_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/depth/im_0120.exr",
+          "target_depth": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/z_depth/im_0120.npy",
+          "output_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0120.exr",
+          "target_normal": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/normal/im_0120.npy",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0120.png"
+        }
+      ],
+      "material": [
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0019.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0019.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0019.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0022.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0022.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0022.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0080.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0080.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0080.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0081.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0081.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0081.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0085.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0085.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0085.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0086.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0086.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0086.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0104.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0104.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0104.png"
+        },
+        {
+          "output_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0120.png",
+          "target_image": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/albedo/im_0120.png",
+          "target_mask": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/test_mask/im_0120.png"
+        }
+      ],
+      "shape": {
+        "output_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/nvdiffrec_gtsup_it500_pass1/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/mesh_world.obj",
+        "target_mesh": "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/benchmark_output_v2/_gt_orb/Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001/mesh.obj"
+      }
+    }
+  }
+}

@@ -1,6 +1,4 @@
 # Prompt image per object, used by `thesis3d generate` for every method.
-# Managed by the app (`thesis3d prompts ...`); the project's own benchmark/prompts.yaml is untouched.
-# tag names the run: outputs go to generative_runs/<tag>/ and benchmark_output/<method>_<tag>/.
 
 tag: v2
 

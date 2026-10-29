@@ -1,6 +1,4 @@
-# Config for hypothesis_slat_uco3d.py (uCO3D sequence, no GT mesh, no alignment)
-#   quick check (seconds):  python hypothesis_slat_uco3d.py --yaml-config yaml_config/config_uco3d.yaml --check
-#   optimization (sbatch):  python hypothesis_slat_uco3d.py --yaml-config yaml_config/config_uco3d.yaml
+# Config for hypothesis_slat_uco3d.py
 
 data_dir: "/home/fr/fr_fr/fr_ba122/projects/dataset/UCO3D/uco3d/chair"
 out_dir: "/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/uco3d/chair"
@@ -9,7 +7,6 @@ seed: 1
 
 # --- SLAT initialisation (both live in the dataset's camera frame) ---
 slat_init: encode      # encode: SLAT encoder on multiview DINOv2 feats of the GT crops
-                       # flow:   SLAT flow model on the hull structure, conditioned on prompt_idx
 prompt_idx: 0          # index into split.train; flow conditioning + fixes the yaw of the normalized frame
 encoder_ckpt: "microsoft/TRELLIS-image-large/ckpts/slat_enc_swin8_B_64l8_fp16"
 flow_steps: 12

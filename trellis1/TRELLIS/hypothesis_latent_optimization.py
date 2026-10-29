@@ -250,16 +250,11 @@ def refine_latent(config_path: Path):
             loss = rgb_loss
 
                 
-
             if display_interval and (idx % display_interval == 0 or idx == frames_per_iter - 1):
     
                 pred_rgb    = ensure_nchw(pred_rgb)
                 ref_rgb     = ensure_nchw(ref_rgb)
                 gt_mask     = ensure_nchw(gt_mask) if gt_mask is not None else None
-
-
-
-
 
 
                 img = torch.cat([pred_rgb, ref_rgb], dim=3)
@@ -268,7 +263,6 @@ def refine_latent(config_path: Path):
 
                 img_np = img.detach().cpu().numpy()
                 save_image(f"{out_dir}/opt_{i:04d}_{idx:02d}.png", img_np)
-
 
 
             total_loss += loss
@@ -282,20 +276,12 @@ def refine_latent(config_path: Path):
         print("total_loss.grad_fn:", total_loss.grad_fn)
 
       
-
         total_loss.backward()
         optimizer.step()
 
     print("Latent optimization completed!")
 
             
-                        
-    
-
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parameters to refine latent")
     parser.add_argument("--yaml-config", type=Path, required=True, help="Path to the YAML config file" )

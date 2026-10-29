@@ -20,7 +20,7 @@ class OVoxelOptimizer:
         self.lambda_lpips = 0.2  
           
     def extract_mesh(self, coords, dual_vertices, intersected_flag, quad_lerp, train=True):  
-        """Extract mesh from O-Voxel features"""  
+        """Extract mesh from O-Voxel features"""
         return flexible_dual_grid_to_mesh(  
             coords=coords,  
             dual_vertices=dual_vertices,  
@@ -32,7 +32,7 @@ class OVoxelOptimizer:
         )  
       
     def compute_direct_losses(self, pred_vertices, pred_intersected, gt_vertices, gt_intersected):  
-        """Direct regression losses on O-Voxel features"""  
+        """Direct regression losses on O-Voxel features"""
         terms = {}  
           
         if self.lambda_intersected > 0:  
@@ -46,7 +46,7 @@ class OVoxelOptimizer:
         return terms  
       
     def compute_rendering_losses(self, pred_mesh, gt_mesh, cameras):  
-        """Rendering losses on extracted meshes"""  
+        """Rendering losses on extracted meshes"""
         terms = {}  
           
         gt_renders = self._render_single(gt_mesh, cameras)  
@@ -63,7 +63,7 @@ class OVoxelOptimizer:
         return terms  
       
     def _render_single(self, mesh, cameras):  
-        """Render a single mesh"""  
+        """Render a single mesh"""
         self.renderer.rendering_options['near'] = cameras['near']  
         self.renderer.rendering_options['far'] = cameras['near'] + 2  
         return self.renderer.render(  
@@ -76,20 +76,7 @@ class OVoxelOptimizer:
     def optimization_step(self, pred_coords, pred_dual_vertices, pred_intersected_logits,   
                           pred_quad_lerp, gt_coords, gt_dual_vertices, gt_intersected,   
                           optimizer, cameras):  
-        """  
-        Single optimization step  
-          
-        Args:  
-            pred_coords: (N, 3) predicted voxel coordinates  
-            pred_dual_vertices: (N, 3) predicted dual vertices  
-            pred_intersected_logits: (N, 3) predicted intersected flags (logits)  
-            pred_quad_lerp: (N, 1) predicted quad split weights  
-            gt_coords: (N, 3) ground truth voxel coordinates  
-            gt_dual_vertices: (N, 3) ground truth dual vertices  
-            gt_intersected: (N, 3) ground truth intersected flags (boolean)  
-            optimizer: torch optimizer  
-            cameras: camera parameters dict  
-        """  
+        """Single optimization step"""
         optimizer.zero_grad()  
           
         pred_intersected_flag = pred_intersected_logits > 0  

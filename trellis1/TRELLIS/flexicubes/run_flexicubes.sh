@@ -7,11 +7,6 @@
 #SBATCH --output=flexicubes_opt_%j.out
 
 # One FlexiCubes optimization (no TRELLIS model is loaded).
-#   sbatch flexicubes/run_flexicubes.sh flexicubes_configs/Birdhouse_Lighting001.yaml
-#   sbatch flexicubes/run_flexicubes.sh flexicubes_configs/Birdhouse_Lighting001.yaml --mesh-source sam3d
-# Everything after the config is forwarded (--mesh-source, --out-dir, --check).
-# The --check pass is cheap enough for an interactive allocation:
-#   salloc -p dev_gpu_a100_il -n 1 --gres=gpu:1 -t 00:30:00
 
 set -euo pipefail
 

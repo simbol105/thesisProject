@@ -121,8 +121,7 @@ def matched_baseline_note():
     keys = ["chamfer", "normal", "depth", "albedo"]
     rows = [["RecGen (v2), same 5 objects"] + [fmt(mean(base, k, objs), METRICS[k][5]) for k in keys],
             ["RecGen + SLAT (T2)"] + [fmt(mean(s, k, objs), METRICS[k][5]) for k in keys]]
-    return (f"`RecGen + SLAT (T2)` is missing {', '.join(missing)} (the run ran out of GPU memory), so its "
-            f"mean is over 5 objects. Against the baseline restricted to those same 5:\n\n"
+    return (f"`RecGen + SLAT (T2)` is missing {', '.join(missing)} (out of GPU memory); baseline on the same 5 objects:\n\n"
             + table(["method"] + [METRICS[k][0] for k in keys], rows))
 
 
@@ -281,11 +280,8 @@ def main():
     A = L.append
 
     A("# Appendix: benchmark tables\n")
-    A("All scores come from the Stanford-ORB metric code applied to the DTC objects, on 8 held-out test "
-      "views per object, one run per method and object. Chamfer is the bidirectional squared chamfer in "
-      "ORB's scale (x2e-3); normal is 1-cos; depth is scale-invariant MSE; PSNR, SSIM and LPIPS follow "
-      "ORB. Lower is better for chamfer, normal, depth and LPIPS; higher for PSNR and SSIM. `--` marks a "
-      "run that does not exist.\n")
+    A("Stanford-ORB scores on 8 test views per object; lower is better for chamfer, normal, depth and LPIPS; "
+      "`--` marks a missing run.\n")
 
     A("## A.1 Objects\n")
     A(table(["short name", "DTC object"], [[SHORT[o], f"`{o}`"] for o in OBJECTS]) + "\n")
@@ -317,25 +313,19 @@ def main():
         A(per_object_table(baselines_v2 + refined_methods(), k) + "\n")
 
     A("## A.6 Chamfer in millimetres: encoding cost against optimization gain\n")
-    A("Each run's own chamfer (world frame, 50k sampled points), separating the encode/decode round trip "
-      "from the optimization. TRELLIS.2 runs do not record the source mesh separately.\n")
     for t in chamfer_mm_tables():
         A(t + "\n")
 
     A("## A.7 TRELLIS.2: topology and gate changes per run\n")
-    A("Components and Euler characteristic of the extracted mesh before and after optimization, with the "
-      "number of voxels added or removed at the final decoder level and the number of quad flags flipped.\n")
     A(topology_table() + "\n")
 
     comp = components_table(args.components) if args.components else None
     if comp:
         A("## A.8 TRELLIS: connected components before and after optimization\n")
-        A("Measured on the exported world-frame meshes.\n")
         A(comp + "\n")
 
     A(f"## A.{9 if comp else 8} Decoder noise floor (TRELLIS.2 SLAT runs)\n")
-    A("The same latent decoded twice within one run, with bit-identical inputs: the gate changes reported "
-      "in A.7 are therefore caused by the optimization, not by decoder non-determinism.\n")
+    A("The same latent decoded twice, so gate changes in A.7 are not decoder non-determinism.\n")
     A(noise_floor_table() + "\n")
 
     args.out.write_text("\n".join(L))

@@ -1,6 +1,4 @@
-"""SLAT (or cubefeats) optimization starting from an existing reconstruction (recgen / SAM3D /
-TRELLIS), against the DTC ground truth.
-"""
+"""SLAT (or cubefeats) optimization starting from an existing reconstruction"""
 
 import os
 
@@ -48,7 +46,6 @@ TRELLIS_CAM_FOV_DEG = 40
 SLAT_ENCODER_CKPT = "microsoft/TRELLIS-image-large/ckpts/slat_enc_swin8_B_64l8_fp16"
 MESH_KEYS = {"recgen": "recgen_mesh_path", "sam3d": "sam3d_mesh_path", "trellis": "trellis_mesh_path",
              "trellis2": "trellis2_mesh_path"}
-
 
 
 def _load_json(path: Path) -> Dict:
@@ -212,7 +209,6 @@ def compute_slat_mesh_decoder_losses(
     return terms
 
 
-
 def mesh_vertex_colors(mesh) -> np.ndarray:
     """Per-vertex RGB in [0, 1], whatever the mesh carries."""
     visual = getattr(mesh, "visual", None)
@@ -355,9 +351,6 @@ def render_feature_views(
     return torch.stack(out, dim=0)
 
 
-
-
-
 def compute_alignment(cfg: Dict, src_mesh, src_tm, gt_world, gt_tm, renderer, extrinsics_world, intr,
                       device) -> np.ndarray:
     """Similarity mesh frame -> world frame, as a float64 4x4."""
@@ -406,7 +399,6 @@ def to_mesh_frame(A: np.ndarray, gt_world: MeshExtractResult, extrinsics_world: 
     return gt_mesh, extrinsics
 
 
-
 @torch.no_grad()
 def visual_panel(renderer, mesh, gt_mesh, extr, intr) -> np.ndarray:
     """pred color | gt color | pred normal | gt normal | overlay (red = pred only, green = gt only)."""
@@ -448,7 +440,6 @@ def export_mesh(mesh: MeshExtractResult, path: Path, A: Optional[np.ndarray] = N
     path.parent.mkdir(parents=True, exist_ok=True)
     trimesh.Trimesh(v, mesh.faces.detach().cpu().numpy(), process=False, **kwargs).export(str(path))
     print(f"[io] wrote {path}")
-
 
 
 def build_setup(cfg: Dict, mesh_source: str, device):
@@ -540,7 +531,6 @@ def build_setup(cfg: Dict, mesh_source: str, device):
         "alignment": A, "gt_mesh": gt_mesh, "gt_plain": gt_plain, "src_mesh": src_mesh,
         "slat": slat, "feat_sample": feat_sample,
     }
-
 
 
 def run(config_path: Path, mesh_source: Optional[str], out_dir_override: Optional[str], check: bool):

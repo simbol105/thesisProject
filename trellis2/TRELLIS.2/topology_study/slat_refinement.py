@@ -1,6 +1,4 @@
-"""TRELLIS.2: optimize the shape SLAT and the texture SLAT jointly with a rendering loss, and
-measure whether the mesh topology changes.
-"""
+"""TRELLIS.2: optimize the shape SLAT and the texture SLAT jointly with a rendering loss"""
 import sys
 from pathlib import Path
 

@@ -35,7 +35,6 @@ from hypothesis_slat_downsample import (
 )
 
 
-
 def _proper_rotations_24() -> List[np.ndarray]:
     """The 24 rotations of the cube (signed permutation matrices with det +1)."""
     mats = []
@@ -131,7 +130,6 @@ def select_alignment(pred_mesh, gt_world, gt_world_trimesh, renderer, extrinsics
     return best["A"]
 
 
-
 def export_mesh(mesh: MeshExtractResult, path: Path, A: np.ndarray = None):
     v = mesh.vertices.detach().cpu().numpy()
     if A is not None:
@@ -157,7 +155,6 @@ def grad_wrt(loss: torch.Tensor, z: torch.Tensor, scale: float) -> Tuple[float, 
         return 0.0, 0.0
     g = g / scale
     return g.norm().item(), (g != 0).float().mean().item()
-
 
 
 def refine_latent(config_path: Path, out_dir_override: Path = None):

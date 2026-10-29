@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import imageio
@@ -10,9 +9,6 @@ from scipy.spatial import cKDTree
 from scipy.optimize import minimize
 from scipy.spatial.transform import Rotation
 import open3d as o3d
-
-
-
 
 
 def align_meshes_fixed_scale_ransac(pred_mesh, dtc_mesh):
@@ -75,10 +71,8 @@ def align_meshes_fixed_scale_ransac(pred_mesh, dtc_mesh):
     return final_transform
 
 
-
-
 def align_meshes(dtc_mesh, pred_mesh, n_samples=10000):
-    """Align pred_mesh to dtc_mesh using:"""
+    """Align pred_mesh to dtc_mesh using"""
 
     dtc = unwrap_mesh(dtc_mesh)
     pred = unwrap_mesh(pred_mesh)
@@ -121,7 +115,6 @@ def align_meshes(dtc_mesh, pred_mesh, n_samples=10000):
     T[:3, 3] = t
 
     return T
-
 
 
 def align_meshes_similarity(
@@ -204,9 +197,8 @@ def align_meshes_similarity(
     return T, scale
 
 
-
 def transf3d(pts3d, transf4x4):
-    """Args:"""
+    """Apply a 4x4 homogeneous transform to points of shape [..., 3]."""
     device = pts3d.device
     dtype = pts3d.dtype
     transf4x4 = transf4x4.to(device)
@@ -236,8 +228,6 @@ def transf3d_broadcast(pts3d, transf4x4):
     )
 
 
-
-
 def save_image(fn, x : np.ndarray) -> np.ndarray:
     try:
         if os.path.splitext(fn)[1] == ".png":
@@ -249,8 +239,6 @@ def save_image(fn, x : np.ndarray) -> np.ndarray:
         
 
 import numpy as np
-
-
 
 
 def normalize_matrix(M):
@@ -276,9 +264,6 @@ def push_camera_back(E, d):
     E_new = E.clone()
     E_new[:3, 3] = t_new
     return E_new
-
-
-
 
 
 def unwrap_mesh(mesh):
@@ -312,7 +297,7 @@ R_opengl_to_trellis = np.array([
 import numpy as np
 
 def kabsch_rotation(A, B):
-    """A, B: (N, 3) arrays of corresponding points"""
+    """Optimal rotation R (3x3) aligning corresponding points A -> B, both (N, 3) (Kabsch)."""
     Ac = A - A.mean(axis=0)
     Bc = B - B.mean(axis=0)
 
@@ -326,8 +311,6 @@ def kabsch_rotation(A, B):
         R = Vt.T @ U.T
 
     return R
-
-
 
 
 theta = np.radians(-90)
@@ -381,15 +364,6 @@ def normalize_custom(verts):
     return verts_norm, centroid, scale
 
 
-
-
-
-
-
-
-
-
-
 def normalize(mesh):
     mesh = mesh.copy()
     mesh.apply_translation(-mesh.centroid)
@@ -398,8 +372,6 @@ def normalize(mesh):
     return mesh
 
     
-    
-
 def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, icp_iterations=50):
     """Compute robust ICP-based alignment transformation from predicted mesh to ground truth mesh."""
     device = pred_mesh.device if hasattr(pred_mesh, 'device') else torch.device('cpu')
@@ -487,9 +459,6 @@ def get_normalization_matrix(dtc_mesh, pred_mesh):
     return compute_icp_alignment_transform(dtc_mesh, pred_mesh)
 
 
-
-
-
 import torch.nn.functional as F
 from torch.autograd import Variable
 from math import exp
@@ -543,11 +512,6 @@ def _ssim(img1, img2, window, window_size, channel, size_average=True):
         return ssim_map.mean(1).mean(1).mean(1)
 
 
-
-
-
-
-
 from scipy.spatial import cKDTree
 
 def align_meshes_pca(dtc_mesh, pred_mesh):
@@ -599,8 +563,6 @@ def align_meshes_pca(dtc_mesh, pred_mesh):
     return T
 
 
-
-
 def align_meshes_ransac_icp(pred_mesh, dtc_mesh, voxel_size=0.05):
    
     source_mesh = unwrap_mesh(pred_mesh)
@@ -610,7 +572,6 @@ def align_meshes_ransac_icp(pred_mesh, dtc_mesh, voxel_size=0.05):
     
     target = o3d.geometry.PointCloud()
     target.points = o3d.utility.Vector3dVector(target_mesh.vertices)
-    
     
     
     source_down = source.voxel_down_sample(voxel_size)
@@ -644,455 +605,3 @@ def align_meshes_ransac_icp(pred_mesh, dtc_mesh, voxel_size=0.05):
  
     return result_icp.transformation
 
-
-
-
-
-
-
-
-'''
-
-coords, data = o_voxel.io.read("ovoxel_helmet.vxz")
-position = (coords / RES - 0.5).cuda()
-base_color = (data['base_color'] / 255).cuda()
-
-# Render
-renderer = o_voxel.rasterize.VoxelRenderer(
-    rendering_options={"resolution": 512, "ssaa": 2}
-)
-output = renderer.render(
-    position=position,          # Voxel centers
-    attrs=base_color,           # Color/Opacity etc.
-    voxel_size=1.0/RES,
-    extrinsics=extr,
-    intrinsics=intr
-)
-
-'''
-
-'''
-k, i guess you could try to 
-1) get the o-voxel representation from the mesh, 
-2) use the o-voxel parameters for optimization, 
-3) get the mesh from the o-voxel representation to render
-[2:06 PM]you would have to repeat 3) for each iteration
-
-
-
-
-mesh = asset.to_mesh()
-vertices = torch.from_numpy(mesh.vertices).float()
-faces = torch.from_numpy(mesh.faces).long()
-voxel_indices, dual_vertices, intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
-    vertices, faces,
-    grid_size=RES,                              # Resolution
-    aabb=[[-0.5,-0.5,-0.5],[0.5,0.5,0.5]],      # Axis-aligned bounding box
-    face_weight=1.0,                            # Face term weight in QEF
-    boundary_weight=0.2,                        # Boundary term weight in QEF
-    regularization_weight=1e-2,                 # Regularization term weight in QEF
-    timing=True
-)
-## sort to ensure align between geometry and material voxelization
-vid = o_voxel.serialize.encode_seq(voxel_indices)
-mapping = torch.argsort(vid)
-voxel_indices = voxel_indices[mapping]
-dual_vertices = dual_vertices[mapping]
-intersected = intersected[mapping]
-
-
-
-
-# 2. Material Voxelization (Volumetric Attributes)
-# Returns: dict containing 'base_color', 'metallic', 'roughness', etc.
-voxel_indices_mat, attributes = o_voxel.convert.textured_mesh_to_volumetric_attr(
-    asset,
-    grid_size=RES,
-    aabb=[[-0.5,-0.5,-0.5],[0.5,0.5,0.5]],
-    timing=True
-)
-## sort to ensure align between geometry and material voxelization
-vid_mat = o_voxel.serialize.encode_seq(voxel_indices_mat)
-mapping_mat = torch.argsort(vid_mat)
-attributes = {k: v[mapping_mat] for k, v in attributes.items()}
-
-# Save to compressed .vxz format
-## packing
-dual_vertices = dual_vertices * RES - voxel_indices
-dual_vertices = (torch.clamp(dual_vertices, 0, 1) * 255).type(torch.uint8)
-intersected = (intersected[:, 0:1] + 2 * intersected[:, 1:2] + 4 * intersected[:, 2:3]).type(torch.uint8)
-attributes['dual_vertices'] = dual_vertices
-attributes['intersected'] = intersected
-o_voxel.io.write("ovoxel_helmet.vxz", voxel_indices, attributes)
-
-
-
-
-dual_vertices = data['dual_vertices']
-intersected = data['intersected']
-base_color = data['base_color']
-## ... other attributes omitted for brevity
-
-# Depack
-dual_vertices = dual_vertices / 255
-intersected = torch.cat([
-    intersected % 2,
-    intersected // 2 % 2,
-    intersected // 4 % 2,
-], dim=-1).bool()
-
-# Extract Mesh
-# O-Voxel connects dual vertices to form quads, optionally splitting them 
-# based on geometric features.
-rec_verts, rec_faces = o_voxel.convert.flexible_dual_grid_to_mesh(
-    coords.cuda(), 
-    dual_vertices.cuda(), 
-    intersected.cuda(), 
-    split_weight=None, # Auto-split based on min angle if None
-    grid_size=RES,
-    aabb=[[-0.5,-0.5,-0.5],[0.5,0.5,0.5]],
-)
-
-'''
-
-
-
-'''
-
-coords, attributes = o_voxel.io.read("your_file.vxz")  
-  
-# Unpack dual_vertices and intersected  
-dual_vertices = attributes['dual_vertices'] / 255.0  # Back to float [0,1]  
-intersected_packed = attributes['intersected']  
-  
-# Unpack intersected bits  
-intersected = torch.stack([  
-    intersected_packed % 2,  
-    intersected_packed // 2 % 2,  
-    intersected_packed // 4 % 2  
-], dim=-1).bool()  
-  
-# Create the 7-channel h.feats format  
-# Channels 0-3: dual_vertices (need to apply inverse sigmoid)  
-# Channels 3-6: intersected_logits (need to convert from bool to logits)  
-# Channel 6: quad_lerp (initialize to 0 or small value)  
-  
-# For dual_vertices, apply inverse of the sigmoid+margin scaling  
-# Original: (1 + 2 * margin) * sigmoid(feats[..., 0:3]) - margin  
-# Inverse: sigmoid_inv((vertices + margin) / (1 + 2 * margin))  
-voxel_margin = 0.5  # Default from FlexiDualGridVaeDecoder  
-dual_vertices_feats = torch.logit(  
-    (dual_vertices + voxel_margin) / (1 + 2 * voxel_margin)  
-)  
-  
-# For intersected, convert bool to logits (use reasonable values)  
-intersected_logits = torch.where(  
-    intersected,   
-    torch.tensor(2.0),  # Positive logits for True  
-    torch.tensor(-2.0)  # Negative logits for False  
-).float()  
-  
-# For quad_lerp, initialize with softplus inverse of small positive values  
-quad_lerp = F.softplus_inverse(torch.ones_like(dual_vertices[:, :1]) * 0.1)  
-  
-# Concatenate to create h.feats  
-h_feats = torch.cat([  
-    dual_vertices_feats,  # channels 0-3  
-    intersected_logits,   # channels 3-6  
-    quad_lerp            # channel 6  
-], dim=-1)  
-  
-# Create SparseTensor h  
-h = sp.SparseTensor(  
-    feats=h_feats,  
-    coords=torch.cat([torch.zeros_like(coords[:, 0:1]), coords], dim=-1)  
-)  
-  
-# Make h.feats trainable for optimization  
-h_feats = torch.nn.Parameter(h_feats)  
-h_opt = h.replace(feats=h_feats)
-
-
-
-
-'''
-
-
-
-
-''''
-Ovoxel to latent to mesh
-
-import torch
-import trimesh
-import o_voxel
-from trellis2 import models
-from trellis2.modules.sparse import SparseTensor
-from trellis2.representations import MeshWithVoxel
-
-
-def load_shape_models():
-    shape_enc = models.from_pretrained("microsoft/TRELLIS.2-4B/ckpts/shape_enc_next_dc_f16c32_fp16")
-    shape_dec = models.from_pretrained("microsoft/TRELLIS.2-4B/ckpts/shape_dec_next_dc_f16c32_fp16")
-    for model in [shape_enc, shape_dec]:
-        model.cuda().eval()
-    
-    return shape_enc, shape_dec
-
-
-def normalize_mesh(mesh):
-    """Normalize mesh vertices to unit cube."""
-    vertices = torch.from_numpy(mesh.vertices).float()
-    faces = torch.from_numpy(mesh.faces).long()
-    
-    center = (vertices.min(0)[0] + vertices.max(0)[0]) / 2
-    scale = 0.99999 / (vertices.max(0)[0] - vertices.min(0)[0]).max()
-    vertices = (vertices - center) * scale
-    
-    return vertices, faces
-
-
-def encode_decode_shape(encoder, decoder, vertices, faces, resolution=512):
-    voxel_indices, dual_vertices, intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
-        vertices, faces, grid_size=resolution,
-        aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-    )
-    
-    coords = torch.cat([torch.zeros(len(voxel_indices), 1, dtype=torch.int32), voxel_indices], dim=1)
-    vertices_sparse = SparseTensor(dual_vertices.cuda(), coords.cuda())
-    intersected_sparse = SparseTensor(intersected.float().cuda(), coords.cuda())
-    
-    with torch.no_grad():
-        latent = encoder(vertices_sparse, intersected_sparse)
-        decoder.set_resolution(resolution)
-        meshes, subs = decoder(latent, return_subs=True)
-    
-    return meshes[0], subs
-
-
-def postprocess_with_default_texture(mesh, subs, resolution):
-    pbr_attr_layout = {
-        'base_color': slice(0, 3),
-        'metallic': slice(3, 4),
-        'roughness': slice(4, 5),
-        'alpha': slice(5, 6),
-    }
-    
-    mesh.fill_holes()
-    
-    # Create default white material
-    sub = subs[-1]
-    num_voxels = sub.coords.shape[0]
-    default_attrs = torch.ones(num_voxels, 6, device=sub.coords.device, dtype=torch.float32)
-    default_attrs[:, 3] = 0.0  # metallic
-    default_attrs[:, 4] = 0.5  # roughness
-    default_attrs[:, 5] = 1.0  # alpha
-    
-    mesh_with_voxel = MeshWithVoxel(
-        mesh.vertices, mesh.faces,
-        origin=[-0.5, -0.5, -0.5],
-        voxel_size=1 / resolution,
-        coords=sub.coords[:, 1:],
-        attrs=default_attrs,
-        voxel_shape=torch.Size([*sub.shape, *sub.spatial_shape]),
-        layout=pbr_attr_layout
-    )
-    
-    mesh_with_voxel.simplify(16777216)
-    
-    glb = o_voxel.postprocess.to_glb(
-        vertices=mesh_with_voxel.vertices,
-        faces=mesh_with_voxel.faces,
-        attr_volume=mesh_with_voxel.attrs,
-        coords=mesh_with_voxel.coords,
-        attr_layout=mesh_with_voxel.layout,
-        voxel_size=mesh_with_voxel.voxel_size,
-        aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-        decimation_target=1000000,
-        texture_size=4096,
-        remesh=True,
-        remesh_band=1,
-        remesh_project=0,
-        verbose=True
-    )
-    return glb
-
-
-def save_mesh(mesh, output_path):
-    trimesh.Trimesh(
-        vertices=mesh.vertices.cpu().numpy(),
-        faces=mesh.faces.cpu().numpy(),
-    ).export(output_path)
-
-
-def main():
-    shape_enc, shape_dec = load_shape_models()
-    
-    mesh_path = "/common_data/workspace/ariel/repos/Hunyuan3D-2.1/assets/cpt_america_out.glb"
-    mesh = trimesh.load(mesh_path)
-    if isinstance(mesh, trimesh.Scene):
-        mesh = list(mesh.geometry.values())[0]
-    vertices, faces = normalize_mesh(mesh)
-    
-    resolution = 1024
-    shape_mesh, subs = encode_decode_shape(shape_enc, shape_dec, vertices, faces, resolution=resolution)
-    save_mesh(shape_mesh, "reconstructed_raw_shape.glb")
-
-    glb_mesh = postprocess_with_default_texture(shape_mesh, subs, resolution)
-    glb_mesh.export("reconstructed_mesh_postprocessed.glb")
-    
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-'''
-
-
-
-
-'''
-
-
-   
-    
-import torch
-import torch.nn.functional as F
-
-def tsdf_edge_topology_loss(
-    rep,                       # MeshExtractResult with attributes: tsdf_v (N,3), tsdf_s (N,) and res (int)
-    max_neighbors: int = 8,
-    grid_res: int | None = None,
-    neighbor_radius: float | None = None,
-    truncation_factor: float = 3.0,
-    loss_type: str = "bce",    # "bce" or "hinge"
-    hinge_margin: float = 0.0,
-    device: torch.device | None = None,
-    weight: float = 1.0,
-):
-    """
-    Compute a topology-aware loss from rep.tsdf_v and rep.tsdf_s.
-
-    - Builds adjacency by connecting each tsdf vertex to nearby vertices within `neighbor_radius`.
-      If neighbor_radius is None, it defaults to 1.1 * (1 / grid_res) if grid_res provided, else 1.1 * median NN distance.
-    - Keeps only candidate edges near the surface band (|s| < trunc), where trunc = truncation_factor / res.
-    - loss_type "bce": binary_cross_entropy_with_logits(s_i, (s_j > 0).float()) + symmetric term.
-    - loss_type "hinge": relu(s_i * s_j + margin) encourages opposite signs (s_i * s_j < -margin).
-    - Returns scalar loss (tensor).
-    """
-    if device is None:
-        device = rep.tsdf_v.device
-
-    v = rep.tsdf_v  # (N,3)
-    s = rep.tsdf_s.flatten()  # (N,)
-    N = v.shape[0]
-    if N < 2:
-        return torch.tensor(0.0, device=device, dtype=s.dtype)
-
-    # grid_res fallback
-    if grid_res is None:
-        grid_res = getattr(rep, "res", None)
-
-    # compute pairwise distances (efficiently in chunks if needed)
-    # We'll compute full distance matrix for simplicity; for very large N you should use sparse kNN.
-    dists = torch.cdist(v, v)  # (N,N)
-    dists.fill_diagonal_(float('inf'))
-
-    # determine neighbor radius
-    if neighbor_radius is None:
-        if grid_res is not None:
-            neighbor_radius = 1.1 * (1.0 / float(grid_res))
-        else:
-            # fallback: use median nearest neighbor distance
-            nn_dist, _ = torch.min(dists, dim=1)
-            neighbor_radius = 1.1 * torch.median(nn_dist).item()
-            if neighbor_radius == 0:
-                neighbor_radius = 1e-3
-
-    # adjacency mask: connect if distance <= neighbor_radius
-    adj_mask = dists <= neighbor_radius
-
-    # optionally limit neighbors per vertex to max_neighbors (keep closest)
-    if max_neighbors is not None and max_neighbors > 0:
-        # for each row, keep only the smallest max_neighbors distances
-        topk = torch.topk(dists, k=min(max_neighbors, N-1), largest=False)
-        kth = topk.values[:, -1].unsqueeze(1)  # threshold per row
-        adj_mask = adj_mask & (dists <= kth)
-
-    # extract unique undirected edges (i < j)
-    idx_i, idx_j = torch.nonzero(adj_mask, as_tuple=True)
-    mask_upper = idx_i < idx_j
-    idx_i = idx_i[mask_upper]
-    idx_j = idx_j[mask_upper]
-    if idx_i.numel() == 0:
-        return torch.tensor(0.0, device=device, dtype=s.dtype)
-
-    s_i = s[idx_i]
-    s_j = s[idx_j]
-
-    # truncation band: only consider edges where at least one endpoint is near surface
-    if grid_res is not None:
-        trunc = truncation_factor / float(grid_res)
-    else:
-        # fallback trunc based on median absolute value
-        trunc = truncation_factor * torch.median(s.abs()).item() if s.numel() > 0 else 1e-3
-        trunc = max(trunc, 1e-4)
-
-    candidate_mask = (s_i.abs() < trunc) | (s_j.abs() < trunc)
-    if candidate_mask.sum() == 0:
-        return torch.tensor(0.0, device=device, dtype=s.dtype)
-
-    s_i = s_i[candidate_mask]
-    s_j = s_j[candidate_mask]
-
-    if loss_type == "bce":
-        # treat s as logits for inside/outside (positive => inside)
-        target_j_pos = (s_j > 0).float()
-        target_i_pos = (s_i > 0).float()
-        loss_ij = F.binary_cross_entropy_with_logits(s_i, target_j_pos)
-        loss_ji = F.binary_cross_entropy_with_logits(s_j, target_i_pos)
-        loss = (loss_ij + loss_ji) * 0.5
-    elif loss_type == "hinge":
-        # encourage s_i * s_j to be negative (opposite signs)
-        prod = s_i * s_j
-        # want prod < -margin -> penalize prod + margin when > 0
-        loss = F.relu(prod + hinge_margin).mean()
-    else:
-        raise ValueError(f"Unsupported loss_type: {loss_type}")
-
-    return loss * float(weight)
-
-
-# Helper: TSDF projection/regression loss from the document (drop-in)
-def tsdf_projection_loss(rep, depth_map: torch.Tensor, extrinsics: torch.Tensor, intrinsics: torch.Tensor):
-    """
-    Reimplementation of the _tsdf_reg_loss from your document.
-    Projects rep.tsdf_v into camera, samples GT depth, forms pseudo-sdf and regresses rep.tsdf_s to it.
-    """
-    with torch.no_grad():
-        projected_pts, pts_depth = utils3d.torch.project_cv(
-            extrinsics=extrinsics,
-            intrinsics=intrinsics,
-            points=rep.tsdf_v,
-        )
-        projected_pts = (projected_pts - 0.5) * 2.0
-        depth_map_res = depth_map.shape[-1]
-        gt_depth = torch.nn.functional.grid_sample(
-            depth_map.reshape(1, 1, depth_map_res, depth_map_res),
-            projected_pts.reshape(1, 1, -1, 2),
-            mode='bilinear',
-            padding_mode='border',
-            align_corners=True,
-        )
-        pseudo_sdf = gt_depth.flatten() - pts_depth.flatten()
-        delta = 1.0 / rep.res * 3.0
-        trunc_mask = pseudo_sdf > -delta
-
-    gt_tsdf = pseudo_sdf[trunc_mask]
-    tsdf = rep.tsdf_s.flatten()[trunc_mask]
-    gt_tsdf = torch.clamp(gt_tsdf, -delta, delta)
-    return torch.mean((tsdf - gt_tsdf) ** 2)
-
-'''

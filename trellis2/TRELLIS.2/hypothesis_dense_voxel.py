@@ -4,7 +4,6 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["SPARSE_CONV_BACKEND"] = "spconv"
 
 
-
 import argparse
 import json
 from pathlib import Path
@@ -149,7 +148,6 @@ def scale_opencv_intrinsics_for_render(
     return intr_normalized
 
 
-
 def decode_vertex_features(feats: torch.Tensor, voxel_margin: float) -> torch.Tensor:
     return torch.tanh((feats - 0.5) * 2.0) * voxel_margin
 
@@ -268,24 +266,6 @@ def downsample_tensors(a: torch.Tensor, b: torch.Tensor):
     return a, b
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def build_pred_grid(pred_coords, RES):
     grid = -torch.ones((RES, RES, RES), dtype=torch.long, device=pred_coords.device)
     x = pred_coords[:,0].long()
@@ -313,10 +293,6 @@ def match_sparse_voxels_nn(pred_coords, pred_feats, gt_coords, gt_feats):
     gt_matched   = gt_feats.to(device)
 
     return pred_matched, gt_matched
-
-
-
-
 
 
 def pad_sparse_features(gt_features, pred_features):
@@ -403,7 +379,6 @@ def refine_ovoxel(
     output_glb_path = Path(config_yaml["output_path"])
    
     
-
     pipeline_type = str(config_yaml.get("pipeline_type", '512'))
     frames_per_iter = config_yaml.get("frames_per_iter", None)
     near = float(config_yaml.get("near", 0.01))
@@ -454,7 +429,6 @@ def refine_ovoxel(
     print("Pipeline loaded")
     
    
-    
     print(f"Extracting latents from prompt image {prompt_idx}...")
     
     
@@ -506,8 +480,6 @@ def refine_ovoxel(
     quad_lerp = torch.nn.functional.softplus(torch.ones_like(dual_vertices[:, :1]) * 0.6).to(device)
    
     
-    
-    
     base_color = (torch.ones_like(dual_vertices_opt) * 0.5).to(device)
     coords_expanded = torch.cat([torch.zeros_like(voxel_indices[:, 0:1]), voxel_indices], dim=1).to(device)
     
@@ -526,7 +498,6 @@ def refine_ovoxel(
     )
     
     
-  
     optimizer = torch.optim.Adam([vertices_sp.feats, intersected_sp.feats, quad_lerp_f, base_color_f], lr = lr)
     
     renderer = MeshRenderer(
@@ -540,7 +511,6 @@ def refine_ovoxel(
     )
     
     
-    
     orig_img = Image.open(image_paths[prompt_idx])
     orig_w, orig_h = orig_img.size
     
@@ -549,10 +519,6 @@ def refine_ovoxel(
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
         
-    '''
-    If we need to align mesh later, 
-    It will be done here. 
-    '''
     criterion = nn.MSELoss() 
     l1_criterion = nn.L1Loss(reduction='mean')
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
@@ -602,9 +568,6 @@ def refine_ovoxel(
     object_pose = base_object_pose @ alignment
 
     
-    '''
-    Derive the gt_intersected and vertices from the groundtruth for mesh optimization.
-    '''
     gt_indices, gt_vertices, gt_intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
         vertices=v.detach().cpu(),
         faces=f.detach().cpu(),
@@ -644,9 +607,6 @@ def refine_ovoxel(
     gt_vertices = gt_vertices.to(device)
 
 
-    
-
-
     print("Starting Optimization...")
     
     for i in range(num_iters + 1):
@@ -660,15 +620,12 @@ def refine_ovoxel(
         optimizer.zero_grad()
         
 
-      
-
         vertices_sp = vertices_sp.replace(feats=vertices_f)
         intersected_sp = intersected_sp.replace(feats=intersected_f)
         vertices = (1 + 2*voxel_margin) * F.sigmoid(vertices_sp.feats) - voxel_margin
         intersected_flag = torch.sigmoid(intersected_sp.feats) > 0.2
         color = torch.sigmoid(base_color_f)
         quad_lerp = F.softplus(quad_lerp_f)
-        
         
         
         extracted_vertices, extracted_faces = o_voxel.convert.flexible_dual_grid_to_mesh(   
@@ -685,17 +642,10 @@ def refine_ovoxel(
         vertex_colors = sample_vertex_colors(dense_grid, mesh_vertices_norm)
 
    
-
-        
-
-
-        
         mesh = Mesh( extracted_vertices, extracted_faces,
                     vertex_attrs=vertex_colors.contiguous()
         )
         
-
-
 
         pred_intersected_matched, gt_intersected_matched = \
             match_sparse_voxels_nn(
@@ -710,7 +660,6 @@ def refine_ovoxel(
             pred_intersected_matched,
             gt_intersected_matched
         )
-        
         
         
         gt_coords_cpu = gt_indices.detach().cpu().numpy()
@@ -756,8 +705,6 @@ def refine_ovoxel(
         total_loss = total_loss + topology_loss
 
 
-
-        
         pred_vertices_matched, gt_vertices_matched = \
             match_sparse_voxels_nn(
                 pred_coords=vertices_sp.coords[:,1:], 
@@ -770,14 +717,12 @@ def refine_ovoxel(
         mse_loss = F.mse_loss(pred_vertices_matched, gt_vertices_matched)
 
 
-        
         geo_loss = bce_loss + mse_loss
         if i==5:
             print("color shape:", color.shape)
             print("mesh.vertices shape:", mesh.vertices.shape)
             print("mesh.vertex_attrs shape:", mesh.vertex_attrs.shape)
 
-        
         
         print(f"Iteration {i} : Geometry Loss: {geo_loss.item():.3f}\n")
         for idx in indices:
@@ -797,8 +742,6 @@ def refine_ovoxel(
             depth = buffers["depth"]
             
            
-            
-            
             gt_buffers = renderer.render(
                 mesh=dtc_mesh.to(device=device),
                 extrinsics = extrinsics_t[idx] @ base_object_pose,
@@ -833,7 +776,6 @@ def refine_ovoxel(
                 gt_depth = gt_depth.permute(2, 0, 1)
             
             
-          
             if display_interval and (idx % display_interval == 0 or idx == frames_per_iter - 1):
                 normal_vis = (normal - normal.min()) / (normal.max() - normal.min() + 1e-6)
                 H, W = normal_vis.shape[1], normal_vis.shape[2]
@@ -858,8 +800,6 @@ def refine_ovoxel(
                 
                 Path(out_dir).mkdir(parents=True, exist_ok=True)
                 save_image(f"{out_dir}/opt_{i:04d}_{idx:02d}.png", img_np)
-
-
 
 
             if i in TEST_INTERVALS:
@@ -909,7 +849,6 @@ def refine_ovoxel(
         quad_lerp = F.softplus(quad_lerp_f)
         
         
-        
         extracted_vertices, extracted_faces = o_voxel.convert.flexible_dual_grid_to_mesh(   
                 vertices_sp.coords[:, 1:],  
                 vertices,   
@@ -932,11 +871,6 @@ def refine_ovoxel(
     trimesh_obj.export(output_glb_path)
 
     
-
-
-
-
-
 def main():
     parser = argparse.ArgumentParser(description="Refine Trellis latents, using image loss point renderer. ")
     

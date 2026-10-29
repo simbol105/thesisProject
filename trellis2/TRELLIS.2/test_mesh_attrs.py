@@ -1,6 +1,4 @@
-"""Diagnostic script to verify:
-1. What mesh type is being created (MeshWithVoxel vs Mesh)
-"""
+"""Diagnostic: which mesh type the pipeline creates (MeshWithVoxel vs Mesh)."""
 import torch
 import torch.nn as nn
 from pathlib import Path
@@ -17,7 +15,6 @@ from opt_utils.utility import get_normalization_matrix
 from typing import Dict, Tuple
 
 
-
 def get_intrinsics_from_calibration(intr: Dict, orig_wh: Tuple[int, int], render_resolution: int) -> torch.Tensor:
     fx, fy, cx, cy = float(intr["fx"]), float(intr["fy"]), float(intr["cx"]), float(intr["cy"])
     orig_w, orig_h = orig_wh
@@ -32,8 +29,6 @@ def get_intrinsics_from_calibration(intr: Dict, orig_wh: Tuple[int, int], render
         dtype=torch.float32,
     )
     return intr_normalized
-
-
 
 
 def main():

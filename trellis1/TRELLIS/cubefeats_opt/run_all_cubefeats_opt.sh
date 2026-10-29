@@ -6,8 +6,7 @@
 #SBATCH --job-name=cubefeats_opt
 #SBATCH --output=cubefeats_opt_%j.out
 
-# TRELLIS1 cubefeats optimization for every object, from the generative meshes of
-# benchmark/run_all.py (generative_runs/<tag>/<source>/, configs in cubefeats_opt_configs/).
+# TRELLIS1 cubefeats optimization for every object
 
 set -uo pipefail
 

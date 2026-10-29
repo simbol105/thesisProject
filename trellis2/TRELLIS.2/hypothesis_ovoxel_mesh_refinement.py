@@ -34,7 +34,6 @@ import o_voxel
 from o_voxel import postprocess
 
 
-
 RES = 512
 
 TEST_INDEX = 4
@@ -240,7 +239,6 @@ def _load_json(path: Path) -> Dict:
         return json.load(f)
 
 
-
 def refine_ovoxel(
     yaml_config_path: Path,
 ):
@@ -411,7 +409,6 @@ def refine_ovoxel(
     )
     
     
-    
     orig_img = Image.open(image_paths[prompt_idx])
     orig_w, orig_h = orig_img.size
     
@@ -420,10 +417,6 @@ def refine_ovoxel(
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
         
-    '''
-    If we need to align mesh later, 
-    It will be done here. 
-    '''
     criterion = nn.MSELoss(reduction='mean') 
     l1_criterion = nn.L1Loss(reduction='mean')
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
@@ -492,7 +485,6 @@ def refine_ovoxel(
         h_opt = h.replace(feats = h_feats)
 
       
-        
         vertices = (1 + 2 * voxel_margin) *   torch.nn.functional.sigmoid(h_opt.feats[..., 0:3]) - voxel_margin
         intersected_logit = torch.sigmoid(h_opt.feats[..., 3:6]) > 0.5
         attributes  = torch.sigmoid(h_opt.feats[..., 7:10])
@@ -531,8 +523,6 @@ def refine_ovoxel(
             depth = buffers["depth"]
             
            
-            
-            
             gt_buffers = renderer.render(
                 mesh=groundtruth_mesh,
                 extrinsics = extrinsics_t[idx] @ base_object_pose,
@@ -567,7 +557,6 @@ def refine_ovoxel(
                 gt_depth = gt_depth.permute(2, 0, 1)
             
             
-          
             if display_interval and (idx % display_interval == 0 or idx == frames_per_iter - 1):
                 normal_vis = (normal - normal.min()) / (normal.max() - normal.min() + 1e-6)
                 H, W = normal_vis.shape[1], normal_vis.shape[2]
@@ -592,8 +581,6 @@ def refine_ovoxel(
                 
                 Path(out_dir).mkdir(parents=True, exist_ok=True)
                 save_image(f"{out_dir}/opt_{i:04d}_{idx:02d}.png", img_np)
-
-
 
 
             if idx in TEST_INTERVALS:
@@ -626,7 +613,6 @@ def refine_ovoxel(
         optimizer.step()
         
 
-        
     print("Finished optimization...")
 
     with torch.no_grad():
@@ -661,7 +647,6 @@ def refine_ovoxel(
         )
 
 
-
         glb = o_voxel.postprocess.to_glb(
         vertices            =   final_mesh.vertices,
         faces               =   final_mesh.faces,
@@ -682,11 +667,6 @@ def refine_ovoxel(
     print(f"Finish optimization, mesh exported to {output_glb_path}")
 
     
-
-
-
-
-
 def main():
     parser = argparse.ArgumentParser(description="Refine Trellis latents, using image loss point renderer. ")
     

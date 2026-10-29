@@ -6,9 +6,6 @@
 #SBATCH --job-name=flexicubes_batch
 #SBATCH --output=flexicubes_batch_%j.out
 
-# Every config, sequentially, for one mesh source.
-#   sbatch flexicubes/run_all_flexicubes.sh            # recgen meshes
-#   sbatch flexicubes/run_all_flexicubes.sh sam3d      # SAM3D meshes
 
 set -euo pipefail
 

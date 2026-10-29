@@ -33,7 +33,6 @@ import o_voxel
 from o_voxel import postprocess
 
 
-
 def _load_json(path: Path) -> Dict:
     with open(path, "r") as f:
         return json.load(f)
@@ -223,7 +222,6 @@ def refine_latents_hypothesis(
     pipeline.cuda()
    
 
-
     env_map = EnvMap(torch.tensor(
         cv2.cvtColor(cv2.imread(str(envmap_path), cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB),
         dtype=torch.float32, device='cuda'
@@ -265,7 +263,6 @@ def refine_latents_hypothesis(
     )
     
     
-
     shape_coords = shape_slat.coords.detach().to(device)
     tex_coords = tex_slat.coords.detach().to(device)
     shape_feats_init = shape_slat.feats.detach().clone().to(device)

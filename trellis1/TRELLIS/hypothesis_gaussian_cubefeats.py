@@ -1,4 +1,3 @@
-
 import os
 os.environ['ATTN_BACKEND'] =  'flash-attn'
 os.environ['SPCONV_ALGO'] = 'native' 
@@ -44,10 +43,6 @@ TEST_INDEX = 4
 TEST_INTERVALS = [0, 1, 50, 100, 200,  500, 799, 999]
 
 
-
-
-
-
 def _tsdf_reg_loss_from_depth(rep, depth_map: torch.Tensor, extrinsics: torch.Tensor, intrinsics: torch.Tensor) -> torch.Tensor:
     if utils3d is None:
         raise ImportError("utils3d.torch is required to compute the TSDF term.")
@@ -83,7 +78,7 @@ def tsdf_reg_loss(
     intrinsics: Union[torch.Tensor, List[torch.Tensor]],
     renderer: Optional[MeshRenderer] = None,
 ) -> torch.Tensor:
-    """Project the current optimization mesh's TSDF samples into the GT camera view,"""
+    """Project the current optimization mesh's TSDF samples into the GT camera view"""
     if isinstance(rep, (list, tuple)):
         if not isinstance(gt_mesh, (list, tuple)):
             gt_mesh = [gt_mesh] * len(rep)
@@ -110,7 +105,6 @@ def tsdf_reg_loss(
     )
     depth_map = gt_buffers["depth"]
     return _tsdf_reg_loss_from_depth(rep, depth_map, extrinsics, intrinsics)
-
 
 
 def rot_x(theta):
@@ -401,7 +395,6 @@ def refine_latent(config_path: Path):
     gs = outputs['gaussian'][0]
     
 
-    
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
     ref_images = torch.stack(
         [_resize_rgb_to_tensor(p, RES, device) for p in image_paths], dim=0
@@ -434,8 +427,6 @@ def refine_latent(config_path: Path):
     l2_criterion = nn.MSELoss(reduction="mean")
     
 
-    
-   
     decoder_args = {
                 "resolution": 64,
                 "model_channels": 768,
@@ -601,16 +592,3 @@ if __name__ == "__main__":
     refine_latent(Path(args.yaml_config))
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
- 

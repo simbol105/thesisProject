@@ -1,0 +1,100 @@
+# Growing a structure the latent does not contain: the Birdhouse chimney.
+
+category: "Birdhouse_Lighting001"
+data_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001"
+gt_mesh: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/model.glb"
+model_name: "microsoft/TRELLIS-image-large"
+out_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/optimization_output/slat_dilation/Birdhouse_chimney"
+
+# --- the prompt: a training photograph in which the chimney is hidden ----------------------------
+prompt_image: "train/im_0005"
+seed: 1
+sampler:
+  structure_steps: 12
+  structure_cfg: 7.5
+  slat_steps: 12
+  slat_cfg: 5.0
+max_initial_recall: 0.3                 # warn when TRELLIS hallucinated the structure anyway
+excise_region: false                    # true: delete the active voxels in the region before starting
+
+# --- the structure to grow, in the object frame of model.glb (metres, y up) ----------------------
+region:
+  name: chimney
+  box_lo: [-0.055, 0.186, -0.057]
+  box_hi: [-0.020, 0.231, -0.023]
+  plane: [-1.0, 1.05, 0.0, 0.256]       # keep p with n.p > d: the side of the roof plane the chimney is on
+  margin: 0.002                         # tolerance when counting predicted surface inside the region
+  gt_samples: 400000
+region_views: 3                         # training views that see it best, for the growth panels
+
+# --- mesh frame -> dataset world frame --------------------------------------------------------------
+align_iou_views: 16
+align_top_k: 4
+
+# --- rendering ---------------------------------------------------------------------------------------
+near: 0.01
+far: 1000
+ssaa: 1
+
+# --- optimization: the settings of slat_opt_configs/Birdhouse_Lighting001.yaml ----------------------
+lr: 0.06
+num_iters: 500
+frames_per_iter: 10
+loss_scaling: true
+weight: 1.5
+sdf_weight: 0.5
+tsdf_weight: 0.5
+tsdf_normalize: true                    # TSDF error in units of its truncation distance
+lambda_mask: 1.0
+lambda_depth: 1.2
+lambda_normal: 1.0
+lambda_color: 0.9
+lambda_ssim: 0.2
+lambda_lpips: 0.2
+
+# --- logging -------------------------------------------------------------------------------------------
+eval_interval: 50                       # test metrics, region metrics and panels
+grad_diag_interval: 100                 # per-term gradient on old / new / new-in-region voxels
+eval_views: 8
+
+# --- dilation ------------------------------------------------------------------------------------------
+silence_margin_cells: 1.5               # new cells must be this far outside (in 256^3 cells)
+max_active_voxels: 60000                # memory guard: the decoder turns every voxel into 64 cells
+guided_views: 48
+guided_band_voxels: 1.0
+guided_free_votes: 2
+
+# strategy: none | shell | random | grow | guided
+arms:
+  baseline:
+    strategy: none
+  shell_r1:
+    strategy: shell
+    radius: 1
+    init: nearest
+    silence_iters: 150
+  shell_r2:
+    strategy: shell
+    radius: 2
+    init: nearest
+    silence_iters: 150
+  random_r2:
+    strategy: random
+    radius: 2
+    keep_prob: 0.5
+    init: nearest
+    silence_iters: 150
+  grow:
+    strategy: grow
+    radius: 1                           # voxels added around the current surface per round
+    grow_every: 25
+    grow_until: 400
+    prune: true                         # drop new voxels farther than prune_radius from the surface
+    prune_radius: 2
+    init: nearest
+    silence_iters: 30                   # per growth round, for the voxels added in that round
+  guided:
+    strategy: guided
+    radius: 16                          # how far from the active set a GT-observed voxel may be
+    init: nearest
+    silence_iters: 150

@@ -46,7 +46,7 @@ echo $CUDA_HOME
 export PATH=/opt/bwhpc/common/devel/cuda/12.8/bin:$PATH
 conda activate trellis
 
-python claude_fix.py --yaml-config /home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/yaml_config/config.yaml
+python slat_fix.py --yaml-config /home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/yaml_config/config.yaml
 
 python hypothesis_latent_optimization.py --yaml-config /home/fr/fr_fr/fr_ba122/projects/trellis1/TRELLIS/yaml_config/config.yaml
 

@@ -1,0 +1,238 @@
+{
+  "method": "nvdiffrec_gtsup_it1000",
+  "objects": [
+    "Birdhouse_Lighting001",
+    "Cup_B08TWHJ33Q_Tan_Lighting001",
+    "Figurine_B08FYFNYP4_LionKing_Lighting001",
+    "Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001",
+    "Mallard_B082D168CK_MintGreen_Lighting001",
+    "Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001"
+  ],
+  "scores_stats": {
+    "view": {
+      "lpips": [
+        0.046297735146557294,
+        0.034686312845023146
+      ],
+      "psnr_hdr": [
+        21.056478996227415,
+        3.758587236378009
+      ],
+      "psnr_ldr": [
+        27.741968996197297,
+        3.6763245377955767
+      ],
+      "ssim": [
+        0.9562957254820503,
+        0.03163098613172691
+      ]
+    },
+    "light": {
+      "lpips": [
+        0.046464355410231896,
+        0.03534413747889723
+      ],
+      "psnr_hdr": [
+        22.168738244559346,
+        3.883955126365242
+      ],
+      "psnr_ldr": [
+        28.739820957918095,
+        3.7704605451758986
+      ],
+      "ssim": [
+        0.9569063423162637,
+        0.030783020956640077
+      ]
+    },
+    "geometry": {
+      "depth_mse_scene": [
+        2.3777050497978774e-05,
+        2.0969133338505786e-05
+      ],
+      "normal_angle": [
+        0.20599537808448076,
+        0.0532421175180594
+      ]
+    },
+    "material": {
+      "lpips": [
+        0.04773187493750205,
+        0.03331012509474321
+      ],
+      "psnr_ldr": [
+        33.952442676233744,
+        5.384544588330188
+      ],
+      "ssim": [
+        0.9661265821778215,
+        0.02480288416421741
+      ]
+    },
+    "shape": {
+      "bidir_chamfer": [
+        0.007717710729724461,
+        0.005065866115126481
+      ]
+    }
+  },
+  "scores": {
+    "Birdhouse_Lighting001": {
+      "view": {
+        "psnr_hdr": 14.059423194943014,
+        "psnr_ldr": 20.304092325419056,
+        "lpips": 0.11903740279376507,
+        "ssim": 0.8939174236729741
+      },
+      "light": {
+        "psnr_hdr": 15.492608761736085,
+        "psnr_ldr": 21.315240442195194,
+        "lpips": 0.12060756795108318,
+        "ssim": 0.896423814818263
+      },
+      "geometry": {
+        "normal_angle": 0.11313327215611935,
+        "depth_mse_scene": 1.0071417591461795e-05
+      },
+      "material": {
+        "psnr_ldr": 22.898709974966575,
+        "lpips": 0.1171706523746252,
+        "ssim": 0.9128260165452957
+      },
+      "shape": {
+        "bidir_chamfer": 8.248305205790674e-05
+      }
+    },
+    "Cup_B08TWHJ33Q_Tan_Lighting001": {
+      "view": {
+        "psnr_hdr": 21.984297721808836,
+        "psnr_ldr": 28.83924926424492,
+        "lpips": 0.036974293645471334,
+        "ssim": 0.9710859782062471
+      },
+      "light": {
+        "psnr_hdr": 22.126130048559936,
+        "psnr_ldr": 28.997096980737005,
+        "lpips": 0.03696749499067664,
+        "ssim": 0.9711918542161584
+      },
+      "geometry": {
+        "normal_angle": 0.17766519635915756,
+        "depth_mse_scene": 9.811319245045524e-06
+      },
+      "material": {
+        "psnr_ldr": 36.872499798104386,
+        "lpips": 0.03295698552392423,
+        "ssim": 0.9797870647162199
+      },
+      "shape": {
+        "bidir_chamfer": 0.005756365601651678
+      }
+    },
+    "Figurine_B08FYFNYP4_LionKing_Lighting001": {
+      "view": {
+        "psnr_hdr": 19.40568899051022,
+        "psnr_ldr": 27.264634544657362,
+        "lpips": 0.039465916343033314,
+        "ssim": 0.9559209086000919
+      },
+      "light": {
+        "psnr_hdr": 20.39218900596975,
+        "psnr_ldr": 28.213652713425727,
+        "lpips": 0.03928466350771487,
+        "ssim": 0.9559586779214442
+      },
+      "geometry": {
+        "normal_angle": 0.22353849560022354,
+        "depth_mse_scene": 7.909007329942597e-06
+      },
+      "material": {
+        "psnr_ldr": 36.16503498957239,
+        "lpips": 0.040399009361863136,
+        "ssim": 0.9688389915972948
+      },
+      "shape": {
+        "bidir_chamfer": 0.00809495139736522
+      }
+    },
+    "Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001": {
+      "view": {
+        "psnr_hdr": 20.801635650424824,
+        "psnr_ldr": 27.649804551441242,
+        "lpips": 0.04939554398879409,
+        "ssim": 0.9452101299539208
+      },
+      "light": {
+        "psnr_hdr": 21.467358817318622,
+        "psnr_ldr": 28.709404470563946,
+        "lpips": 0.04970860155299306,
+        "ssim": 0.9461144465021789
+      },
+      "geometry": {
+        "normal_angle": 0.2182779163122177,
+        "depth_mse_scene": 4.564141249829845e-05
+      },
+      "material": {
+        "psnr_ldr": 39.294767376267245,
+        "lpips": 0.055271216202527285,
+        "ssim": 0.9685522923246026
+      },
+      "shape": {
+        "bidir_chamfer": 0.004345378318430153
+      }
+    },
+    "Mallard_B082D168CK_MintGreen_Lighting001": {
+      "view": {
+        "psnr_hdr": 25.463972936437223,
+        "psnr_ldr": 31.674032527267073,
+        "lpips": 0.017798705608583987,
+        "ssim": 0.9894887619884685
+      },
+      "light": {
+        "psnr_hdr": 26.78615002268817,
+        "psnr_ldr": 32.61963996084936,
+        "lpips": 0.017305108020082116,
+        "ssim": 0.9895940254209563
+      },
+      "geometry": {
+        "normal_angle": 0.21327416226267815,
+        "depth_mse_scene": 6.0017253929345316e-05
+      },
+      "material": {
+        "psnr_ldr": 36.43780734532415,
+        "lpips": 0.019473758526146412,
+        "ssim": 0.9886266266694292
+      },
+      "shape": {
+        "bidir_chamfer": 0.014736203402288683
+      }
+    },
+    "Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001": {
+      "view": {
+        "psnr_hdr": 24.62385548324039,
+        "psnr_ldr": 30.720000764154157,
+        "lpips": 0.015114548499695957,
+        "ssim": 0.9821511504705995
+      },
+      "light": {
+        "psnr_hdr": 26.747992811083485,
+        "psnr_ldr": 32.583891179737336,
+        "lpips": 0.014912696438841522,
+        "ssim": 0.9821552350185812
+      },
+      "geometry": {
+        "normal_angle": 0.29008322581648827,
+        "depth_mse_scene": 9.211892393778953e-06
+      },
+      "material": {
+        "psnr_ldr": 32.0458365731677,
+        "lpips": 0.021119627635926008,
+        "ssim": 0.978128501214087
+      },
+      "shape": {
+        "bidir_chamfer": 0.013290882606553124
+      }
+    }
+  },
+  "note": "ORB metrics; bidir_chamfer is the squared-distance chamfer in m^2 as in ORB's json (ORB paper tables report 2e3 x this value). 'light' = the view renders scored scale-invariantly (no per-view environment maps in DTC)."
+}

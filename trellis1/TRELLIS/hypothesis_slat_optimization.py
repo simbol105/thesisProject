@@ -113,7 +113,7 @@ def tsdf_reg_loss(
     intrinsics: Union[torch.Tensor, List[torch.Tensor]],
     renderer: Optional[MeshRenderer] = None,
 ) -> torch.Tensor:
-    """Project the current optimization mesh's TSDF samples into the GT camera view,"""
+    """Project the current optimization mesh's TSDF samples into the GT camera view"""
     if isinstance(rep, (list, tuple)):
         if not isinstance(gt_mesh, (list, tuple)):
             gt_mesh = [gt_mesh] * len(rep)
@@ -496,25 +496,6 @@ def refine_latent(config_path: Path):
     mesh = outputs['mesh'][0]
     
     
-    
-    
-    
-    
-    '''
-    DILATION of Input SLAT
-    '''
-    
-    
-    
-    
-    
-    
-    
-
-
-    
- 
- 
     slat_opt = nn.Parameter(slat.feats.clone().detach())
     slat_opt.requires_grad_(True)
 
@@ -543,7 +524,6 @@ def refine_latent(config_path: Path):
         )
 
 
-        
     else:
         print("No ground truth mesh provided, skipping alignment step.")
         alignment = torch.eye(4, device=device) 
@@ -573,9 +553,6 @@ def refine_latent(config_path: Path):
     decoder.train()
 
 
-
-    
-    
     if config_yaml.get("optimizer", "") == "sgd":
         optimizer = torch.optim.SGD([slat_opt] , lr=lr)
     else: 
@@ -594,9 +571,6 @@ def refine_latent(config_path: Path):
         x = sp.SparseTensor(feats=slat_opt, coords=slat.coords) 
         
         
-        
-   
-        
         meshes = decoder.forward(x)
         mesh = meshes[0]
         
@@ -605,9 +579,6 @@ def refine_latent(config_path: Path):
         print(f"[Iter {i:03d}] Reg loss: {float(reg_loss.detach().cpu()):.4f}")
 
        
-       
-
-
         total_loss = torch.zeros((), device=device)
         tsdf_loss = torch.zeros((), device=device)
         img_losses = torch.zeros((), device=device)
@@ -672,7 +643,6 @@ def refine_latent(config_path: Path):
                 )
                 
                 
-
                 img_losses  += loss_terms["loss"]
             else:
                 ref_rgb = ref_images[idx][:3]
@@ -711,16 +681,11 @@ def refine_latent(config_path: Path):
                 save_image(f"{out_dir}/opt_{i:04d}_{idx:02d}.png", img_np)
 
 
-
-
         img_losses = img_losses / len(indices)
         tsdf_loss = tsdf_loss / len(indices)  
         total_loss = (sdf_weight * reg_loss) + (tsdf_weight * tsdf_loss) + (weight * img_losses)
         print(f"[Iter {i:03d}] Loss: {float(total_loss.detach().cpu()):.4f}")
 
-
-
-      
 
         total_loss.backward()
 
@@ -728,19 +693,11 @@ def refine_latent(config_path: Path):
         print("SLAT grad: ", slat_opt.grad.norm().item())
         
 
-                            
         optimizer.step()
 
     print("Latent optimization completed!")
 
             
-                        
-    
-
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parameters to refine latent")
     parser.add_argument("--yaml-config", type=Path, required=True, help="Path to the YAML config file" )
@@ -748,16 +705,3 @@ if __name__ == "__main__":
     refine_latent(Path(args.yaml_config))
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
- 

@@ -291,7 +291,7 @@ def downsample_tensors(a: torch.Tensor, b: torch.Tensor):
     return a, b
 
 def pad_sparse_features(gt_features, pred_features):  
-    """Pad the smaller sparse tensor to match the larger one."""  
+    """Pad the smaller sparse tensor to match the larger one."""
     if gt_features.shape[0] == pred_features.shape[0]:  
         return gt_features, pred_features  
       
@@ -311,7 +311,6 @@ def pad_sparse_features(gt_features, pred_features):
         return padded, pred_features
 
 
-
 def refine_ovoxel(
     yaml_config_path: Path,
 ):
@@ -329,7 +328,6 @@ def refine_ovoxel(
     output_glb_path = Path(config_yaml["output_path"])
    
     
-
     pipeline_type = str(config_yaml.get("pipeline_type", '512'))
     frames_per_iter = config_yaml.get("frames_per_iter", None)
     near = float(config_yaml.get("near", 0.01))
@@ -379,7 +377,6 @@ def refine_ovoxel(
     print("Pipeline loaded")
     
    
-    
     print(f"Extracting latents from prompt image {prompt_idx}...")
     
     
@@ -431,27 +428,12 @@ def refine_ovoxel(
     quad_lerp = torch.nn.functional.softplus(torch.ones_like(dual_vertices[:, :1]) * 0.6)
     
    
-
-    
     base_color = torch.from_numpy(
         np.array(mesh.visual.vertex_colors)[:dual_vertices_opt.shape[0], :3] / 255.0
     ).float()
 
     
-
-
     intersected_f = opt_intersected.float() / 7.0
-    
-    
-    
-    '''
-    dual_vertices_opt shape:  torch.Size([2814040, 3])
-    intersected_f shape:  torch.Size([2814040, 3])
-    quad_lerp shape:  torch.Size([2814040, 1])
-    base_color shape:  torch.Size([691360, 3])
-    h_feats shape:  torch.Size([2814040, 10])
-
-    '''
     
     
     h_feats_init = torch.cat([
@@ -481,7 +463,6 @@ def refine_ovoxel(
     )
     
     
-    
     orig_img = Image.open(image_paths[prompt_idx])
     orig_w, orig_h = orig_img.size
     
@@ -490,10 +471,6 @@ def refine_ovoxel(
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
         
-    '''
-    If we need to align mesh later, 
-    It will be done here. 
-    '''
     criterion = nn.MSELoss(reduction='mean') 
     l1_criterion = nn.L1Loss(reduction='mean')
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
@@ -541,10 +518,6 @@ def refine_ovoxel(
     object_pose = base_object_pose @ alignment
     
     
-    
-    '''
-    Derive the gt_intersected and vertices from the groundtruth for mesh optimization.
-    '''
     gt_indices, gt_vertices, gt_intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
         vertices=v.detach().cpu(),
         faces=f.detach().cpu(),
@@ -626,8 +599,6 @@ def refine_ovoxel(
             depth = buffers["depth"]
             
            
-            
-            
             gt_buffers = renderer.render(
                 mesh=dtc_mesh.to(device=device),
                 extrinsics = extrinsics_t[idx] @ base_object_pose,
@@ -662,7 +633,6 @@ def refine_ovoxel(
                 gt_depth = gt_depth.permute(2, 0, 1)
             
             
-          
             if display_interval and (idx % display_interval == 0 or idx == frames_per_iter - 1):
                 normal_vis = (normal - normal.min()) / (normal.max() - normal.min() + 1e-6)
                 H, W = normal_vis.shape[1], normal_vis.shape[2]
@@ -687,8 +657,6 @@ def refine_ovoxel(
                 
                 Path(out_dir).mkdir(parents=True, exist_ok=True)
                 save_image(f"{out_dir}/opt_{i:04d}_{idx:02d}.png", img_np)
-
-
 
 
             if idx in TEST_INTERVALS:
@@ -758,11 +726,6 @@ def refine_ovoxel(
     print(f"Finish optimization, mesh exported to {output_glb_path}")
 
     
-
-
-
-
-
 def main():
     parser = argparse.ArgumentParser(description="Refine Trellis latents, using image loss point renderer. ")
     

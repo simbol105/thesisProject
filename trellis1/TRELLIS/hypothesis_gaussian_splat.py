@@ -1,4 +1,3 @@
-
 import os
 os.environ['ATTN_BACKEND'] =  'flash-attn'
 os.environ['SPCONV_ALGO'] = 'native' 
@@ -114,7 +113,7 @@ def tsdf_reg_loss(
     intrinsics: Union[torch.Tensor, List[torch.Tensor]],
     renderer: Optional[MeshRenderer] = None,
 ) -> torch.Tensor:
-    """Project the current optimization mesh's TSDF samples into the GT camera view,"""
+    """Project the current optimization mesh's TSDF samples into the GT camera view"""
     if isinstance(rep, (list, tuple)):
         if not isinstance(gt_mesh, (list, tuple)):
             gt_mesh = [gt_mesh] * len(rep)
@@ -594,8 +593,6 @@ def refine_latent(config_path: Path):
                 save_image(f"{out_dir}/opt_{i:04d}_{idx:02d}.png", img_np)
 
 
-
-
         img_losses = img_losses / len(indices)
 
         total_loss =  (weight * img_losses)
@@ -613,13 +610,6 @@ def refine_latent(config_path: Path):
     print("Latent optimization completed!")
 
             
-                        
-    
-
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parameters to refine latent")
     parser.add_argument("--yaml-config", type=Path, required=True, help="Path to the YAML config file" )
@@ -627,16 +617,3 @@ if __name__ == "__main__":
     refine_latent(Path(args.yaml_config))
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
- 

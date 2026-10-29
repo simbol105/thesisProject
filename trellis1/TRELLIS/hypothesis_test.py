@@ -54,9 +54,6 @@ def _load_json(path: Path) -> Dict:
         return json.load(f)
 
 
-
-
-
 def scale_intrinsics(intr, orig_wh, res):
     fx, fy, cx, cy = intr["fx"], intr["fy"], intr["cx"], intr["cy"]
     ow, oh = orig_wh

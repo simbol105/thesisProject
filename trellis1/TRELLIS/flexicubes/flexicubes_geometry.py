@@ -1,30 +1,4 @@
-"""
-FlexiCubes geometry with an SDF initialized from a mesh -- the FlexiCubes counterpart of
-trellis2/TRELLIS.2/dmtet/dmtet.py.
-
-`DmTetGeometry` takes an initial mesh, converts it to an SDF on a tetrahedral grid, and then
-optimizes (sdf, deform) directly through marching tetrahedra, with no TRELLIS decoder in the
-loop. This does the same on a *cube* grid with FlexiCubes, which additionally optimizes the
-per-cube dual weights:
-
-    mesh  -> SDF on the (res+1)^3 grid vertices        (init only)
-          -> nn.Parameter sdf [Nv], deform [Nv, 3], weight [Nc, 21], color [Nv, 3]
-          -> FlexiCubes                                -> mesh, rendered, backpropagated
-
-The grid is TRELLIS' own `construct_dense_grid` / `get_defomed_verts`, and the extractor is the
-FlexiCubes copy vendored at trellis/representations/mesh/flexicubes -- the same one
-`SparseFeatures2Mesh` drives. So this run and the cubefeats run extract meshes through
-identical machinery on an identical grid; the only difference is where sdf/deform/weights come
-from (free parameters here, the SLAT mesh decoder there). That makes the two directly
-comparable.
-
-Note: the vendored FlexiCubes differs from upstream (github.com/nv-tlabs/FlexiCubes) in two
-ways that matter, which is why nothing needs to be cloned:
-  * `construct_voxel_grid` was removed -- use `utils_cube.construct_dense_grid` instead;
-  * `__call__` takes `beta=`/`alpha=` (upstream: `beta_fx12=`/`alpha_fx8=`) and returns
-    4 values (vertices, faces, L_dev, vertices_color) rather than 3.
-The bundled `flexicubes/examples/optimize.py` is upstream's and no longer matches the class.
-"""
+"""FlexiCubes geometry with an SDF initialized from a mesh"""
 
 import math
 from pathlib import Path
@@ -47,10 +21,7 @@ from trellis.representations.mesh.utils_cube import (
 
 
 def sdf_reg_loss(sdf: torch.Tensor, all_edges: torch.Tensor) -> torch.Tensor:
-    """Sign-consistency BCE on grid edges -- removes internal floaters that no view can see.
-
-    Verbatim from flexicubes/examples/loss.py (and from dmtet/dmtet.py, which uses the same).
-    """
+    """Sign-consistency BCE on grid edges -- removes internal floaters that no view can see."""
     sdf_f1x6x2 = sdf[all_edges.reshape(-1)].reshape(-1, 2)
     mask = torch.sign(sdf_f1x6x2[..., 0]) != torch.sign(sdf_f1x6x2[..., 1])
     sdf_f1x6x2 = sdf_f1x6x2[mask]
@@ -64,9 +35,7 @@ def sdf_reg_loss(sdf: torch.Tensor, all_edges: torch.Tensor) -> torch.Tensor:
     return sdf_diff
 
 
-# ==========================================================================================
 # mesh -> SDF on the grid vertices
-# ==========================================================================================
 
 def _raycasting_scene(tri_mesh: trimesh.Trimesh) -> o3d.t.geometry.RaycastingScene:
     mesh = o3d.t.geometry.TriangleMesh(
@@ -92,22 +61,7 @@ def sdf_from_mesh(
     tau_scale: float = 1.0,
     sparc3d_path: Optional[str] = None,
 ) -> np.ndarray:
-    """Signed distance at the (res+1)^3 grid vertices. Negative inside (FlexiCubes' convention:
-    `occ_n = scalar_field < 0`).
-
-    method:
-      floodfill -- unsigned distance, then label the *exterior* by flood-filling the cells that
-                   are further than tau = tau_scale * sqrt(3)/(2*res) from the surface, starting
-                   from the grid boundary; everything not reached is inside. This is the Sparc3D
-                   algorithm (arXiv:2505.14521) and the only one of the three that is correct on
-                   an open, double-sided mesh -- which is what recgen and SAM3D produce.
-      raycast   -- open3d's closest-triangle-normal signed distance. Correct only for watertight
-                   meshes; on the recgen/SAM3D reconstructions it marks only a thin crust as
-                   inside (measured: 6.8% of the grid vs 18.9% for floodfill, GT is 24.1%).
-      sparc3d   -- the exact backend the trellis2 DMTet run uses, via
-                   `sparc3d_sdf.sdf.compute_sdf_on_grid`. Needs `sparc3d_path` on sys.path and a
-                   GPU (kaolin). Same algorithm as floodfill, different implementation.
-    """
+    """Signed distance at the (res+1)^3 grid vertices."""
     if method == "sparc3d":
         import sys
         if sparc3d_path is not None and sparc3d_path not in sys.path:
@@ -162,9 +116,7 @@ def _logit(x: np.ndarray, eps: float = 1e-3) -> np.ndarray:
     return np.log(x / (1.0 - x))
 
 
-# ==========================================================================================
 # the geometry
-# ==========================================================================================
 
 class FlexiCubesGeometry:
     """Free (sdf, deform, weight, colour) on a res^3 cube grid, extracted with FlexiCubes."""
@@ -210,7 +162,6 @@ class FlexiCubesGeometry:
         self.deform = nn.Parameter(torch.zeros(n_verts, 3, device=self.device))
 
         # FlexiCubes' 21 dual weights per cube: beta (12), alpha (8), gamma_f (1).
-        # 0 means "unweighted", which is the plain dual-contouring behaviour.
         self.weight = nn.Parameter(torch.zeros(n_cubes, 21, device=self.device))
         self.weight.requires_grad_(optimize_weights)
 
@@ -263,8 +214,7 @@ class FlexiCubesGeometry:
         mesh = MeshExtractResult(vertices=vertices, faces=faces, vertex_attrs=colors, res=self.res)
         if training:
             mesh.reg_loss = self.reg_loss(L_dev)
-            # TSDF samples, as cube2mesh exposes them -- restricted to a band around the surface
-            # so the projection in tsdf_reg_loss stays the same size as in the cubefeats run
+            # TSDF samples, as cube2mesh exposes them
             with torch.no_grad():
                 band = self.sdf.abs() < (tsdf_band / self.res)
             mesh.tsdf_v = grid_verts[band]

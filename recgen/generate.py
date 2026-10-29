@@ -38,11 +38,6 @@ def reconstruct(config_path: Path):
     dataset_path = Path(config_yaml.get("data_dir", "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC"))
     
     
-
-    # rgb = load_image("/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Cup_B08TWHJ33Q_Tan_Lighting001/train/im_0071.png")
-    # depth = load_image("/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Cup_B08TWHJ33Q_Tan_Lighting001/depth/im_0070_depth.png")
-    # mask = load_image("/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Cup_B08TWHJ33Q_Tan_Lighting001/mask/im_0070.png")
-
     mesh_path = dataset_path / category / "model.glb"
     assert mesh_path.exists(), f"Mesh path {mesh_path} does not exist."
     transforms_json = dataset_path / category / "transforms_train.json"
@@ -55,7 +50,6 @@ def reconstruct(config_path: Path):
     
     mesh = trimesh.load_mesh(mesh_path)
     cv_to_gl = np.diag([1, -1, -1, 1]).astype(np.float32)
-    # object_pose = object_pose @ cv_to_gl
     mesh.apply_transform(object_pose)
     
     pyrender_mesh = pyrender.Mesh.from_trimesh(mesh, smooth=False)
@@ -66,7 +60,6 @@ def reconstruct(config_path: Path):
         zfar=100.0)
     cv_to_gl = np.diag([1, -1, -1, 1]).astype(np.float32)
     extrinsics_t = np.linalg.inv(extrinsics) @ cv_to_gl
-    # extrinsics = extrinsics @ cv_to_gl
     scene.add(camera, pose=extrinsics_t)
     
     renderer = pyrender.OffscreenRenderer(viewport_width=2000, viewport_height=2000)
@@ -76,8 +69,6 @@ def reconstruct(config_path: Path):
     mask = color[:, :, 3]
     rgb = color[:, :, :3]
     
-    # rgb_path = out_dir / "rgb.png"
-    # cv2.imwrite(str(rgb_path), cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
 
     script_path = Path(__file__).resolve().parent / "scripts" / "run_inference.py"
     temp_dir = Path(tempfile.mkdtemp(prefix="recgen_inputs_"))
@@ -117,7 +108,6 @@ def reconstruct(config_path: Path):
         shutil.rmtree(temp_dir, ignore_errors=True)
 
     print(f"Finished reconstruction for {category}, Results saved to {out_dir}")
-
 
 
 if __name__ == "__main__":

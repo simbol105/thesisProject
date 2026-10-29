@@ -1,7 +1,6 @@
 import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-# os.environ["ATTN_BACKEND"] = 'xformers'
 
 import argparse
 import json
@@ -33,7 +32,6 @@ from opt_utils.utility import display_image, save_image, transf3d_broadcast, tra
 from dmtet.dmtet import DmTetGeometry
 import o_voxel
 from o_voxel import postprocess
-
 
 
 render_resolution = 512 
@@ -92,7 +90,6 @@ def refine_latents(
     assert gt_mesh.exists(), f"DTC mesh path does not exist: {gt_mesh}"
     transforms_json_path = Path(config_yaml["transforms_json"])
     assert transforms_json_path.exists(), f"Transforms JSON path does not exist: {transforms_json_path}"
-    # output_glb_path = Path(config_yaml.get("output_path", "optimization_output/trellis_init.glb"))
 
     pipeline_type = str(config_yaml.get("pipeline_type", '512'))
     frames_per_iter = config_yaml.get("frames_per_iter", None)
@@ -136,17 +133,10 @@ def refine_latents(
     pipeline.cuda()
 
 
-    # Build envmap and renderer
-    # envmap_img = cv2.imread(str(envmap_path), cv2.IMREAD_UNCHANGED)
-    # # assert envmap_img is not None, f"Failed to read envmap: {envmap_path}"
-    # envmap_img = cv2.cvtColor(envmap_img, cv2.COLOR_BGR2RGB)
-    # env_map = EnvMap(torch.tensor(envmap_img, dtype=torch.float32, device=device))
-
     prompt_img = Image.open(image_paths[prompt_idx])# .convert("RGBA")
     w, h = prompt_img.size 
     mesh_= pipeline.run(
         prompt_img,
-        # pipeline_type=pipeline_type,
     )[0]
     attr = mesh_.attrs.clone().detach().to(device).requires_grad_(True)
     attrs = nn.Parameter(attr)
@@ -158,7 +148,7 @@ def refine_latents(
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
     
-    # Compute alignment transform for the mesh 
+    # Compute alignment transform for the mesh
     if gt_mesh.exists():
         dtc_mesh = trimesh.load_mesh(gt_mesh) 
         with torch.no_grad():
@@ -187,7 +177,7 @@ def refine_latents(
         device=device.type,
     )
 
-    # compute sdf from initial trelli2 mesh 
+    # compute sdf from initial trelli2 mesh
     dmtet = DmTetGeometry(
         res=128, 
         device = device.__str__(), 
@@ -219,19 +209,14 @@ def refine_latents(
 
         for i in indices: 
             cam_extr = extrinsics_t[i]
-            # pose = cam_extr @ object_pose 
 
             buffer = renderer.render(mesh=mesh, extrinsics=cam_extr, 
                                      intrinsics=intr_scaled, return_types=["attr","mask", "normal"],
                                      transformation=object_pose)
             
             img = buffer["attr"][:3]
-            # print(f"Rendered buffer attr size: \n", buffer["attr"].shape) 
             mask = buffer["mask"]
-            # print(f"Rendered buffer mask size: \n", buffer["mask"].shape)
             normal = buffer["normal"]
-            # print(f"Rendered buffer normal size: \n", buffer["normal"].shape)
-            # depth = buffer["depth"]
 
             ref_img = ref_images[i]
             loss = criterion(img, ref_img[:3])
@@ -266,13 +251,7 @@ def refine_latents(
     
     # Export final mesh
     final_mesh = dmtet.get_mesh(vertex_attr = attrs)
-    # import imageio
-    # from trellis2.utils import render_utils
 
-    # video = render_utils.make_pbr_vis_frames(
-    #     render_utils.render_video(final_mesh, envmap=env_map)
-    # )
-    # imageio.mimsave("trelli_init.mp4", video, fps=15)
     
     output_glb_path.parent.mkdir(parents=True, exist_ok=True)
     color = attrs.detach().cpu().numpy()
@@ -280,11 +259,6 @@ def refine_latents(
                                   faces = final_mesh.faces.cpu().detach().numpy(),vertex_colors=color)
     trimesh_obj.export(output_glb_path)
 
-
-
-        
-
-    
 
 def main():
     parser = argparse.ArgumentParser()

@@ -34,7 +34,6 @@ import o_voxel
 from o_voxel import postprocess
 
 
-
 def _load_json(path: Path) -> Dict:
     with open(path, "r") as f:
         return json.load(f)
@@ -234,9 +233,6 @@ def refine_latents(
     render_resolution = 512 
    
 
-  
-    
-    
     orig_img = Image.open(image_paths[prompt_idx])
     orig_w, orig_h = orig_img.size
     intr_scaled = _scale_opencv_intrinsics(intr, (orig_w, orig_h), render_resolution).to(device=device)
@@ -256,7 +252,6 @@ def refine_latents(
     )
 
 
-
     vertices = mesh.vertices.clone().detach().to(device).requires_grad_(True)
     faces = mesh.faces.clone().detach().to(device)
     mesh_origin = mesh.origin
@@ -269,12 +264,6 @@ def refine_latents(
     opt_vert = nn.Parameter(vertices)
     opt_attrs = nn.Parameter(attrs)
 
-
-
-    
-   
-   
-    
 
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
     ref_images   = torch.stack(
@@ -299,11 +288,6 @@ def refine_latents(
     criterion = nn.MSELoss(reduction='mean') 
 
     
-
-    
-    
-   
-    
     if optimizer_type  == "sgd":
         print(f"Using SGD Optimizer with lr={lr}")
         optimizer = torch.optim.SGD([opt_vert, opt_attrs], lr=lr)
@@ -319,7 +303,6 @@ def refine_latents(
         )
         
            
-
         optimizer.zero_grad(set_to_none=True)
        
         
@@ -335,7 +318,6 @@ def refine_latents(
         )
 
 
-        
         total_loss = torch.zeros((), device=device)
         
               
@@ -352,7 +334,6 @@ def refine_latents(
                 return_types=["attr", "mask", "normal"], 
             )
 
-            
             
             pred = buffers["base_color"]
             
@@ -375,8 +356,6 @@ def refine_latents(
             per_pix = img_loss + mask_loss
 
              
-
-            
             if display_interval and (idx % display_interval == 0 or idx == num_iters -1):
                 normal_vis = (normal - normal.min()) / (normal.max() - normal.min())
                 H, W = normal_vis.shape[1], normal_vis.shape[2]
@@ -400,26 +379,15 @@ def refine_latents(
             total_loss = total_loss + loss
         
       
-        
         total_loss = total_loss / len(indices)
 
         
-
         print(f"[iter {it}] loss={float(total_loss.detach().cpu()):.6f}")
 
         total_loss.backward()
        
 
-       
-       
-
-
         optimizer.step()
-
-
-     
-
-  
 
 
     with torch.no_grad():

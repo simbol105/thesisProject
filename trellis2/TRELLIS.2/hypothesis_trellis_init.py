@@ -174,23 +174,6 @@ def refine_latents(
     pipeline.cuda()
 
 
-
-    ''' 
-    prompt_img = Image.open(image_paths[prompt_idx])
-    w, h = prompt_img.size 
-    mesh_generation_time_ = time.time()
-    mesh_= pipeline.run(
-        prompt_img,
-        # pipeline_type=pipeline_type,
-    )[0]
-    # mesh_.fill_holes()
-    trimesh.Trimesh(vertices=mesh_.vertices.cpu().numpy(), 
-                    faces=mesh_.faces.cpu().numpy()).export(f"{out_dir}/initialization_mesh.obj")
-    mesh_generation_time = time.time() - mesh_generation_time_
-    attr = mesh_.attrs.clone().detach().to(device).requires_grad_(True)
-    attrs = nn.Parameter(attr)
-   '''
-    
     w, h = 2000, 2000
     intr_scaled = _scale_opencv_intrinsics(intr, (w, h), render_resolution).to(device=device)
     mesh_ = trimesh.load_mesh(GENERATED_MESH_PATH)
@@ -267,7 +250,6 @@ def refine_latents(
                     faces=initial_mesh.faces.detach().cpu().numpy()).export(f"{out_dir}/extracted_sdf_mesh.obj")
         
     
-        
     object_pose = base_object_pose  @ torch.tensor(object_transforms_fixed, dtype=torch.float32, device=device)
     
     if optimizer_type == "adam":
@@ -289,8 +271,6 @@ def refine_latents(
         optimizer.zero_grad()
         dmtet_optimizer.zero_grad()
       
-
-
 
         vmin = mesh.vertices.min(dim=0).values
         vmax = mesh.vertices.max(dim=0).values
@@ -365,7 +345,6 @@ def refine_latents(
             save_image(f"{test_out_dir}/test_{idx:04d}.png", test_img_np)
             
 
-            
         total_loss = total_loss / len(indices)
         print(f"[iter {idx}] loss={float(total_loss.detach().cpu()):.6f}")
         total_loss.backward()
@@ -385,10 +364,6 @@ def refine_latents(
         f.write(f"SDF calculation time: {sdf_init_time:.2f} seconds\n")
         f.write(f"Total optimization time for  {num_iters} iterations: {optimization_time:.2f} seconds\n")
 
-
-        
-
-    
 
 def main():
     parser = argparse.ArgumentParser()

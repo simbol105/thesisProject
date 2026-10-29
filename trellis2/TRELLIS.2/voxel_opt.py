@@ -34,7 +34,6 @@ import o_voxel
 from o_voxel import postprocess
 
 
-
 def _load_json(path: Path) -> Dict:
     with open(path, "r") as f:
         return json.load(f)
@@ -168,7 +167,6 @@ def softplus_inverse(y):
     return y + torch.log(-torch.expm1(-y))
 
 
-
 def refine_latents(
     yaml_config_path: Path,
 ):
@@ -299,7 +297,6 @@ def refine_latents(
     faces = mesh_.faces.long().cpu()
     
 
-    
     voxel_indices, dual_vertices, intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
         vertices=torch.tensor(mesh.vertices, dtype=torch.float32),
         faces=torch.tensor(mesh.faces, dtype=torch.float32), 
@@ -347,7 +344,6 @@ def refine_latents(
     quad_lerp = torch.nn.functional.softplus(torch.ones_like(dual_vertices[:, :1]) * 0.1)
     
 
-    
     base_color = attributes['base_color'].float() / 255.0
 
     intersected_f = intersected.float() / 7.0
@@ -366,26 +362,6 @@ def refine_latents(
         coords=torch.cat([torch.zeros_like(voxel_indices[:, 0:1]), voxel_indices], dim=-1) 
     ).to(device=device)
     
-
-   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-      
-    
-
-
-
-
-
 
     optimizer = torch.optim.Adam([h_feats], lr = lr)
     
@@ -416,18 +392,6 @@ def refine_latents(
         )  
         
      
-
-        
-        
-
-         
-        
-        
-        
-        
-        
-        
-        
         mesh = Mesh(mesh_verts, mesh_faces, vertex_attrs=color.contiguous())
         
         indices = (
@@ -485,70 +449,6 @@ def refine_latents(
         optimizer.step()
     
     
-    
-    
-    
-
-
-
-        
-        
-
-        
-
-        
-        
-        
-    
-
-        
-        
-              
-            
-            
-           
-           
-           
-
-      
-           
-
-            
-
-     
-            
-           
-
-
-             
-
-            
-                
-                
-               
-                
-
-
-     
-
-        
-      
-        
-
-     
-
-
-
-
-
-        
-
-        
-        
-
-
-
-
 def main():
     parser = argparse.ArgumentParser()
     

@@ -23,23 +23,6 @@ from pathlib import Path
 from typing import List
 import numpy as np
 
-'''
-TODO: Steps in my optimization loop
-1. Use a random image from the dataset and run the trellis pipeline on it to get the latent representation 
-2. Decode the latent to mesh, render the mesh to image using the same camera parameters as the reference image, 
-3. Compute the image loss between the rendered image and the reference image, like nvdiffrec loss
-4. Backpropagate to update the latent representation. 
-5. Repeat 2-4 until convergence. 
-'''
-'''
-config should contain, path to the train dataset with configuration similar to nvdiffrecmc, 
-and 
-yaml config {
-    "lr": 1e-3,
-    "num_iters": 500,
-    "envmap_path": "path/to/envmap.exr"
-    }
-'''
 def optimize(config_path: Path, config_yaml: dict)-> List[MeshWithVoxel]: 
     assert config_path.exists(), f"Config file {config_path} does not exist."
     with open(config_path, 'r') as f:
@@ -137,8 +120,6 @@ def optimize(config_path: Path, config_yaml: dict)-> List[MeshWithVoxel]:
             loss.backward()
            
            
-       
-        
             optimizer.step()
 
     

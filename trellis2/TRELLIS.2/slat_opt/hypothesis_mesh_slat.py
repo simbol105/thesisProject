@@ -1,6 +1,4 @@
-"""TRELLIS.2 SLAT (and o-voxel) optimization starting from an existing reconstruction
-(RecGen / SAM3D / TRELLIS / TRELLIS.2), the TRELLIS.2 counterpart of trellis1/TRELLIS/slat_opt.
-"""
+"""TRELLIS.2 SLAT (and o-voxel) optimization starting from an existing reconstruction"""
 import sys
 from pathlib import Path
 

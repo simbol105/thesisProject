@@ -1,6 +1,6 @@
 # Appendix: benchmark tables
 
-All scores come from the Stanford-ORB metric code applied to the DTC objects, on 8 held-out test views per object, one run per method and object. Chamfer is the bidirectional squared chamfer in ORB's scale (x2e-3); normal is 1-cos; depth is scale-invariant MSE; PSNR, SSIM and LPIPS follow ORB. Lower is better for chamfer, normal, depth and LPIPS; higher for PSNR and SSIM. `--` marks a run that does not exist.
+Stanford-ORB scores on 8 test views per object; lower is better for chamfer, normal, depth and LPIPS; `--` marks a missing run.
 
 ## A.1 Objects
 
@@ -139,7 +139,7 @@ All scores come from the Stanford-ORB metric code applied to the DTC objects, on
 | &nbsp;&nbsp;+ o-voxel (T2) | 0.0199 | 0.1790 | 0.0008 | 30.87 | 25.79 | 0.0526 | 6 |
 | *nvdiffrec (reference)* | 0.0359 | 0.1798 | 0.0011 | 30.40 | 36.80 | 0.0234 | 6 |
 
-`RecGen + SLAT (T2)` is missing Cup (the run ran out of GPU memory), so its mean is over 5 objects. Against the baseline restricted to those same 5:
+`RecGen + SLAT (T2)` is missing Cup (out of GPU memory); baseline on the same 5 objects:
 
 | method | chamfer (x2e-3) | normal (1-cos) | depth SI-MSE | albedo PSNR |
 |---|---|---|---|---|
@@ -306,8 +306,6 @@ All scores come from the Stanford-ORB metric code applied to the DTC objects, on
 
 ## A.6 Chamfer in millimetres: encoding cost against optimization gain
 
-Each run's own chamfer (world frame, 50k sampled points), separating the encode/decode round trip from the optimization. TRELLIS.2 runs do not record the source mesh separately.
-
 | variable | source | object | source mesh | after encode/decode | after optimization |
 |---|---|---|---|---|---|
 | SLAT (T1) | RecGen | Birdhouse | 2.63 | 2.51 | 1.80 |
@@ -430,8 +428,6 @@ Each run's own chamfer (world frame, 50k sampled points), separating the encode/
 
 ## A.7 TRELLIS.2: topology and gate changes per run
 
-Components and Euler characteristic of the extracted mesh before and after optimization, with the number of voxels added or removed at the final decoder level and the number of quad flags flipped.
-
 | variable | source | object | comp. init | comp. final | Euler init | Euler final | voxels + | voxels - | quad flips |
 |---|---|---|---|---|---|---|---|---|---|
 | SLAT (T2) | RecGen | Birdhouse | 12 | 373 | -1,816 | -3,463 | 838,086 | 973,332 | 407,333 |
@@ -496,8 +492,6 @@ Components and Euler characteristic of the extracted mesh before and after optim
 | o-voxel (T2) | TRELLIS.2 | 6 | 8 | 8 | 0 |
 
 ## A.8 TRELLIS: connected components before and after optimization
-
-Measured on the exported world-frame meshes.
 
 | variable | source | object | comp. init | comp. final | faces init | faces final |
 |---|---|---|---|---|---|---|
@@ -565,7 +559,7 @@ Measured on the exported world-frame meshes.
 
 ## A.9 Decoder noise floor (TRELLIS.2 SLAT runs)
 
-The same latent decoded twice within one run, with bit-identical inputs: the gate changes reported in A.7 are therefore caused by the optimization, not by decoder non-determinism.
+The same latent decoded twice, so gate changes in A.7 are not decoder non-determinism.
 
 | source | object | voxels added | voxels removed | quad flips |
 |---|---|---|---|---|

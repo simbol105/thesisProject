@@ -68,7 +68,6 @@ def _intrinsics_to_projection_fixed(
 mesh_renderer_module.intrinsics_to_projection = _intrinsics_to_projection_fixed
 
 
-
 def load_uco3d(data_dir: Path, convention: str, mask_threshold: float) -> Dict:
     meta = json.load(open(data_dir / "cameras.json", "r"))
     flip = CAMERA_CONVENTIONS[convention]
@@ -97,7 +96,6 @@ def load_uco3d(data_dir: Path, convention: str, mask_threshold: float) -> Dict:
         "split": split,
         "aabb": meta.get("aabb"),
     }
-
 
 
 def dilate_masks(masks: torch.Tensor, radius: int) -> torch.Tensor:
@@ -266,7 +264,6 @@ def build_hull_structure(data: Dict, extr_n: np.ndarray, norm: Dict, cfg: Dict, 
     return torch.cat([torch.zeros_like(coords[:, :1]), coords], dim=1).to(device)
 
 
-
 def crop_box(points_n: np.ndarray, w2c_n: np.ndarray, K: np.ndarray, margin: float) -> Tuple[int, int, int]:
     pc = points_n @ w2c_n[:3, :3].T + w2c_n[:3, 3]
     uv = pc[:, :2] / pc[:, 2:] * np.array([K[0, 0], K[1, 1]]) + np.array([K[0, 2], K[1, 2]])
@@ -313,7 +310,6 @@ def build_views(data: Dict, extr_n: np.ndarray, coords: torch.Tensor, margin: fl
     }
 
 
-
 @torch.no_grad()
 def encode_slat_from_views(
     coords: torch.Tensor,
@@ -355,7 +351,6 @@ def flow_slat_from_prompt(
     cond = pipeline.get_cond([pipeline.preprocess_image(prompt)])
     torch.manual_seed(seed)
     return pipeline.sample_slat(cond, coords, sampler_params)
-
 
 
 def render(renderer: MeshRenderer, mesh: MeshExtractResult, extr, intr, types,
@@ -411,9 +406,8 @@ def evaluate(renderer, mesh, views, view_ids, out_path_fmt: Optional[str]) -> Di
     return {"psnr": float(np.mean(psnrs)), "mask_iou": float(np.mean(ious))}
 
 
-
 def transform_mesh(mesh: MeshExtractResult, A: torch.Tensor) -> MeshExtractResult:
-    """Similarity A [4, 4] (uniform scale allowed) on the vertices, differentiable. Rebuilt rather"""
+    """Similarity A [4, 4] (uniform scale allowed) on the vertices, differentiable."""
     out = MeshExtractResult(
         vertices=mesh.vertices @ A[:3, :3].T + A[:3, 3],
         faces=mesh.faces,
@@ -539,7 +533,6 @@ def estimate_alignment(
     return compose().detach()
 
 
-
 def prepare(cfg: Dict, device) -> Tuple[Dict, Dict, torch.Tensor, Dict]:
     data_dir = Path(cfg["data_dir"])
     assert (data_dir / "cameras.json").exists(), f"No cameras.json in {data_dir}"
@@ -555,7 +548,7 @@ def prepare(cfg: Dict, device) -> Tuple[Dict, Dict, torch.Tensor, Dict]:
 
 
 def check(cfg: Dict, out_dir: Path, device):
-    """Cameras / hull / crops only -- no models. Quick enough for a login or dev node."""
+    """Cameras / hull / crops only -- no models."""
     data, norm, coords, views = prepare(cfg, device)
     check_dir = out_dir / "check"
     check_dir.mkdir(parents=True, exist_ok=True)

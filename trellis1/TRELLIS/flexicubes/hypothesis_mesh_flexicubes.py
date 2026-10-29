@@ -1,27 +1,4 @@
-"""
-Direct FlexiCubes optimization of a reconstructed mesh -- no TRELLIS decoder in the loop.
-
-This is the trellis1 / FlexiCubes counterpart of
-trellis2/TRELLIS.2/hypothesis_trellis_init.py, which takes the initial mesh, converts it to an
-SDF on a DMTet grid and optimizes (sdf, deform) directly. Here:
-
-    recgen / SAM3D mesh
-      -> SDF on the (res+1)^3 cube grid            (Sparc3D-style UDF + exterior flood fill)
-      -> nn.Parameter sdf / deform / weight / colour
-      -> FlexiCubes                                -> mesh
-      -> MeshRenderer vs. the DTC GT mesh          -> backprop into those parameters
-
-It is the ablation partner of cubefeats/hypothesis_mesh_cubefeats.py: same objects, same
-alignment, same cameras, same losses, same metrics and the same FlexiCubes extractor on the
-same grid -- the only difference is that here sdf/deform/weights are free parameters seeded
-from the mesh, whereas there they are produced by the SLAT mesh decoder from an encoded SLAT.
-Nothing in this script loads a TRELLIS model.
-
-Usage
------
-    python flexicubes/hypothesis_mesh_flexicubes.py --yaml-config flexicubes_configs/<obj>.yaml --check
-    sbatch flexicubes/run_flexicubes.sh flexicubes_configs/<obj>.yaml [--mesh-source sam3d]
-"""
+"""Direct FlexiCubes optimization of a reconstructed mesh -- no TRELLIS decoder in the loop."""
 
 import os
 
@@ -48,8 +25,7 @@ from PIL import Image
 from trellis.renderers.mesh_renderer import MeshRenderer
 from opt_utils.utility import save_image
 
-# Everything shared with the cubefeats run is imported, not copied, so the two runs cannot
-# drift apart in their losses, alignment, metrics or output layout.
+# Everything shared with the cubefeats run is imported
 from cubefeats.hypothesis_mesh_cubefeats import (
     RES,
     _load_json,

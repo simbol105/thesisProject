@@ -19,11 +19,8 @@ DEFAULT_CONFIG_DIR = REPO_ROOT / "cubefeats_opt_configs"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "optimization_output" / "cubefeats_opt"
 
 CUBEFEATS_BLOCK = """\
-optimize: cubefeats                     # the 101-channel decoder output @ 256^3 (sdf 8 | deform 24 |
-                                        #   flexicubes weights 21 | color 48), the transformer and
-                                        #   upsampling run once, only flexicubes is in the graph
-cubefeats_sdf_voxel_units: true         # optimize the SDF channels in voxel units (the rest is
-                                        #   already O(1)), so a single lr fits every channel
+optimize: cubefeats                     # the 101-channel decoder output @ 256^3
+cubefeats_sdf_voxel_units: true         # optimize the SDF channels in voxel units
 """
 
 

@@ -88,11 +88,7 @@ def dataset_objects() -> list:
 
 
 def resolve_objects(names) -> list:
-    """CLI object names -> DTC directory names.
-
-    Accepts a short name (birdhouse), a full directory name, a unique case-insensitive prefix or
-    substring of one, 'all' (the six thesis objects) or 'all-dataset' (everything available).
-    """
+    """CLI object names -> DTC directory names."""
     if not names:
         return list(THESIS_OBJECTS.values())
     available = dataset_objects()

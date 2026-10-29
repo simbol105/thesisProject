@@ -1,6 +1,4 @@
-"""Encode any mesh (RecGen / SAM3D / TRELLIS / TRELLIS.2 output) into TRELLIS.2 shape + texture SLATs,
-through the o-voxel (flexible dual grid), exactly as TRELLIS.2's own data pipeline does
-"""
+"""Encode any mesh (RecGen / SAM3D / TRELLIS / TRELLIS.2 output) into TRELLIS.2 shape + texture SLATs"""
 import sys
 from pathlib import Path
 
@@ -24,7 +22,6 @@ from trellis2.modules.sparse import SparseTensor
 SHAPE_ENC = "microsoft/TRELLIS.2-4B/ckpts/shape_enc_next_dc_f16c32_fp16"
 TEX_ENC = "microsoft/TRELLIS.2-4B/ckpts/tex_enc_next_dc_f16c32_fp16"
 AABB = [[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]]
-
 
 
 def load_normalized(path: Path):
@@ -60,7 +57,6 @@ def sample_colors(tm: trimesh.Trimesh, n: int, seed: int = 0):
         except Exception:
             colors = np.full((n, 3), 0.8)
     return points, np.clip(colors, 0, 1)
-
 
 
 def mesh_to_ovoxel(tm: trimesh.Trimesh, res: int):
@@ -101,7 +97,6 @@ def pbr_voxels(tm: trimesh.Trimesh, coords: torch.Tensor, res: int, samples_per_
         base[empty] = colors[nn]
     attrs = np.concatenate([base, np.zeros((len(c), 1)), np.ones((len(c), 1)), np.ones((len(c), 1))], 1)
     return torch.from_numpy(attrs).float(), float(empty.mean())
-
 
 
 @torch.no_grad()

@@ -1,4 +1,4 @@
-"""Write one SLAT-optimization YAML per DTC object, pointing at the generative outputs of one prompt set."""
+"""Write one SLAT-optimization YAML per DTC object"""
 
 import argparse
 import json
@@ -27,26 +27,15 @@ THESIS_OBJECTS = [
 
 TEMPLATE = """\
 # SLAT optimization for {category}
-#
-#   mesh (recgen / SAM3D / TRELLIS) -> 64^3 voxels -> DINOv2 feats -> SLAT encoder -> SLAT
-#   -> [optimized] -> mesh decoder -> flexicubes -> renders vs. the GT -> backprop into the SLAT
-#
-#   sanity check (minutes):  python slat_opt/hypothesis_mesh_slat.py --yaml-config {config_name} --check
-#   run:                     python slat_opt/hypothesis_mesh_slat.py --yaml-config {config_name} --mesh-source recgen   (or sam3d / trellis / trellis2)
-#   every object:            python slat_opt/run_all_slat_opt.py --mesh-source recgen
 
 category: "{category}"
 data_dir: "{data_dir}"
 gt_mesh: "{gt_mesh}"
 
 # --- what is optimized ------------------------------------------------------------------------
-optimize: slat                          # slat: the 8-channel SLAT feats (normalized), decoded every
-                                        #   iteration by the full mesh decoder
-                                        # cubefeats: the 101-channel decoder output @ 256^3 (the old
-                                        #   cubefeats hypothesis, flexicubes only in the graph)
+optimize: slat                          # slat: the 8-channel SLAT feats (normalized)
 
 # --- the reconstruction the SLAT is encoded from -------------------------------------------
-# the meshes benchmark/run_all.py generated from prompt set "{tag}" ({prompt_image}, training frame {prompt_idx})
 mesh_source: recgen                     # recgen | sam3d | trellis | trellis2   (CLI --mesh-source wins)
 recgen_mesh_path: "{recgen_mesh}"
 sam3d_mesh_path: "{sam3d_mesh}"
@@ -55,23 +44,18 @@ trellis2_mesh_path: "{trellis2_mesh}"
 prompt_image: "{prompt_image}"
 prompt_idx: {prompt_idx}
 normalize_mesh: true                    # re-fit the mesh to [-0.5, 0.5]^3 before voxelizing
-fill_interior: false                    # true = flood-fill the interior (off-distribution for
-                                        # the decoder, which was trained on surface shells)
+fill_interior: false                    # true = flood-fill the interior
 
 # --- mesh -> SLAT --------------------------------------------------------------------------
-feature_cameras: trellis                # trellis: TRELLIS' own training rig (sphere Hammersley
-                                        #   views, radius 2, fov 40 deg) in the mesh frame
-                                        # dataset: the DTC cameras (in the mesh frame)
+feature_cameras: trellis                # trellis: TRELLIS' own training rig
 feature_source: render                  # render: DINOv2 on renders of the source mesh
-                                        # dataset: DINOv2 on the GT photos (needs feature_cameras: dataset)
 feature_views: 150
 dino_batch: 8
 encoder_ckpt: "microsoft/TRELLIS-image-large/ckpts/slat_enc_swin8_B_64l8_fp16"
 model_name: "microsoft/TRELLIS-image-large"
 
 # --- mesh frame -> dataset world frame ------------------------------------------------------
-alignment: search                       # search: 24 axis rotations + ICP with scale, picked by
-                                        #   silhouette IoU | ransac | similarity | bbox | identity
+alignment: search                       # search: 24 axis rotations + ICP with scale
 align_iou_views: 16
 align_top_k: 4
 alignment_path: ""                      # a saved alignment.npy skips the estimation

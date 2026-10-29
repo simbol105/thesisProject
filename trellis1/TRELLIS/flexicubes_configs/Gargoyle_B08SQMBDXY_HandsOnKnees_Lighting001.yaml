@@ -1,14 +1,4 @@
 # FlexiCubes optimization for Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001
-#
-#   mesh (recgen / SAM3D) -> SDF on a 128^3 cube grid -> free sdf/deform/weight/colour
-#   -> FlexiCubes -> renders vs. the DTC GT mesh -> backprop. No TRELLIS model is loaded.
-#
-#   This is the ablation partner of cubefeats_configs/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001.yaml: same object, alignment,
-#   cameras, losses and metrics -- only the parameterization differs.
-#
-#   sanity check (minutes):  python flexicubes/hypothesis_mesh_flexicubes.py --yaml-config cubefeats_configs/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001.yaml --check
-#   run:                     sbatch flexicubes/run_flexicubes.sh cubefeats_configs/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001.yaml
-#   run on the SAM3D mesh:   sbatch flexicubes/run_flexicubes.sh cubefeats_configs/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001.yaml --mesh-source sam3d
 
 category: "Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001"
 data_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001"
@@ -23,24 +13,13 @@ normalize_mesh: true                    # re-fit the mesh to [-0.5, 0.5]^3 befor
 # --- mesh -> SDF ------------------------------------------------------------------------------
 grid_res: 128                            # FlexiCubes grid; params scale as res^3
 sdf_init: floodfill                     # floodfill: unsigned distance + exterior flood fill
-                                        #   (the Sparc3D algorithm). The recgen/SAM3D meshes are
-                                        #   NOT watertight, so this is the only sign test that
-                                        #   recovers a solid: measured on Birdhouse it puts
-                                        #   18.9% of the grid inside vs 6.8% for raycast
-                                        #   (the DTC GT mesh is 24.1%).
-                                        # raycast:  open3d closest-triangle-normal signed distance
-                                        # sparc3d:  the exact backend the trellis2 DMTet run uses
-                                        #   (needs sparc3d_path and kaolin on a GPU)
-sdf_tau_scale: 1.0                      # flood fill keeps cells further than
-                                        #   tau_scale * sqrt(3)/(2*res) from the surface
-# sparc3d_path: "/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/third_parties/Sparc3Dsdf/src"
+sdf_tau_scale: 1.0
 
 optimize_weights: true                  # FlexiCubes' 21 dual weights per cube
 optimize_color: true                    # per-grid-vertex colour (sigmoid inside FlexiCubes)
 
 # --- mesh frame -> dataset world frame ------------------------------------------------------
-alignment: ransac                       # ransac | similarity | bbox | identity
-                                        # folded into the cameras, never applied to the grid
+alignment: ransac
 
 # --- rendering -------------------------------------------------------------------------------
 near: 0.01
@@ -49,8 +28,7 @@ ssaa: 1
 
 # --- optimization ------------------------------------------------------------------------------
 optimizer: adam                         # adam | sgd
-lr: 1e-2                                # an SDF in world units, not a latent: much smaller than
-                                        #   the cubefeats lr
+lr: 1e-2                                # an SDF in world units, not a latent
 num_iters: 500
 frames_per_iter: 10
 seed: 1

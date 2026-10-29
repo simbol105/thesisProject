@@ -1,8 +1,6 @@
 # ---- assistant config, private notes, scratch -----------------------------------------------
 miscellaneous/
-.claude/
 .vscode/
-CLAUDE.md
 
 # ---- data, weights, caches -------------------------------------------------------------------
 dataset/

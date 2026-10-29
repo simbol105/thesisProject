@@ -6,8 +6,7 @@
 #SBATCH --job-name=slat_opt_batch
 #SBATCH --output=slat_opt_batch_%j.out
 
-# SLAT optimization for every object, from the generative meshes of benchmark/run_all.py
-# (generative_runs/<tag>/<source>/, configs in slat_opt_configs/).
+# SLAT optimization for every object
 
 set -uo pipefail
 

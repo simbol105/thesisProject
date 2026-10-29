@@ -56,7 +56,6 @@ def _patch_flex_gemm_frozen_weights() -> None:
 _patch_flex_gemm_frozen_weights()
 
 
-
 def _try_image_path(base_path_no_ext: Path) -> Path:
     for ext in [".png", ".jpg", ".jpeg", ".webp"]:
         cand = base_path_no_ext.with_suffix(ext)
@@ -103,7 +102,6 @@ def make_renderer(cfg: Dict, device) -> MeshRenderer:
         "resolution": RENDER_RES, "near": float(cfg.get("near", 0.01)),
         "far": float(cfg.get("far", 100.0)), "ssaa": 1,
     }, device=device.type)
-
 
 
 def _proper_rotations_24() -> List[np.ndarray]:
@@ -194,7 +192,6 @@ def to_model_frame(A: np.ndarray, gt_world: Mesh, extrinsics_world: torch.Tensor
     return gt, extr
 
 
-
 def decode_shape_raw(pipeline, shape_slat, resolution: int):
     """Raw decoder output h [N, 7] @ `resolution` and the (hard) subdivision logits per level."""
     decoder = pipeline.models['shape_slat_decoder']
@@ -216,7 +213,6 @@ def ovoxel_to_mesh(coords: torch.Tensor, h_feats: torch.Tensor, resolution: int,
 def with_texture(vertices, faces, tex_coords, tex_attrs, tex_shape, resolution, layout) -> MeshWithVoxel:
     return MeshWithVoxel(vertices, faces, origin=[-0.5, -0.5, -0.5], voxel_size=1.0 / resolution,
                          coords=tex_coords, attrs=tex_attrs, voxel_shape=tex_shape, layout=layout)
-
 
 
 def _perceptual(a: torch.Tensor, b: torch.Tensor, lambda_ssim: float, lambda_lpips: float) -> torch.Tensor:
@@ -268,7 +264,6 @@ def grad_wrt(loss: torch.Tensor, tensors: Dict[str, torch.Tensor], scale: float 
     return out
 
 
-
 def topology_stats(vertices: torch.Tensor, faces: torch.Tensor) -> Dict[str, float]:
     """Topology of a triangle mesh after welding coincident vertices."""
     v = vertices.detach().float().cpu().numpy()
@@ -312,7 +307,6 @@ def gate_changes(coords0, inter0, coords1, inter1, res: int) -> Dict[str, int]:
 def logit_margin(logits: torch.Tensor, band: float = 0.5) -> float:
     """Fraction of gate logits within `band` of the threshold (how close gates are to flipping)."""
     return (logits.abs() < band).float().mean().item()
-
 
 
 @torch.no_grad()
@@ -382,7 +376,6 @@ def export_mesh(mesh, path: Path, A: Optional[np.ndarray] = None):
 def append_jsonl(path: Path, record: Dict):
     with open(path, "a") as f:
         f.write(json.dumps(record) + "\n")
-
 
 
 def load_pipeline(cfg: Dict):

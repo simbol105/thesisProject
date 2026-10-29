@@ -34,7 +34,6 @@ import o_voxel
 from o_voxel import postprocess
 
 
-
 RES = 512
 
 
@@ -167,7 +166,6 @@ def _decode_latent_differentiable(
             )
         )
     return out_mesh
-
 
 
 def refine_ovoxel(
@@ -324,7 +322,6 @@ def refine_ovoxel(
     })
     
     
-    
     orig_img = Image.open(image_paths[prompt_idx])
     orig_w, orig_h = orig_img.size
     intr_scaled = _scale_opencv_intrinsics(intr, (orig_w, orig_h), RES).to(device=device)
@@ -333,10 +330,6 @@ def refine_ovoxel(
     for f in frames:
         extrinsics.append(torch.tensor(f["transform_matrix"], dtype=torch.float32))
         
-    '''
-    If we need to align mesh later, 
-    It will be done here. 
-    '''
     criterion = nn.MSELoss(reduction='mean') 
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
     ref_images   = torch.stack(
@@ -422,7 +415,6 @@ def refine_ovoxel(
         optimizer.step()
         
 
-        
     print("Finished optimization...")
     with torch.no_grad():
         h_opt = h.replace(feats = h_feats)
@@ -459,7 +451,6 @@ def refine_ovoxel(
         )
 
 
-
         glb = o_voxel.postprocess.to_glb(
         vertices            =   final_mesh.vertices,
         faces               =   final_mesh.faces,
@@ -480,11 +471,6 @@ def refine_ovoxel(
     print(f"Finish optimization, mesh exported to {output_glb_path}")
 
     
-
-
-
-
-
 def main():
     parser = argparse.ArgumentParser(description="Refine Trellis latents, using image loss point renderer. ")
     

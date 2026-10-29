@@ -1,12 +1,4 @@
-"""Minimal stand-in for `pyexr` (not installed in the trellis2 env), backed by OpenCV's EXR codec.
-
-Stanford-ORB only uses `pyexr.open(path).get()`, which returns an H x W x C float32 array in RGB(A)
-channel order. OpenCV reads BGR(A), so the channels are reordered here.
-
-Limitation: OpenCV only decodes R/G/B/A/Y channels. EXRs with other channel names (e.g. nvdiffrec's
-depth maps, a single "Z" channel) read as all zeros. The benchmark only reads EXRs it wrote itself
-(RGB or single-channel), so this does not affect it.
-"""
+"""Minimal stand-in for `pyexr` (not installed in the trellis2 env), backed by OpenCV's EXR codec."""
 import os
 
 os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")

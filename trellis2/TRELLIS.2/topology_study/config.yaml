@@ -1,9 +1,4 @@
 # TRELLIS.2 topology check: SLAT refinement and o-voxel refinement from the same starting point.
-#
-#   python topology_study/run_both.py --yaml-config topology_study/config.yaml
-#
-# Both scripts share <out_root>/init_state.pt (latents from pipeline.run + the alignment); pass
-# --regenerate to sample again.
 
 data_dir: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001"
 gt_mesh: "/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001/model.glb"

@@ -1,8 +1,4 @@
 # Prompt image per object for benchmark/run_all.py (one training image, used by every method).
-# Pick views from the contact sheets in benchmark/prompt_candidates/<object>.jpg.
-# tag names the run: outputs go to generative_runs/<tag>/ and benchmark_output/<method>_<tag>/.
-# Changing an image later: rerun with --overwrite (or delete that object's folder), since existing
-# outputs are skipped.
 tag: v2
 
 prompts:

@@ -1,6 +1,4 @@
-"""Write one TRELLIS.2 SLAT-optimization YAML per DTC object, pointing at the generative outputs of one
-prompt set (generative_runs/<tag>/{recgen,sam3d,trellis,trellis2}/<obj>/, from benchmark/run_all.py).
-"""
+"""Write one TRELLIS.2 SLAT-optimization YAML per DTC object"""
 import argparse
 from pathlib import Path
 
@@ -15,13 +13,6 @@ MESH_FILES = {"recgen": "mesh.obj", "sam3d": "mesh.glb", "trellis": "mesh.glb", 
 
 TEMPLATE = """\
 # TRELLIS.2 SLAT / o-voxel optimization for {category}
-#
-#   mesh -> o-voxel + PBR voxels -> TRELLIS.2 encoders -> shape + texture SLAT
-#   -> topology_study/slat_refinement.py (SLATs through the decoders) and/or ovoxel_refinement.py
-#
-#   check (encode + round trip): python slat_opt/hypothesis_mesh_slat.py --yaml-config {config_name} --mesh-source recgen --check
-#   run:                         python slat_opt/hypothesis_mesh_slat.py --yaml-config {config_name} --mesh-source recgen
-#   every object:                python slat_opt/run_all_slat_opt.py --mesh-source recgen
 
 category: "{category}"
 data_dir: "{data_dir}"

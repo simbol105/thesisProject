@@ -1,9 +1,4 @@
-"""Write one FlexiCubes-optimization YAML per DTC object (recgen + SAM3D mesh paths in each).
-
-    python flexicubes/generate_flexicubes_configs.py              # the six thesis objects
-    python flexicubes/generate_flexicubes_configs.py --all        # every object under dataset/DTC
-    python flexicubes/generate_flexicubes_configs.py --objects Cup_B08TWHJ33Q_Tan_Lighting001
-"""
+"""Write one FlexiCubes-optimization YAML per DTC object (recgen + SAM3D mesh paths in each)."""
 
 import argparse
 from pathlib import Path
@@ -29,16 +24,6 @@ THESIS_OBJECTS = [
 
 TEMPLATE = """\
 # FlexiCubes optimization for {category}
-#
-#   mesh (recgen / SAM3D) -> SDF on a {grid_res}^3 cube grid -> free sdf/deform/weight/colour
-#   -> FlexiCubes -> renders vs. the DTC GT mesh -> backprop. No TRELLIS model is loaded.
-#
-#   This is the ablation partner of cubefeats_configs/{category}.yaml: same object, alignment,
-#   cameras, losses and metrics -- only the parameterization differs.
-#
-#   sanity check (minutes):  python flexicubes/hypothesis_mesh_flexicubes.py --yaml-config {config_name} --check
-#   run:                     sbatch flexicubes/run_flexicubes.sh {config_name}
-#   run on the SAM3D mesh:   sbatch flexicubes/run_flexicubes.sh {config_name} --mesh-source sam3d
 
 category: "{category}"
 data_dir: "{data_dir}"
@@ -53,24 +38,13 @@ normalize_mesh: true                    # re-fit the mesh to [-0.5, 0.5]^3 befor
 # --- mesh -> SDF ------------------------------------------------------------------------------
 grid_res: {grid_res}                            # FlexiCubes grid; params scale as res^3
 sdf_init: floodfill                     # floodfill: unsigned distance + exterior flood fill
-                                        #   (the Sparc3D algorithm). The recgen/SAM3D meshes are
-                                        #   NOT watertight, so this is the only sign test that
-                                        #   recovers a solid: measured on Birdhouse it puts
-                                        #   18.9% of the grid inside vs 6.8% for raycast
-                                        #   (the DTC GT mesh is 24.1%).
-                                        # raycast:  open3d closest-triangle-normal signed distance
-                                        # sparc3d:  the exact backend the trellis2 DMTet run uses
-                                        #   (needs sparc3d_path and kaolin on a GPU)
-sdf_tau_scale: 1.0                      # flood fill keeps cells further than
-                                        #   tau_scale * sqrt(3)/(2*res) from the surface
-# sparc3d_path: "/home/fr/fr_fr/fr_ba122/projects/trellis2/TRELLIS.2/third_parties/Sparc3Dsdf/src"
+sdf_tau_scale: 1.0
 
 optimize_weights: true                  # FlexiCubes' 21 dual weights per cube
 optimize_color: true                    # per-grid-vertex colour (sigmoid inside FlexiCubes)
 
 # --- mesh frame -> dataset world frame ------------------------------------------------------
-alignment: ransac                       # ransac | similarity | bbox | identity
-                                        # folded into the cameras, never applied to the grid
+alignment: ransac
 
 # --- rendering -------------------------------------------------------------------------------
 near: 0.01
@@ -79,8 +53,7 @@ ssaa: 1
 
 # --- optimization ------------------------------------------------------------------------------
 optimizer: adam                         # adam | sgd
-lr: 1e-2                                # an SDF in world units, not a latent: much smaller than
-                                        #   the cubefeats lr
+lr: 1e-2                                # an SDF in world units, not a latent
 num_iters: {num_iters}
 frames_per_iter: {frames_per_iter}
 seed: 1

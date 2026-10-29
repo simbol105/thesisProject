@@ -1,6 +1,4 @@
-"""Stanford-ORB benchmark on the DTC thesis objects, for RecGen, SAM3D, nvdiffrec (+FlexiCubes) and
-any other method that produces a mesh.
-"""
+"""Stanford-ORB benchmark on the DTC thesis objects"""
 import os
 
 os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")
@@ -47,7 +45,6 @@ METHODS: Dict[str, Dict] = {
         "albedo": lambda obj, i: NVDIFFREC_OUT / obj / "validate" / f"val_{i:06d}_kd.png",
     },
 }
-
 
 
 def srgb_to_linear(x: np.ndarray) -> np.ndarray:
@@ -104,7 +101,6 @@ def load_mesh_with_colors(path: Path):
     return np.asarray(tm.vertices, dtype=np.float64), np.asarray(tm.faces, dtype=np.int64), colors
 
 
-
 class Renderer:
     def __init__(self, near: float = 0.01, far: float = 100.0):
         import nvdiffrast.torch as dr
@@ -150,7 +146,6 @@ def to_torch_mesh(v: np.ndarray, f: np.ndarray, c: Optional[np.ndarray]):
     dev = torch.device("cuda")
     return (torch.tensor(v, dtype=torch.float32, device=dev), torch.tensor(f, dtype=torch.int64, device=dev),
             None if c is None else torch.tensor(c, dtype=torch.float32, device=dev))
-
 
 
 def _rotations_24() -> List[np.ndarray]:
@@ -212,7 +207,6 @@ def align_to_world(v: np.ndarray, f: np.ndarray, gt_world: trimesh.Trimesh, dtc:
               f"chamfer {c['chamfer'] * 1000:.2f} mm, silhouette IoU {c['iou']:.4f}")
     best = max(cands, key=lambda c: c["iou"])
     return {"A": best["A"], "iou": best["iou"], "chamfer_mm": best["chamfer"] * 1000}
-
 
 
 def gt_dir(out_root: Path, obj: str) -> Path:

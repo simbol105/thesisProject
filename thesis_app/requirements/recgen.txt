@@ -1,4 +1,1 @@
-# RecGen (conda env "recgen", CUDA 11.8). RecGen resolves its own dependencies with pixi;
-# the environment is created from its manifest rather than from a pip requirements file:
-#   cd third_party/recgen && pixi install
-# The CLI runs it as `pixi run python` inside that project (see thesis3d/runners.py).
+# RecGen (conda env "recgen", CUDA 11.8): cd third_party/recgen && pixi install

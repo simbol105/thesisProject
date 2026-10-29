@@ -3,8 +3,8 @@
 #SBATCH --partition=gpu_a100_il
 #SBATCH --time=02:00:00
 #SBATCH --ntasks=1
-#SBATCH --job-name=claude_slat_opt
-#SBATCH --output=claude_slat_opt_%j.out
+#SBATCH --job-name=slat_opt
+#SBATCH --output=slat_opt_%j.out
 
 # usage: sbatch scripts/run_slat_optimization.sh [config] [--out-dir DIR]
 set -euo pipefail

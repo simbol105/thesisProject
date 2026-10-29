@@ -15,7 +15,6 @@ raster_settings = PointsRasterizationSettings(
 )
 
 # 2. Instantiate PulsarPointsRenderer WITHOUT a compositor
-# n_channels defines the output (e.g., 4 for RGBA)
 renderer = PulsarPointsRenderer(
     rasterizer=PointsRasterizer(cameras=cameras, raster_settings=raster_settings),
     n_channels=4 
@@ -35,7 +34,6 @@ for step in range(100):
     point_cloud = Pointclouds(points=point_positions, features=point_features)
     
     # Forward Pass: Pulsar outputs the composed image array directly.
-    # 'gamma' dictates the blending sharpness parameters
     rendered_rgba = renderer(point_cloud, gamma=(1e-4,)) 
     
     loss = nn.functional.mse_loss(rendered_rgba[0, ..., :3], target_rgb_image)

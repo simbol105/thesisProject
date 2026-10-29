@@ -116,7 +116,7 @@ def tsdf_reg_loss(
     intrinsics: Union[torch.Tensor, List[torch.Tensor]],
     renderer: Optional[MeshRenderer] = None,
 ) -> torch.Tensor:
-    """Project the current optimization mesh's TSDF samples into the GT camera view,"""
+    """Project the current optimization mesh's TSDF samples into the GT camera view"""
     if isinstance(rep, (list, tuple)):
         if not isinstance(gt_mesh, (list, tuple)):
             gt_mesh = [gt_mesh] * len(rep)
@@ -234,7 +234,6 @@ def load_image(path):
     image = np.array(image)
     image = image.astype(np.uint8)
     return image
-
 
 
 def dilate_sparse_tensor(  
@@ -507,7 +506,6 @@ def refine_latent(config_path: Path):
     slat_decoder.to(device=device)
 
     
-
     slat = outputs['latent']
     mesh = outputs['mesh'][0]
     
@@ -516,12 +514,8 @@ def refine_latent(config_path: Path):
     print("Initial cubefeats coords size: ", cube_feats.coords.shape)
     
     
-    
     cube_feats_opts = nn.Parameter(cube_feats.feats.clone().detach())
     cube_feats_opts.requires_grad_(True)
-    
-    
-   
     
     
     extrinsics_t = torch.stack(extrinsics, dim=0).to(device=device)
@@ -549,7 +543,6 @@ def refine_latent(config_path: Path):
         )
 
 
-        
     else:
         print("No ground truth mesh provided, skipping alignment step.")
         alignment = torch.eye(4, device=device) 
@@ -560,19 +553,7 @@ def refine_latent(config_path: Path):
     l2_criterion = nn.MSELoss(reduction="mean")
      
     
-       
-        
     decoder = SparseFeatures2Mesh(res=DECODER_RES*4, use_color=True)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     if config_yaml.get("optimizer", "") == "sgd":
@@ -590,12 +571,9 @@ def refine_latent(config_path: Path):
         optimizer.zero_grad()
        
         
-        
-   
         x = cube_feats.replace(feats=cube_feats_opts)
   
         
-            
         mesh = decoder(x, training=True)
         
         reg_loss = mesh.reg_loss
@@ -667,7 +645,6 @@ def refine_latent(config_path: Path):
                 )
                 
                 
-
                 img_losses  += loss_terms["loss"]
             else:
                 ref_rgb = ref_images[idx][:3]
@@ -728,17 +705,11 @@ def refine_latent(config_path: Path):
             save_image(f"{test_out_dir}/test_{i:04d}.png", test_img_np)
 
 
-
-
-
         img_losses = img_losses / len(indices)
         tsdf_loss = tsdf_loss / len(indices)  
         total_loss = (sdf_weight * reg_loss) + (tsdf_weight * tsdf_loss) + (weight * img_losses)
         print(f"[Iter {i:03d}] Loss: {float(total_loss.detach().cpu()):.4f}")
 
-
-
-      
 
         total_loss.backward()
 
@@ -746,7 +717,6 @@ def refine_latent(config_path: Path):
         print("SLAT grad: ", cube_feats_opts.grad.norm().item())
         
 
-                            
         optimizer.step()
 
     with torch.no_grad():
@@ -783,16 +753,3 @@ if __name__ == "__main__":
     refine_latent(Path(args.yaml_config))
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
- 

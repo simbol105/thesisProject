@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import imageio
@@ -6,7 +5,7 @@ import torch
 import trimesh
 
 def transf3d(pts3d, transf4x4):
-    """Args:"""
+    """Apply a 4x4 homogeneous transform to points of shape [..., 3]."""
     device = pts3d.device
     dtype = pts3d.dtype
     transf4x4 = transf4x4.to(device)
@@ -126,7 +125,6 @@ def _parse_frame(self, cfg, idx):
         object_matrix = torch.tensor(cfg['object_pose'], dtype=torch.float32)
         
         
-   
         mv = mv @ object_matrix
 
         flip_zy = torch.diag(torch.tensor([1.0, -1.0, -1.0, 1.0], dtype=torch.float32))
@@ -140,12 +138,10 @@ def _parse_frame(self, cfg, idx):
         mv = mv @ S
 
         
-
         campos = torch.linalg.inv(mv)[:3, 3]   
         mvp    = proj @ mv
         
        
-
         return img[None, ...], mv[None, ...], mvp[None, ...], campos[None, ...]
 
 def normalize_matrix(M):
@@ -171,9 +167,6 @@ def push_camera_back(E, d):
     E_new = E.clone()
     E_new[:3, 3] = t_new
     return E_new
-
-
-
 
 
 def unwrap_mesh(mesh):
@@ -207,7 +200,7 @@ R_opengl_to_trellis = np.array([
 import numpy as np
 
 def kabsch_rotation(A, B):
-    """A, B: (N, 3) arrays of corresponding points"""
+    """Optimal rotation R (3x3) aligning corresponding points A -> B, both (N, 3) (Kabsch)."""
     Ac = A - A.mean(axis=0)
     Bc = B - B.mean(axis=0)
 
@@ -289,15 +282,6 @@ def normalize_custom(verts):
     return verts_norm, centroid, scale
 
 
-
-
-
-
-
-
-
-
-
 def normalize(mesh):
     mesh = mesh.copy()
     mesh.apply_translation(-mesh.centroid)
@@ -306,8 +290,6 @@ def normalize(mesh):
     return mesh
 
     
-    
-
 def compute_icp_alignment_transform(dtc_mesh, pred_mesh, simplify_target=10000, icp_iterations=50):
     """Compute robust ICP-based alignment transformation from predicted mesh to ground truth mesh."""
     device = pred_mesh.device if hasattr(pred_mesh, 'device') else torch.device('cpu')
@@ -432,9 +414,6 @@ def compute_simple_alignment_transform(dtc_mesh, pred_mesh):
     return torch.tensor(T, dtype=torch.float32, device=device)
  
 
-
-
-
 import torch.nn.functional as F
 from torch.autograd import Variable
 from math import exp
@@ -510,13 +489,6 @@ def normal_angle(pred, gt):
     return ang
 
 
-
-
-
-
-
-
-
 from scipy.spatial import cKDTree
 
 def align_meshes_pca(dtc_mesh, pred_mesh):
@@ -581,7 +553,6 @@ def align_meshes_ransac_icp(pred_mesh, dtc_mesh, voxel_size=0.05):
     target.points = o3d.utility.Vector3dVector(target_mesh.vertices)
     
     
-    
     source_down = source.voxel_down_sample(voxel_size)
     target_down = target.voxel_down_sample(voxel_size)
     
@@ -612,7 +583,6 @@ def align_meshes_ransac_icp(pred_mesh, dtc_mesh, voxel_size=0.05):
 
  
     return result_icp.transformation
-
 
 
 from scipy.spatial import cKDTree
@@ -731,598 +701,3 @@ def bake_extrinsic_intrinsic(
 
     return extr, baked_intr
 
-
-
-
-
-
-
-
-
-
-'''
-
-coords, data = o_voxel.io.read("ovoxel_helmet.vxz")
-position = (coords / RES - 0.5).cuda()
-base_color = (data['base_color'] / 255).cuda()
-
-# Render
-renderer = o_voxel.rasterize.VoxelRenderer(
-    rendering_options={"resolution": 512, "ssaa": 2}
-)
-output = renderer.render(
-    position=position,          # Voxel centers
-    attrs=base_color,           # Color/Opacity etc.
-    voxel_size=1.0/RES,
-    extrinsics=extr,
-    intrinsics=intr
-)
-
-
-
-
-ndc_min = -1
-            ndc_max = 1
-            height = int(imgs_sizes[0])
-            width = int(imgs_sizes[1])
-
-            cams_persp4x4 = cams_intr4x4.clone()
-            cams_persp4x4[:, 0, 2] = -cams_persp4x4[:, 0, 2]
-            cams_persp4x4[:, 1, 2] = -cams_persp4x4[:, 1, 2]
-            cams_persp4x4[:, 2, 2] = 0.0
-            cams_persp4x4[:, 2, 3] = 1.0
-            cams_persp4x4[:, 3, 2] = 1.0
-            cams_persp4x4[:, 3, 3] = 0.0
-
-            cams_persp4x4[:, 1, 2] = -(height + cams_persp4x4[:, 1, 2])
-            # top = height / 2
-            # bottom = -top
-            # right = width / 2
-            # left = -right
-
-            top = 0
-            bottom = max(height, 1)  # note: ensures no division by zero
-            right = max(width, 1)  # note: ensures no division by zero
-            left = 0
-
-            zfar = 10000  # (cams_tform4x4_obj[..., 2, 3].max()) * 10.
-
-            tx = -(right + left) / (right - left)
-            ty = -(top + bottom) / (top - bottom)
-
-            if ndc_min == -1 and ndc_max == 1:
-                U = -2.0 * znear * zfar / (zfar - znear)
-                V = -(zfar + znear) / (zfar - znear)
-            elif ndc_min == 0 and ndc_max == 1:
-                U = (znear * zfar) / (znear - zfar)
-                V = zfar / (zfar - znear)
-            elif ndc_min == 1 and ndc_max == 0:
-                U = (znear * zfar) / (zfar - znear)
-                V = znear / (zfar - znear)
-            else:
-                raise NotImplementedError(
-                    "Perspective Projection does not support NDC range of "
-                    f"[{ndc_min}, {ndc_max}]",
-                )
-
-            # The matrix is non differentiable, as NDC coordinates are a fixed standard set by the graphics api
-            ndc_mat = torch.Tensor(
-                [
-                    [2.0 / (right - left), 0.0, 0.0, -tx],
-                    [0.0, 2.0 / (top - bottom), 0.0, -ty],
-                    [0.0, 0.0, U, V],
-                    [0.0, 0.0, 0.0, -1.0],
-                ],
-            )[
-                None,
-            ].to(
-                device=device,
-            )
-
-            # Squash matrices together to form complete perspective projection matrix which maps to NDC coordinates
-            #
-            from od3d.cv.visual.show import OPEN3D_CAM_TFORM_CAM
-
-            cams_proj4x4 = (ndc_mat @ cams_persp4x4) @ (
-                    OPEN3D_CAM_TFORM_CAM.clone()[None,].to(device=device)
-                    @ cams_tform4x4_obj
-            )
-
-            verts, verts_counts = self.get_vert_mod_from_objs(
-                mod=VERT_MODALITIES.PT3D,
-                objs_ids=objects_ids,
-                instance_deform=instance_deform,
-                padded=True,
-            )
-            faces, faces_counts = self.get_face_mod_from_objs(
-                mod=FACE_MODALITIES.VERTS_IN_SCENES_ID,
-                objs_ids=objects_ids,
-                padded=True,
-            )
-            from od3d.cv.select import cumsum_w0
-
-            if objects_ids.dim() == 1:
-                scenes_faces_counts = faces_counts
-            elif objects_ids.dim() == 2:
-                scenes_faces_counts = faces_counts.sum(dim=-1)
-            else:
-                raise NotImplementedError
-
-            scenes_faces_counts_cumsum_w0 = cumsum_w0(scenes_faces_counts, dim=-1)
-
-            ranges = torch.stack(
-                [scenes_faces_counts_cumsum_w0, scenes_faces_counts],
-                dim=1,
-            )
-
-            if objects_ids.dim() == 1:
-                # 1x None for verts
-                if obj_tform4x4_objs is not None:
-                    cams_proj4x4 = cams_proj4x4[:, None] @ obj_tform4x4_objs
-                else:
-                    cams_proj4x4 = cams_proj4x4[:, None]
-                verts_cam = (cams_proj4x4 @ add_homog_dim(verts, dim=-1)[..., None])[
-                    ...,
-                    0,
-                ]
-            elif objects_ids.dim() == 2:
-                # 1x None for objects and 1x None for verts
-                if obj_tform4x4_objs is not None:
-                    if obj_tform4x4_objs.dim() == 3:
-                        cams_proj4x4 = (
-                            cams_proj4x4[:, None, None]
-                            @ obj_tform4x4_objs[None, :, None]
-                        )
-                        logger.info(
-                            "should not happen that obj_tform4x4_objs.dim() == 3",
-                        )
-                    elif obj_tform4x4_objs.dim() == 4:
-                        cams_proj4x4 = (
-                            cams_proj4x4[:, None, None] @ obj_tform4x4_objs[:, :, None]
-                        )
-                    else:
-                        msg = f"not implemented for obj_tform4x4_objs.dim(): {obj_tform4x4_objs.dim()}"
-                        raise NotImplementedError(msg)
-                else:
-                    cams_proj4x4 = cams_proj4x4[:, None, None]
-                verts_cam = (cams_proj4x4 @ add_homog_dim(verts, dim=-1)[..., None])[
-                    ...,
-                    0,
-                ]
-
-            verts_cam = self.unpad_mod(objs_mod=verts_cam, objs_lengths=verts_counts)
-            faces = self.unpad_mod(objs_mod=faces, objs_lengths=faces_counts)
-
-            ranges = ranges.to(torch.int32)
-            faces = faces.to(torch.int32)
-
-            # verts_cam_new = verts_cam.clone()
-            # faces_new = faces.clone()
-            # ranges_new = ranges.clone()
-            # TODO: doublecheck if the right faces are put together in the ranges?
-            #
-            # verts = self.get_verts_stacked_with_mesh_ids(mesh_ids=objects_ids[0], instance_deform=instance_deform).clone()
-            # if detach_objects:
-            #     verts = verts.detach()
-            # if instance_deform is not None:
-            #     for b, object_id in enumerate(objects_ids[0]):
-            #         if not detach_deform:
-            #             verts[b] += instance_deform.verts_deform[b, :len(verts[b])]
-            #         else:
-            #             verts[b] += instance_deform.verts_deform[b, :len(verts[b])].detach()
-            #
-            # verts_cam = (cams_proj4x4[:, None,] @ add_homog_dim(verts, dim=-1)[..., None])[..., 0]
-            # faces = []
-            # faces_count = 0
-            # verts_count = 0
-            # verts_count_acc_from_0 = []
-            # ranges = []
-            # for b, object_id in enumerate(objects_ids[0]):
-            #     _faces = self.get_faces_with_mesh_id(object_id, clone=True)
-            #     _faces += verts_count
-            #     verts_count_acc_from_0.append(verts_count)
-            #     faces.append(_faces)
-            #     ranges.append(torch.LongTensor([faces_count, len(_faces)]))
-            #     verts_count += len(verts_cam[b])
-            #     faces_count += len(_faces)
-            #
-            # ranges = torch.stack(ranges, dim=0).to(device='cpu', dtype=torch.int32)
-            # faces = torch.cat(faces, dim=0).to(device=device, dtype=torch.int32)
-            # verts_cam = verts_cam.reshape(-1, 4)
-
-            use_cuda = "cuda" in str(
-                device,
-            )  #  dr.RasterizeGLContext() if not use_cuda else
-            self.glctx = (
-                dr.RasterizeGLContext()
-                if not use_cuda
-                else dr.RasterizeCudaContext(device=device)
-            )
-            rast_out, _ = dr.rasterize(
-                self.glctx,
-                verts_cam,
-                faces,
-                ranges=ranges,
-                resolution=[int(imgs_sizes[0]), int(imgs_sizes[1])],
-            )
-
-  # extr = torch.inverse(extr) @ cv_to_gl
-            # extr = torch.eye(4, device=device)
-            
-            # modify the mesh vertices, advice from Leo
-            # mesh_verts = transf3d_broadcast(
-            #     pts3d=mesh.vertices.clone(),
-            #     transf4x4=extr,
-            # )
-            # ext_buf = extr.clone()
-            # transl = -(mesh_verts.max(dim=0)[0] + mesh_verts.min(dim=0)[0]) / 2.0
-            # ext_buf[:3, 3] += transl
-            # mesh_verts = transf3d_broadcast(
-            #     pts3d=mesh.vertices.clone(),
-            #     transf4x4=ext_buf,
-            # )
-            # scale = 1.0 / mesh_verts.abs().max()
-            # ext_buf[:3, :] *= scale
-            # extr = ext_buf
-            # mesh_verts = transf3d_broadcast(pts3d=mesh.vertices.clone(), transf4x4=extr)
-            
-            # mesh.vertices = mesh_verts
-            
-            #         mesh_verts = mesh.vertices.clone()
-#         verts = mesh_verts  # (N, 3)
-
-# # Convert to homogeneous coordinates
-#         ones = torch.ones((verts.shape[0], 1), device=verts.device, dtype=verts.dtype)
-#         verts_h = torch.cat([verts, ones], dim=1)  # (N, 4)
-
-# # Apply object pose
-#         verts_world_h = (object_pose @ verts_h.T).T  # (N, 4)
-
-# # Drop the homogeneous coordinate
-#         vertices_world = verts_world_h[:, :3]
-#         mesh.vertices = vertices_world.contiguous() 
-
-'''
-
-'''
-        mesh = Meshes.read_from_ply_file(
-                fpath=self.get_fpath_mesh(),
-                device=device,
-                scale=scale,
-            )
-
-            mesh_verts = transf3d_broadcast(
-                pts3d=mesh.verts.clone(),
-                transf4x4=tform_obj,
-            )
-            tform_obj_buf = tform_obj.clone()
-            transl = -(mesh_verts.max(dim=0)[0] + mesh_verts.min(dim=0)[0]) / 2.0
-            tform_obj_buf[:3, 3] += transl
-
-            mesh_verts = transf3d_broadcast(
-                pts3d=mesh.verts.clone(),
-                transf4x4=tform_obj_buf,
-            )
-            scale = 1.0 / mesh_verts.abs().max()
-            tform_obj_buf[:3, :] *= scale
-
-            # mesh_verts = transf3d_broadcast(pts3d=mesh.verts.clone(), transf4x4=tform_obj_buf)
-            tform_obj = tform_obj_buf
-        
-        '''
-
-
-
-'''
-k, i guess you could try to 
-1) get the o-voxel representation from the mesh, 
-2) use the o-voxel parameters for optimization, 
-3) get the mesh from the o-voxel representation to render
-[2:06 PM]you would have to repeat 3) for each iteration
-
-
-
-
-mesh = asset.to_mesh()
-vertices = torch.from_numpy(mesh.vertices).float()
-faces = torch.from_numpy(mesh.faces).long()
-voxel_indices, dual_vertices, intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
-    vertices, faces,
-    grid_size=RES,                              # Resolution
-    aabb=[[-0.5,-0.5,-0.5],[0.5,0.5,0.5]],      # Axis-aligned bounding box
-    face_weight=1.0,                            # Face term weight in QEF
-    boundary_weight=0.2,                        # Boundary term weight in QEF
-    regularization_weight=1e-2,                 # Regularization term weight in QEF
-    timing=True
-)
-## sort to ensure align between geometry and material voxelization
-vid = o_voxel.serialize.encode_seq(voxel_indices)
-mapping = torch.argsort(vid)
-voxel_indices = voxel_indices[mapping]
-dual_vertices = dual_vertices[mapping]
-intersected = intersected[mapping]
-
-
-
-
-# 2. Material Voxelization (Volumetric Attributes)
-# Returns: dict containing 'base_color', 'metallic', 'roughness', etc.
-voxel_indices_mat, attributes = o_voxel.convert.textured_mesh_to_volumetric_attr(
-    asset,
-    grid_size=RES,
-    aabb=[[-0.5,-0.5,-0.5],[0.5,0.5,0.5]],
-    timing=True
-)
-## sort to ensure align between geometry and material voxelization
-vid_mat = o_voxel.serialize.encode_seq(voxel_indices_mat)
-mapping_mat = torch.argsort(vid_mat)
-attributes = {k: v[mapping_mat] for k, v in attributes.items()}
-
-# Save to compressed .vxz format
-## packing
-dual_vertices = dual_vertices * RES - voxel_indices
-dual_vertices = (torch.clamp(dual_vertices, 0, 1) * 255).type(torch.uint8)
-intersected = (intersected[:, 0:1] + 2 * intersected[:, 1:2] + 4 * intersected[:, 2:3]).type(torch.uint8)
-attributes['dual_vertices'] = dual_vertices
-attributes['intersected'] = intersected
-o_voxel.io.write("ovoxel_helmet.vxz", voxel_indices, attributes)
-
-
-
-
-dual_vertices = data['dual_vertices']
-intersected = data['intersected']
-base_color = data['base_color']
-## ... other attributes omitted for brevity
-
-# Depack
-dual_vertices = dual_vertices / 255
-intersected = torch.cat([
-    intersected % 2,
-    intersected // 2 % 2,
-    intersected // 4 % 2,
-], dim=-1).bool()
-
-# Extract Mesh
-# O-Voxel connects dual vertices to form quads, optionally splitting them 
-# based on geometric features.
-rec_verts, rec_faces = o_voxel.convert.flexible_dual_grid_to_mesh(
-    coords.cuda(), 
-    dual_vertices.cuda(), 
-    intersected.cuda(), 
-    split_weight=None, # Auto-split based on min angle if None
-    grid_size=RES,
-    aabb=[[-0.5,-0.5,-0.5],[0.5,0.5,0.5]],
-)
-
-'''
-
-
-
-'''
-
-coords, attributes = o_voxel.io.read("your_file.vxz")  
-  
-# Unpack dual_vertices and intersected  
-dual_vertices = attributes['dual_vertices'] / 255.0  # Back to float [0,1]  
-intersected_packed = attributes['intersected']  
-  
-# Unpack intersected bits  
-intersected = torch.stack([  
-    intersected_packed % 2,  
-    intersected_packed // 2 % 2,  
-    intersected_packed // 4 % 2  
-], dim=-1).bool()  
-  
-# Create the 7-channel h.feats format  
-# Channels 0-3: dual_vertices (need to apply inverse sigmoid)  
-# Channels 3-6: intersected_logits (need to convert from bool to logits)  
-# Channel 6: quad_lerp (initialize to 0 or small value)  
-  
-# For dual_vertices, apply inverse of the sigmoid+margin scaling  
-# Original: (1 + 2 * margin) * sigmoid(feats[..., 0:3]) - margin  
-# Inverse: sigmoid_inv((vertices + margin) / (1 + 2 * margin))  
-voxel_margin = 0.5  # Default from FlexiDualGridVaeDecoder  
-dual_vertices_feats = torch.logit(  
-    (dual_vertices + voxel_margin) / (1 + 2 * voxel_margin)  
-)  
-  
-# For intersected, convert bool to logits (use reasonable values)  
-intersected_logits = torch.where(  
-    intersected,   
-    torch.tensor(2.0),  # Positive logits for True  
-    torch.tensor(-2.0)  # Negative logits for False  
-).float()  
-  
-# For quad_lerp, initialize with softplus inverse of small positive values  
-quad_lerp = F.softplus_inverse(torch.ones_like(dual_vertices[:, :1]) * 0.1)  
-  
-# Concatenate to create h.feats  
-h_feats = torch.cat([  
-    dual_vertices_feats,  # channels 0-3  
-    intersected_logits,   # channels 3-6  
-    quad_lerp            # channel 6  
-], dim=-1)  
-  
-# Create SparseTensor h  
-h = sp.SparseTensor(  
-    feats=h_feats,  
-    coords=torch.cat([torch.zeros_like(coords[:, 0:1]), coords], dim=-1)  
-)  
-  
-# Make h.feats trainable for optimization  
-h_feats = torch.nn.Parameter(h_feats)  
-h_opt = h.replace(feats=h_feats)
-
-
-###############################3333333
-optimizer = torch.optim.Adam([h_feats], lr=0.01)  
-  
-# Create decoder in train mode  
-decoder = FlexiDualGridVaeDecoder(...)  
-decoder.train()  
-  
-for iteration in range(num_iterations):  
-    optimizer.zero_grad()  
-      
-    # Forward pass through decoder  
-    vertices = h_opt.replace((1 + 2 * decoder.voxel_margin) *   
-                           F.sigmoid(h_opt.feats[..., 0:3]) - decoder.voxel_margin)  
-    intersected_logits = h_opt.replace(h_opt.feats[..., 3:6])  
-    quad_lerp = h_opt.replace(F.softplus(h_opt.feats[..., 6:7]))  
-      
-    # Convert to mesh (this is differentiable for vertex positions)  
-    mesh = Mesh(*flexible_dual_grid_to_mesh(  
-        h_opt.coords[:, 1:],   
-        vertices.feats,   
-        intersected_logits.feats,   
-        quad_lerp.feats,  
-        aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],  
-        grid_size=decoder.resolution,  
-        train=True  
-    ))  
-      
-    # Render and compute loss  
-    rendered = renderer.render(mesh, camera_params)  
-    loss = compute_loss(rendered, target)  
-      
-    # Backpropagate  
-    loss.backward()  
-    optimizer.step()  
-      
-    print(f"Iter {iteration}: Loss = {loss.item():.6f}")
-
-'''
-
-
-
-
-''''
-Ovoxel to latent to mesh
-
-import torch
-import trimesh
-import o_voxel
-from trellis2 import models
-from trellis2.modules.sparse import SparseTensor
-from trellis2.representations import MeshWithVoxel
-
-
-def load_shape_models():
-    shape_enc = models.from_pretrained("microsoft/TRELLIS.2-4B/ckpts/shape_enc_next_dc_f16c32_fp16")
-    shape_dec = models.from_pretrained("microsoft/TRELLIS.2-4B/ckpts/shape_dec_next_dc_f16c32_fp16")
-    for model in [shape_enc, shape_dec]:
-        model.cuda().eval()
-    
-    return shape_enc, shape_dec
-
-
-def normalize_mesh(mesh):
-    """Normalize mesh vertices to unit cube."""
-    vertices = torch.from_numpy(mesh.vertices).float()
-    faces = torch.from_numpy(mesh.faces).long()
-    
-    center = (vertices.min(0)[0] + vertices.max(0)[0]) / 2
-    scale = 0.99999 / (vertices.max(0)[0] - vertices.min(0)[0]).max()
-    vertices = (vertices - center) * scale
-    
-    return vertices, faces
-
-
-def encode_decode_shape(encoder, decoder, vertices, faces, resolution=512):
-    voxel_indices, dual_vertices, intersected = o_voxel.convert.mesh_to_flexible_dual_grid(
-        vertices, faces, grid_size=resolution,
-        aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-    )
-    
-    coords = torch.cat([torch.zeros(len(voxel_indices), 1, dtype=torch.int32), voxel_indices], dim=1)
-    vertices_sparse = SparseTensor(dual_vertices.cuda(), coords.cuda())
-    intersected_sparse = SparseTensor(intersected.float().cuda(), coords.cuda())
-    
-    with torch.no_grad():
-        latent = encoder(vertices_sparse, intersected_sparse)
-        decoder.set_resolution(resolution)
-        meshes, subs = decoder(latent, return_subs=True)
-    
-    return meshes[0], subs
-
-
-def postprocess_with_default_texture(mesh, subs, resolution):
-    pbr_attr_layout = {
-        'base_color': slice(0, 3),
-        'metallic': slice(3, 4),
-        'roughness': slice(4, 5),
-        'alpha': slice(5, 6),
-    }
-    
-    mesh.fill_holes()
-    
-    # Create default white material
-    sub = subs[-1]
-    num_voxels = sub.coords.shape[0]
-    default_attrs = torch.ones(num_voxels, 6, device=sub.coords.device, dtype=torch.float32)
-    default_attrs[:, 3] = 0.0  # metallic
-    default_attrs[:, 4] = 0.5  # roughness
-    default_attrs[:, 5] = 1.0  # alpha
-    
-    mesh_with_voxel = MeshWithVoxel(
-        mesh.vertices, mesh.faces,
-        origin=[-0.5, -0.5, -0.5],
-        voxel_size=1 / resolution,
-        coords=sub.coords[:, 1:],
-        attrs=default_attrs,
-        voxel_shape=torch.Size([*sub.shape, *sub.spatial_shape]),
-        layout=pbr_attr_layout
-    )
-    
-    mesh_with_voxel.simplify(16777216)
-    
-    glb = o_voxel.postprocess.to_glb(
-        vertices=mesh_with_voxel.vertices,
-        faces=mesh_with_voxel.faces,
-        attr_volume=mesh_with_voxel.attrs,
-        coords=mesh_with_voxel.coords,
-        attr_layout=mesh_with_voxel.layout,
-        voxel_size=mesh_with_voxel.voxel_size,
-        aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-        decimation_target=1000000,
-        texture_size=4096,
-        remesh=True,
-        remesh_band=1,
-        remesh_project=0,
-        verbose=True
-    )
-    return glb
-
-
-def save_mesh(mesh, output_path):
-    trimesh.Trimesh(
-        vertices=mesh.vertices.cpu().numpy(),
-        faces=mesh.faces.cpu().numpy(),
-    ).export(output_path)
-
-
-def main():
-    shape_enc, shape_dec = load_shape_models()
-    
-    mesh_path = "/common_data/workspace/ariel/repos/Hunyuan3D-2.1/assets/cpt_america_out.glb"
-    mesh = trimesh.load(mesh_path)
-    if isinstance(mesh, trimesh.Scene):
-        mesh = list(mesh.geometry.values())[0]
-    vertices, faces = normalize_mesh(mesh)
-    
-    resolution = 1024
-    shape_mesh, subs = encode_decode_shape(shape_enc, shape_dec, vertices, faces, resolution=resolution)
-    save_mesh(shape_mesh, "reconstructed_raw_shape.glb")
-
-    glb_mesh = postprocess_with_default_texture(shape_mesh, subs, resolution)
-    glb_mesh.export("reconstructed_mesh_postprocessed.glb")
-    
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-'''

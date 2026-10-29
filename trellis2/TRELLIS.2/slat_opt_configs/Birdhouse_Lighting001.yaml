@@ -1,11 +1,4 @@
 # TRELLIS.2 SLAT / o-voxel optimization for Birdhouse_Lighting001
-#
-#   mesh -> o-voxel + PBR voxels -> TRELLIS.2 encoders -> shape + texture SLAT
-#   -> topology_study/slat_refinement.py (SLATs through the decoders) and/or ovoxel_refinement.py
-#
-#   check (encode + round trip): python slat_opt/hypothesis_mesh_slat.py --yaml-config slat_opt_configs/Birdhouse_Lighting001.yaml --mesh-source recgen --check
-#   run:                         python slat_opt/hypothesis_mesh_slat.py --yaml-config slat_opt_configs/Birdhouse_Lighting001.yaml --mesh-source recgen
-#   every object:                python slat_opt/run_all_slat_opt.py --mesh-source recgen
 
 category: "Birdhouse_Lighting001"
 data_dir: "/pfs/data6/home/fr/fr_fr/fr_ba122/projects/dataset/DTC/Birdhouse_Lighting001"

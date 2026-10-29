@@ -1,4 +1,3 @@
-
 import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -108,7 +107,6 @@ def _decode_latent_differentiable(
             )
         )
     return out_mesh
-
 
 
 def refine_latents(
@@ -320,7 +318,6 @@ def refine_latents(
         shape_slat.replace(feats=shape_feats, coords=shape_coords),
         tex_slat.replace(feats=tex_feats, coords=tex_coords),
     )
-
 
 
 def main():

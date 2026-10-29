@@ -1,6 +1,4 @@
-"""TRELLIS.2: optimize the o-voxel directly (no decoder in the loop) with a rendering loss, and
-measure whether the mesh topology changes.
-"""
+"""TRELLIS.2: optimize the o-voxel directly"""
 import sys
 from pathlib import Path
 
