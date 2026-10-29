@@ -2,9 +2,9 @@
 tag: v2
 
 prompts:
-  Birdhouse_Lighting001: im_0077                          # raised 3/4: porch, window side, roof, chimney (was im_0040, straight front)
-  Cup_B08TWHJ33Q_Tan_Lighting001: im_0059                 # raised: rim/opening, handle in profile (was im_0006, eye-level side, no handle)
-  Figurine_B08FYFNYP4_LionKing_Lighting001: im_0044       # raised 3/4: face, body, base (was im_0006, low side)
-  Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001: im_0045   # raised front 3/4: face, both wings, body (was im_0006, one wing hidden)
-  Mallard_B082D168CK_MintGreen_Lighting001: im_0043       # raised 3/4: head, beak, body curve, base (was im_0009, narrow near-frontal)
-  Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001: im_0067       # raised: honeycomb top, side, front (was im_0006, low side)
+  Birdhouse_Lighting001: im_0077                          
+  Cup_B08TWHJ33Q_Tan_Lighting001: im_0059                 
+  Figurine_B08FYFNYP4_LionKing_Lighting001: im_0044       
+  Gargoyle_B08SQMBDXY_HandsOnKnees_Lighting001: im_0045   
+  Mallard_B082D168CK_MintGreen_Lighting001: im_0043       
+  Mouse_B0CHNVBBLF_Honeycomb_1_Lighting001: im_0067       
