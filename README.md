@@ -1,6 +1,7 @@
 # 3D Object Reconstruction via Latent Priors and Renderings
 
-Refining the latents of image-to-3D generative models (feed forward models) with a differentiable inverse rendering loss, benchmarked with Stanford-ORB on DTC objects.
+Refining the latents of image-to-3D generative models (feed forward models) with  inverse rendering loss, benchmarked with Stanford-ORB on DTC objects.
+Please note, some files have been omitted before uploading to github, due to their size
 
 ## Layout
 
