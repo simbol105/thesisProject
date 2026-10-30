@@ -81,7 +81,7 @@ Config: `trellis1/TRELLIS/slat_opt_configs/dilation/Birdhouse_chimney.yaml`.
 
 ## Results
 
-Each optimization run folder holds `metrics.jsonl`, the meshes and its render panels. Five panels per run (one view, from the first to the last evaluation) are tracked in git, in the run's `test/` folder (`region/` for the dilation arms); `python benchmark/select_run_images.py --add` selects them.
+Each optimization run folder holds `metrics.jsonl`, the meshes and its render panels. Five panels per run (one view, from the first to the last evaluation) were keptt in the git commit, in the run's `test/` folder (`region/` for the dilation arms); `python benchmark/select_run_images.py --add` selects them.
 
 | experiment | run folders | tracked images |
 |---|---|---|
