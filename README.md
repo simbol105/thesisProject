@@ -3,7 +3,7 @@
 
 Refining the latents of image-to-3D generative models (feed forward models) with inverse rendering loss, benchmarked with Stanford-ORB on DTC objects.
 
-Please note, some files have been omitted before uploading to github, due to their size
+Please note, some files and folders have been omitted before uploading to github, due to their size
 
 ![Pipeline](pipeline.png)
 
