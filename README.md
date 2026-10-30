@@ -1,6 +1,10 @@
 # 3D Object Reconstruction via Latent Priors and Rendering
 
+<<<<<<< Updated upstream
 Refining the latents of image-to-3D generative models (feed forward models) with  inverse rendering loss, benchmarked with Stanford-ORB on DTC objects.
+=======
+Refining the latents of image-to-3D generative models (feed forward models) with inverse rendering loss, benchmarked with Stanford-ORB on DTC objects.
+>>>>>>> Stashed changes
 Please note, some files have been omitted before uploading to github, due to their size
 
 ![Pipeline](pipeline.png)
@@ -83,7 +87,11 @@ Config: `trellis1/TRELLIS/slat_opt_configs/dilation/Birdhouse_chimney.yaml`.
 
 ## Results
 
+<<<<<<< Updated upstream
 Each optimization run folder holds `metrics.jsonl`, the meshes and its render panels. Five panels per run (one view, from the first to the last evaluation) were keptt in the git commit, in the run's `test/` folder (`region/` for the dilation run); `python benchmark/select_run_images.py --add` selects them.
+=======
+Each optimization run folder holds `metrics.jsonl`, the meshes and its render panels. Five panels per run (one view, from the first to the last evaluation) were kept in the git commit, in the run's `test/` folder (`region/` for the dilation run); `python benchmark/select_run_images.py --add` selects them.
+>>>>>>> Stashed changes
 
 | experiment | run folders | tracked images |
 |---|---|---|
